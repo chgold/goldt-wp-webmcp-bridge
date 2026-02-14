@@ -271,9 +271,6 @@ class Tools_Endpoint {
     }
     
     public function check_permission($request) {
-        // Debug: Log how many times this is called
-        error_log('AI Connect: check_permission called for ' . $request->get_route());
-        
         $token = $this->auth->get_token_from_request();
         
         if (empty($token)) {

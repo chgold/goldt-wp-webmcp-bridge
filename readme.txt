@@ -116,6 +116,22 @@ Your feedback directly influences what we build next!
 
 = Testing Your Setup =
 
+**Development Note:**
+
+If using PHP built-in server or environments where pretty permalinks don't work with dots in URLs, use the `index.php?rest_route=` format:
+
+```bash
+# Development format (PHP built-in server)
+curl "http://localhost:8888/index.php?rest_route=/ai-connect/v1/tools/wordpress.searchPosts"
+```
+
+On production servers with Apache/Nginx, use the standard format:
+
+```bash
+# Production format (Apache/Nginx)
+curl "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.searchPosts"
+```
+
 **Quick cURL Test:**
 
 ```bash

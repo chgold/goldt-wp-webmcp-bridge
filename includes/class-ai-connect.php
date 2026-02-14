@@ -130,7 +130,12 @@ class AI_Connect {
                         <tr>
                             <td><strong>WooCommerce:</strong></td>
                             <td><?php 
-                                echo class_exists('WooCommerce') ? '✓ Active (v' . esc_html(WC()->version) . ')' : '✗ Not installed';
+                                if (class_exists('WooCommerce')) {
+                                    $wc_version = defined('WC_VERSION') ? WC_VERSION : 'Unknown';
+                                    echo '✓ Active (v' . esc_html($wc_version) . ')';
+                                } else {
+                                    echo '✗ Not installed';
+                                }
                             ?></td>
                         </tr>
                         <tr>
