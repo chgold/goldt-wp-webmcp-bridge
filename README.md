@@ -16,10 +16,15 @@ Connect AI agents (ChatGPT, Claude, or any custom AI) to your WordPress site wit
 ### Installation
 
 1. Upload the plugin to `/wp-content/plugins/ai-connect/`
-2. Run `composer install` in the plugin directory
-3. Activate through WordPress admin
+2. Activate through WordPress admin
 
 **That's it!** No configuration needed.
+
+**Note:** The plugin includes all required dependencies:
+- `firebase/php-jwt` (v6.10.0) - JWT token handling
+- `predis/predis` (v2.4.1) - Redis client for rate limiting (optional)
+
+No manual `composer install` required - everything is bundled!
 
 ---
 

@@ -2,7 +2,6 @@
 .wordpress-org/
 
 # Composer
-/vendor/
 composer.lock
 
 # IDE

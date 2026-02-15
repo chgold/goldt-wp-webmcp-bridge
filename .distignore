@@ -1,0 +1,27 @@
+# Development files
+.git
+.gitignore
+.distignore
+
+# Tests
+tests/
+
+# Documentation
+README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Composer dev
+composer.json
+composer.lock
+
+# CI/CD
+.github/

@@ -106,7 +106,12 @@ Your feedback directly influences what we build next!
 2. Go to **Plugins → Add New → Upload Plugin**
 3. Upload the zip file and click **Install Now**
 4. Activate the plugin
-5. Run `composer install` in the plugin directory to install dependencies
+
+**Note:** All required dependencies are included:
+* `firebase/php-jwt` (v6.10.0) - JWT token handling
+* `predis/predis` (v2.4.1) - Redis client for rate limiting (optional)
+
+No manual `composer install` required!
 
 = Setup =
 
