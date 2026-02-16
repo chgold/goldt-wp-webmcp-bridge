@@ -3,7 +3,7 @@
  * Plugin Name: AI Connect
  * Plugin URI: https://github.com/chgold/ai-connect
  * Description: Bridge WordPress & AI Agents with WebMCP Protocol
- * Version: 0.1.0
+ * Version: 0.1.1
  * Author: chgold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AI_CONNECT_VERSION', '0.1.0');
+define('AI_CONNECT_VERSION', '0.1.1');
 define('AI_CONNECT_PATH', plugin_dir_path(__FILE__));
 define('AI_CONNECT_URL', plugin_dir_url(__FILE__));
 
