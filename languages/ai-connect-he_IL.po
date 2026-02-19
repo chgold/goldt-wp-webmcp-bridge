@@ -1,258 +1,184 @@
-# Copyright (C) 2026 chgold
-# This file is distributed under the GPL v3.
+# Translation file
 msgid ""
 msgstr ""
-"Project-Id-Version: AI Connect
-"Report-Msgid-Bugs-To: https://github.com/chgold/ai-connect/issues
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Language: he_IL\n"
+"Language: he_IL
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-02-16T09:41:18+02:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.10.0\n"
-"X-Domain: ai-connect\n"
 
-#. Plugin Name of the plugin
-#: ai-connect.php
-#: includes/class-ai-connect.php:81
-#: includes/class-ai-connect.php:82
+msgid "\"\nmsgstr "
+msgstr "\"\nmsgstr"
+
 msgid "AI Connect"
-msgstr ""
+msgstr "\"\n\nmsgid "
 
-#. Plugin URI of the plugin
-#: ai-connect.php
 msgid "https://github.com/chgold/ai-connect"
-msgstr ""
+msgstr "https://github.com/chgold/ai-connect"
 
-#. Description of the plugin
-#: ai-connect.php
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr ""
+msgstr "\"\n\n#. Author of the plugin\n#: ai-connect.php\nmsgid "
 
-#. Author of the plugin
-#: ai-connect.php
 msgid "chgold"
-msgstr ""
+msgstr "\"\n\nmsgid "
 
-#. Author URI of the plugin
-#: ai-connect.php
 msgid "https://github.com/chgold"
-msgstr ""
+msgstr "https://github.com/chgold"
 
-#: ai-connect.php:79
-msgid "AI Connect: Missing dependencies. Please run \"composer install\" in the plugin directory."
-msgstr ""
+msgid "AI Connect: Missing dependencies. Please run \\"
+msgstr "AI Connect: חסרים יחסי תלות. אנא הפעל \\"
 
-#: ai-connect.php:88
 msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr ""
+msgstr "AI Connect: מומלץ להשתמש ב - WooCommerce לפונקציונליות מלאה."
 
-#: ai-connect.php:100
-#: includes/class-ai-connect.php:92
-#: includes/class-ai-connect.php:93
 msgid "Settings"
-msgstr ""
+msgstr "הגדרות"
 
-#. translators: %s: version number
-#: includes/class-ai-connect.php:108
 msgid "✅ AI Connect v%s is active and ready!"
-msgstr ""
+msgstr "✅ AI Connect v%s פעיל ומוכן!"
 
-#: includes/class-ai-connect.php:112
 msgid "Environment Status"
-msgstr ""
+msgstr "מצב הסביבה"
 
-#: includes/class-ai-connect.php:155
 msgid "⚠️ Action Required"
-msgstr ""
+msgstr "נדרשת פעולה"
 
-#: includes/class-ai-connect.php:156
 msgid "Composer dependencies are not installed. Please run:"
-msgstr ""
+msgstr "תלות במלחין אינה מותקנת. אנא הפעל:"
 
-#: includes/class-ai-connect.php:161
 msgid "🎯 Quick Start"
-msgstr ""
+msgstr "התחלה מהירה"
 
-#: includes/class-ai-connect.php:163
 msgid "Test the API"
-msgstr ""
+msgstr "בדיקת ה - API"
 
-#: includes/class-ai-connect.php:163
 msgid "View Manifest"
-msgstr ""
+msgstr "הצג מניפסט"
 
-#: includes/class-ai-connect.php:164
 msgid "Authentication"
-msgstr ""
+msgstr "אימות"
 
-#: includes/class-ai-connect.php:164
 msgid "Use WordPress username & password to login via"
-msgstr ""
+msgstr "השתמש בשם משתמש וסיסמה של וורדפרס כדי להתחבר באמצעות"
 
-#: includes/class-ai-connect.php:165
 msgid "Available Tools"
-msgstr ""
+msgstr "כלים זמינים"
 
-#: includes/class-ai-connect.php:165
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr ""
+msgstr "5 כלי ליבה של WordPress (חיפוש פוסטים, getPost, דפי חיפוש, getPage, getCurrentUser)"
 
-#: includes/class-ai-connect.php:166
 msgid "Documentation"
-msgstr ""
+msgstr "תיעוד"
 
-#: includes/class-ai-connect.php:166
 msgid "GitHub README"
-msgstr ""
+msgstr "GitHub README"
 
-#: includes/class-ai-connect.php:222
 msgid "User access revoked successfully."
-msgstr ""
+msgstr "גישת המשתמש בוטלה בהצלחה."
 
-#: includes/class-ai-connect.php:237
 msgid "User access restored successfully."
-msgstr ""
+msgstr "גישת המשתמש שוחזרה בהצלחה."
 
-#: includes/class-ai-connect.php:249
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
-msgstr ""
+msgstr "JWT Secret הסתובב בהצלחה! כל האסימונים הקיימים בוטלו."
 
-#: includes/class-ai-connect.php:263
 msgid "Settings saved!"
-msgstr ""
+msgstr "ההגדרות נשמרו!"
 
-#: includes/class-ai-connect.php:276
 msgid "API Rate Limiting"
-msgstr ""
+msgstr "הגבלת קצב API"
 
-#: includes/class-ai-connect.php:279
 msgid "Rate Limit (per minute)"
-msgstr ""
+msgstr "הגבלת תעריף (לדקה)"
 
-#: includes/class-ai-connect.php:282
 msgid "Maximum API requests per minute per user"
-msgstr ""
+msgstr "בקשות API מקסימליות לדקה לכל משתמש"
 
-#: includes/class-ai-connect.php:286
 msgid "Rate Limit (per hour)"
-msgstr ""
+msgstr "הגבלת תעריף (לשעה)"
 
-#: includes/class-ai-connect.php:289
 msgid "Maximum API requests per hour per user"
-msgstr ""
+msgstr "בקשות API מקסימליות לשעה לכל משתמש"
 
-#: includes/class-ai-connect.php:294
 msgid "Data Management"
-msgstr ""
+msgstr "ניהול נתונים"
 
-#: includes/class-ai-connect.php:297
 msgid "Uninstall Cleanup"
-msgstr ""
+msgstr "הסרת ההתקנה של הניקוי"
 
-#: includes/class-ai-connect.php:302
 msgid "Delete all plugin data when uninstalling"
-msgstr ""
+msgstr "מחק את כל נתוני התוסף בעת הסרת ההתקנה"
 
-#: includes/class-ai-connect.php:305
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
-msgstr ""
+msgstr "כאשר אפשרות זו מופעלת, כל הלקוחות, האסימונים וההגדרות של OAuth יימחקו לצמיתות בעת הסרת ההתקנה של תוסף זה. השאר לא מסומן כדי לשמור נתונים להתקנה מחדש."
 
-#: includes/class-ai-connect.php:307
 msgid "Note:"
-msgstr ""
+msgstr "הערה:"
 
-#: includes/class-ai-connect.php:307
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
-msgstr ""
+msgstr "נתוני אבטחה רגישים (סודות JWT, אסימוני רענון) יימחקו תמיד ללא קשר להגדרה זו."
 
-#: includes/class-ai-connect.php:314
 msgid "Save Settings"
-msgstr ""
+msgstr "שמירת ההגדרות"
 
-#: includes/class-ai-connect.php:319
 msgid "Security"
-msgstr ""
+msgstr "אבטחה"
 
-#: includes/class-ai-connect.php:321
 msgid "Rotate JWT Secret Key"
-msgstr ""
+msgstr "סובב מפתח סודי JWT"
 
-#: includes/class-ai-connect.php:322
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
-msgstr ""
+msgstr "פעולה זו תיצור מפתח סודי חדש של JWT ותבטל <strong>באופן מיידי את כל אסימוני הגישה הקיימים</strong>."
 
-#: includes/class-ai-connect.php:323
 msgid "All users will need to authenticate again to get new tokens."
-msgstr ""
+msgstr "כל המשתמשים יצטרכו לאמת שוב כדי לקבל אסימונים חדשים."
 
-#: includes/class-ai-connect.php:326
 msgid "Warning:"
-msgstr ""
+msgstr "אזהרה:"
 
-#: includes/class-ai-connect.php:326
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
-msgstr ""
+msgstr "לא ניתן לבטל פעולה זו. כל סוכני הבינה המלאכותית המחוברים כעת ינותקו."
 
-#: includes/class-ai-connect.php:329
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
-msgstr ""
+msgstr "האם אתה בטוח שברצונך לסובב את סוד ה - JWT? פעולה זו תנתק את כל סוכני הבינה המלאכותית המחוברים והמשתמשים יצטרכו לאמת מחדש."
 
-#: includes/class-ai-connect.php:331
 msgid "Rotate JWT Secret"
-msgstr ""
+msgstr "סובב סוד JWT"
 
-#: includes/class-ai-connect.php:336
 msgid "Manage User Access"
-msgstr ""
+msgstr "נהל גישת משתמשים"
 
-#: includes/class-ai-connect.php:337
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
-msgstr ""
+msgstr "חסימת גישה של משתמשים ספציפיים ל - AI Connect. משתמשים חסומים אינם יכולים לאמת או להשתמש באסימונים קיימים."
 
-#: includes/class-ai-connect.php:342
 msgid "Blocked Users"
-msgstr ""
+msgstr "משתמשים חסומים"
 
-#: includes/class-ai-connect.php:344
 msgid "User ID"
-msgstr ""
+msgstr "מזהה משתמש"
 
-#: includes/class-ai-connect.php:344
 msgid "Username"
-msgstr ""
+msgstr "שם משתמש"
 
-#: includes/class-ai-connect.php:344
 msgid "Email"
-msgstr ""
+msgstr "אימייל"
 
-#: includes/class-ai-connect.php:344
 msgid "Action"
-msgstr ""
+msgstr "פעולה"
 
-#: includes/class-ai-connect.php:357
 msgid "Restore Access"
-msgstr ""
+msgstr "שחזר גישה"
 
-#: includes/class-ai-connect.php:365
 msgid "No users are currently blocked."
-msgstr ""
+msgstr "אין משתמשים חסומים כרגע."
 
-#: includes/class-ai-connect.php:371
 msgid "Block a User"
-msgstr ""
+msgstr "חסימת משתמש"
 
-#: includes/class-ai-connect.php:375
 msgid "User ID:"
-msgstr ""
+msgstr "מזהה משתמש:"
 
-#: includes/class-ai-connect.php:377
 msgid "Enter the WordPress user ID to block"
-msgstr ""
+msgstr "הזן את מזהה המשתמש של WordPress כדי לחסום"
 
-#: includes/class-ai-connect.php:379
 msgid "Block User"
-msgstr ""
+msgstr "חסימת משתמש"
+
