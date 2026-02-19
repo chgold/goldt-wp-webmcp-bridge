@@ -1,258 +1,180 @@
-# Copyright (C) 2026 chgold
-# This file is distributed under the GPL v3.
+# Translation file
 msgid ""
 msgstr ""
-"Project-Id-Version: AI Connect
-"Report-Msgid-Bugs-To: https://github.com/chgold/wp-ai-connect/issues
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: ja <LL@li.org>\n"
-"Language: ja
-"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-02-19T16:32:56+02:00\n"
-"PO-Revision-Date: 2026-02-19 19:19+0200\n"
-"X-Generator: WP-CLI 2.10.0\n"
-"X-Domain: ai-connect\n"
 
-#. Plugin Name of the plugin
-#: ai-connect.php
-#: includes/class-ai-connect.php:81
-#: includes/class-ai-connect.php:82
 msgid "AI Connect"
-msgstr ""
+msgstr "AI Connect"
 
-#. Plugin URI of the plugin
-#: ai-connect.php
 msgid "https://github.com/chgold/ai-connect"
-msgstr ""
+msgstr "https://github.com/chgold/ai-connect"
 
-#. Description of the plugin
-#: ai-connect.php
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
 msgstr ""
 
-#. Author of the plugin
-#: ai-connect.php
 msgid "chgold"
-msgstr ""
+msgstr "chgold"
 
-#. Author URI of the plugin
-#: ai-connect.php
 msgid "https://github.com/chgold"
+msgstr "https://github.com/chgold"
+
+msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
 msgstr ""
 
-#: ai-connect.php:79
-msgid "AI Connect: Missing dependencies. Please run \"composer install\" in the plugin directory."
-msgstr ""
-
-#: ai-connect.php:88
 msgid "AI Connect: WooCommerce is recommended for full functionality."
 msgstr ""
 
-#: ai-connect.php:100
-#: includes/class-ai-connect.php:92
-#: includes/class-ai-connect.php:93
 msgid "Settings"
 msgstr ""
 
-#. translators: %s: version number
-#: includes/class-ai-connect.php:108
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr ""
 
-#: includes/class-ai-connect.php:112
 msgid "Environment Status"
 msgstr ""
 
-#: includes/class-ai-connect.php:155
 msgid "⚠️ Action Required"
 msgstr ""
 
-#: includes/class-ai-connect.php:156
 msgid "Composer dependencies are not installed. Please run:"
 msgstr ""
 
-#: includes/class-ai-connect.php:161
 msgid "🎯 Quick Start"
 msgstr ""
 
-#: includes/class-ai-connect.php:163
 msgid "Test the API"
 msgstr ""
 
-#: includes/class-ai-connect.php:163
 msgid "View Manifest"
 msgstr ""
 
-#: includes/class-ai-connect.php:164
 msgid "Authentication"
 msgstr ""
 
-#: includes/class-ai-connect.php:164
 msgid "Use WordPress username & password to login via"
 msgstr ""
 
-#: includes/class-ai-connect.php:165
 msgid "Available Tools"
 msgstr ""
 
-#: includes/class-ai-connect.php:165
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
 msgstr ""
 
-#: includes/class-ai-connect.php:166
 msgid "Documentation"
 msgstr ""
 
-#: includes/class-ai-connect.php:166
 msgid "GitHub README"
 msgstr ""
 
-#: includes/class-ai-connect.php:222
 msgid "User access revoked successfully."
 msgstr ""
 
-#: includes/class-ai-connect.php:237
 msgid "User access restored successfully."
 msgstr ""
 
-#: includes/class-ai-connect.php:249
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
 msgstr ""
 
-#: includes/class-ai-connect.php:263
 msgid "Settings saved!"
 msgstr ""
 
-#: includes/class-ai-connect.php:276
 msgid "API Rate Limiting"
 msgstr ""
 
-#: includes/class-ai-connect.php:279
 msgid "Rate Limit (per minute)"
 msgstr ""
 
-#: includes/class-ai-connect.php:282
 msgid "Maximum API requests per minute per user"
 msgstr ""
 
-#: includes/class-ai-connect.php:286
 msgid "Rate Limit (per hour)"
 msgstr ""
 
-#: includes/class-ai-connect.php:289
 msgid "Maximum API requests per hour per user"
 msgstr ""
 
-#: includes/class-ai-connect.php:294
 msgid "Data Management"
 msgstr ""
 
-#: includes/class-ai-connect.php:297
 msgid "Uninstall Cleanup"
 msgstr ""
 
-#: includes/class-ai-connect.php:302
 msgid "Delete all plugin data when uninstalling"
 msgstr ""
 
-#: includes/class-ai-connect.php:305
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
 msgstr ""
 
-#: includes/class-ai-connect.php:307
 msgid "Note:"
 msgstr ""
 
-#: includes/class-ai-connect.php:307
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
 msgstr ""
 
-#: includes/class-ai-connect.php:314
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-ai-connect.php:319
 msgid "Security"
 msgstr ""
 
-#: includes/class-ai-connect.php:321
 msgid "Rotate JWT Secret Key"
 msgstr ""
 
-#: includes/class-ai-connect.php:322
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
 msgstr ""
 
-#: includes/class-ai-connect.php:323
 msgid "All users will need to authenticate again to get new tokens."
 msgstr ""
 
-#: includes/class-ai-connect.php:326
 msgid "Warning:"
 msgstr ""
 
-#: includes/class-ai-connect.php:326
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
 msgstr ""
 
-#: includes/class-ai-connect.php:329
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
 msgstr ""
 
-#: includes/class-ai-connect.php:331
 msgid "Rotate JWT Secret"
 msgstr ""
 
-#: includes/class-ai-connect.php:336
 msgid "Manage User Access"
 msgstr ""
 
-#: includes/class-ai-connect.php:337
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
 msgstr ""
 
-#: includes/class-ai-connect.php:342
 msgid "Blocked Users"
 msgstr ""
 
-#: includes/class-ai-connect.php:344
 msgid "User ID"
 msgstr ""
 
-#: includes/class-ai-connect.php:344
 msgid "Username"
 msgstr ""
 
-#: includes/class-ai-connect.php:344
 msgid "Email"
 msgstr ""
 
-#: includes/class-ai-connect.php:344
 msgid "Action"
 msgstr ""
 
-#: includes/class-ai-connect.php:357
 msgid "Restore Access"
 msgstr ""
 
-#: includes/class-ai-connect.php:365
 msgid "No users are currently blocked."
 msgstr ""
 
-#: includes/class-ai-connect.php:371
 msgid "Block a User"
 msgstr ""
 
-#: includes/class-ai-connect.php:375
 msgid "User ID:"
 msgstr ""
 
-#: includes/class-ai-connect.php:377
 msgid "Enter the WordPress user ID to block"
 msgstr ""
 
-#: includes/class-ai-connect.php:379
 msgid "Block User"
 msgstr ""
+

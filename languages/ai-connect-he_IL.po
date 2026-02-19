@@ -2,29 +2,25 @@
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
-"Language: he_IL
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "\"\nmsgstr "
-msgstr "\"\nmsgstr"
-
 msgid "AI Connect"
-msgstr "\"\n\nmsgid "
+msgstr "\\\\\\\\"
 
 msgid "https://github.com/chgold/ai-connect"
 msgstr "https://github.com/chgold/ai-connect"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "\"\n\n#. Author of the plugin\n#: ai-connect.php\nmsgid "
+msgstr "\\\\\\\\"
 
 msgid "chgold"
-msgstr "\"\n\nmsgid "
+msgstr "chgold"
 
 msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
-msgid "AI Connect: Missing dependencies. Please run \\"
-msgstr "AI Connect: חסרים יחסי תלות. אנא הפעל \\"
+msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
+msgstr ""
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
 msgstr "AI Connect: מומלץ להשתמש ב - WooCommerce לפונקציונליות מלאה."

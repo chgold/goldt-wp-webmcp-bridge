@@ -2,15 +2,15 @@
 # This file is distributed under the GPL v3.
 msgid ""
 msgstr ""
-"Project-Id-Version: AI Connect\n"
-"Report-Msgid-Bugs-To: https://github.com/chgold/wp-ai-connect/issues\n"
+"Project-Id-Version: AI Connect
+"Report-Msgid-Bugs-To: https://github.com/chgold/wp-ai-connect/issues
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Language: en_US
+"Language: en_US\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-02-19T13:45:33+02:00\n"
+"POT-Creation-Date: 2026-02-19T23:45:09+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.10.0\n"
 "X-Domain: ai-connect\n"

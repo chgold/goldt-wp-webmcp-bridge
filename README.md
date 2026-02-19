@@ -1,6 +1,6 @@
 # AI Connect - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.1.1-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.1.2-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -514,6 +514,33 @@ add_action('ai_connect_register_modules', function($ai_connect) {
     ]);
 });
 ```
+
+---
+
+## 📋 Changelog
+
+### Version 0.1.2 - 2026-02-19
+* **Added:** Translation support for 12 languages (ar, de_DE, en_US, es_ES, fr_FR, he_IL, it_IT, ja, nl_NL, pt_BR, ru_RU, zh_CN)
+* **Improved:** Full Hebrew translation completed with emoji and placeholder support
+* **Fix:** Include composer.json and composer.lock in WordPress.org builds
+* **Improved:** Ready for community translations via translate.wordpress.org
+
+### Version 0.1.1 - 2026-02-16
+* Include vendor dependencies (firebase/php-jwt, predis/predis) in distribution
+* Update installation documentation - no manual composer install required
+* Add .distignore for WordPress.org distribution
+* Add dependency check with admin notice
+* Improve plugin distribution workflow
+
+### Version 0.1.0 - 2025-02-13
+* Initial public release
+* WebMCP protocol support
+* Direct username/password authentication with JWT
+* 5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)
+* Rate limiting (Redis + WordPress transients)
+* Security controls (Rotate JWT Secret, User Blacklist)
+* Automatic manifest generation
+* Production ready
 
 ---
 

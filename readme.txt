@@ -4,7 +4,7 @@ Tags: ai, ai-agent, webmcp, rest-api, artificial-intelligence
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -249,6 +249,12 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 0.1.2 - 2026-02-19 =
+* Added: Translation support for 12 languages (ar, de_DE, en_US, es_ES, fr_FR, he_IL, it_IT, ja, nl_NL, pt_BR, ru_RU, zh_CN)
+* Improved: Full Hebrew translation completed with emoji and placeholder support
+* Fix: Include composer.json and composer.lock in WordPress.org builds
+* Improved: Ready for community translations via translate.wordpress.org
+
 = 0.1.1 - 2026-02-16 =
 * Include vendor dependencies (firebase/php-jwt, predis/predis) in distribution
 * Update installation documentation - no manual composer install required
@@ -267,6 +273,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * Production ready
 
 == Upgrade Notice ==
+
+= 0.1.2 =
+Translation infrastructure added! Plugin now supports 12 languages with full Hebrew translation available.
 
 = 0.1.1 =
 Improved distribution - all dependencies now bundled. No manual setup required!
