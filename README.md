@@ -28,27 +28,6 @@ No manual `composer install` required - everything is bundled!
 
 ---
 
-## 🔧 Development Note
-
-**Important for local development:**
-
-If using PHP built-in server or environments where pretty permalinks don't work with dots in URLs, use the `index.php?rest_route=` format:
-
-```bash
-# Development format (PHP built-in server)
-curl "http://localhost:8888/index.php?rest_route=/ai-connect/v1/tools/wordpress.searchPosts"
-```
-
-On production servers with Apache/Nginx and proper rewrite rules, use the standard format:
-
-```bash
-# Production format (Apache/Nginx)
-curl "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.searchPosts"
-```
-
-**All examples below use the production format.** For local development, replace `/wp-json/` with `/index.php?rest_route=/`.
-
----
 
 ## 📖 Authentication Guide
 
@@ -521,9 +500,7 @@ add_action('ai_connect_register_modules', function($ai_connect) {
 
 ### Version 0.1.2 - 2026-02-19
 * **Added:** Translation support for 12 languages (ar, de_DE, en_US, es_ES, fr_FR, he_IL, it_IT, ja, nl_NL, pt_BR, ru_RU, zh_CN)
-* **Improved:** Full Hebrew translation completed with emoji and placeholder support
 * **Fix:** Include composer.json and composer.lock in WordPress.org builds
-* **Improved:** Ready for community translations via translate.wordpress.org
 
 ### Version 0.1.1 - 2026-02-16
 * Include vendor dependencies (firebase/php-jwt, predis/predis) in distribution

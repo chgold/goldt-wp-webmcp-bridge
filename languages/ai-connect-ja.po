@@ -11,7 +11,7 @@ msgid "https://github.com/chgold/ai-connect"
 msgstr "https://github.com/chgold/ai-connect"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr ""
+msgstr "WebMCPプロトコルでWordPressとAIエージェントを橋渡し"
 
 msgid "chgold"
 msgstr "chgold"
@@ -20,161 +20,161 @@ msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
 msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr ""
+msgstr "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr ""
+msgstr "AI Connect ： WooCommerceは完全な機能を提供することをお勧めします。"
 
 msgid "Settings"
-msgstr ""
+msgstr "設定"
 
 msgid "✅ AI Connect v%s is active and ready!"
-msgstr ""
+msgstr "✅ AI Connect v %sがアクティブになり、準備が整いました！"
 
 msgid "Environment Status"
-msgstr ""
+msgstr "環境ステータス"
 
 msgid "⚠️ Action Required"
-msgstr ""
+msgstr "行うべきこと"
 
 msgid "Composer dependencies are not installed. Please run:"
-msgstr ""
+msgstr "Composerの依存関係がインストールされていません。次を実行してください："
 
 msgid "🎯 Quick Start"
-msgstr ""
+msgstr "クイックスタート"
 
 msgid "Test the API"
-msgstr ""
+msgstr "APIをテストする"
 
 msgid "View Manifest"
-msgstr ""
+msgstr "マニフェストを表示"
 
 msgid "Authentication"
-msgstr ""
+msgstr "認証"
 
 msgid "Use WordPress username & password to login via"
-msgstr ""
+msgstr "WordPressのユーザー名とパスワードを使用して、を介してログインします"
 
 msgid "Available Tools"
-msgstr ""
+msgstr "利用可能なツール"
 
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr ""
+msgstr "5つのWordPressコアツール（ searchPosts、getPost、searchPages、getPage、getCurrentUser ）"
 
 msgid "Documentation"
-msgstr ""
+msgstr "ドキュメント"
 
 msgid "GitHub README"
-msgstr ""
+msgstr "GitHub README"
 
 msgid "User access revoked successfully."
-msgstr ""
+msgstr "ユーザーアクセスが正常に取り消されました。"
 
 msgid "User access restored successfully."
-msgstr ""
+msgstr "ユーザーアクセスが正常に復元されました。"
 
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
-msgstr ""
+msgstr "JWTシークレットのローテーションに成功しました！既存のトークンはすべて無効になりました。"
 
 msgid "Settings saved!"
-msgstr ""
+msgstr "設定を保存しました!"
 
 msgid "API Rate Limiting"
-msgstr ""
+msgstr "レート制限"
 
 msgid "Rate Limit (per minute)"
-msgstr ""
+msgstr "レート制限（ 1分あたり）"
 
 msgid "Maximum API requests per minute per user"
-msgstr ""
+msgstr "ユーザーごとの1分あたりの最大APIリクエスト数"
 
 msgid "Rate Limit (per hour)"
-msgstr ""
+msgstr "レート制限（ 1時間あたり）"
 
 msgid "Maximum API requests per hour per user"
-msgstr ""
+msgstr "ユーザーごとの1時間あたりの最大APIリクエスト数"
 
 msgid "Data Management"
-msgstr ""
+msgstr "データ管理"
 
 msgid "Uninstall Cleanup"
-msgstr ""
+msgstr "クリーンアップのアンインストール"
 
 msgid "Delete all plugin data when uninstalling"
-msgstr ""
+msgstr "アンインストール時にすべてのプラグインデータを削除する"
 
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
-msgstr ""
+msgstr "有効にすると、このプラグインをアンインストールすると、すべてのOAuthクライアント、トークン、および設定が完全に削除されます。再インストールのためにデータを保持するには、チェックを外したままにしてください。"
 
 msgid "Note:"
-msgstr ""
+msgstr "注意:"
 
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
-msgstr ""
+msgstr "機密性の高いセキュリティデータ（ JWTシークレット、リフレッシュトークン）は、この設定に関係なく常に削除されます。"
 
 msgid "Save Settings"
-msgstr ""
+msgstr "設定を保存"
 
 msgid "Security"
-msgstr ""
+msgstr "セキュリティ"
 
 msgid "Rotate JWT Secret Key"
-msgstr ""
+msgstr "JWTシークレットキーを回転"
 
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
-msgstr ""
+msgstr "これにより、新しいJWT秘密鍵が生成され、<strong>既存のすべてのアクセストークンが直ちに無効になり</strong>ます。"
 
 msgid "All users will need to authenticate again to get new tokens."
-msgstr ""
+msgstr "新しいトークンを取得するには、すべてのユーザーが再度認証する必要があります。"
 
 msgid "Warning:"
-msgstr ""
+msgstr "警告:"
 
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
-msgstr ""
+msgstr "この操作は元に戻せません。現在接続されているすべてのAIエージェントは切断されます。"
 
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
-msgstr ""
+msgstr "JWTシークレットを回転してもよろしいですか？これにより、接続されているすべてのAIエージェントが切断され、ユーザーは再認証する必要があります。"
 
 msgid "Rotate JWT Secret"
-msgstr ""
+msgstr "JWTシークレットを回転"
 
 msgid "Manage User Access"
-msgstr ""
+msgstr "ユーザーアクセスの管理"
 
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
-msgstr ""
+msgstr "特定のユーザーがAI Connectにアクセスするのをブロックします。ブロックされたユーザーは、既存のトークンを認証または使用できません。"
 
 msgid "Blocked Users"
-msgstr ""
+msgstr "ブロックしたユーザー"
 
 msgid "User ID"
-msgstr ""
+msgstr "ユーザーID"
 
 msgid "Username"
-msgstr ""
+msgstr "ユーザー名"
 
 msgid "Email"
-msgstr ""
+msgstr "メール"
 
 msgid "Action"
-msgstr ""
+msgstr "操作"
 
 msgid "Restore Access"
-msgstr ""
+msgstr "アクセスを復元"
 
 msgid "No users are currently blocked."
-msgstr ""
+msgstr "現在ブロックされているユーザーはいません。"
 
 msgid "Block a User"
-msgstr ""
+msgstr "ユーザーをブロックする"
 
 msgid "User ID:"
-msgstr ""
+msgstr "ユーザーID:"
 
 msgid "Enter the WordPress user ID to block"
-msgstr ""
+msgstr "ブロックするWordPressユーザーIDを入力してください"
 
 msgid "Block User"
-msgstr ""
+msgstr "ユーザーをブロック"
 

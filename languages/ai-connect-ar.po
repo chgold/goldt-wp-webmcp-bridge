@@ -11,7 +11,7 @@ msgid "https://github.com/chgold/ai-connect"
 msgstr "https://github.com/chgold/ai-connect"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr ""
+msgstr "وكلاء بريدج ووردبريس والذكاء الاصطناعي مع بروتوكول WebMCP"
 
 msgid "chgold"
 msgstr "chgold"
@@ -20,161 +20,161 @@ msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
 msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr ""
+msgstr "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr ""
+msgstr "AI Connect: يوصى باستخدام WooCommerce للوظائف الكاملة."
 
 msgid "Settings"
-msgstr ""
+msgstr "الإعدادات"
 
 msgid "✅ AI Connect v%s is active and ready!"
-msgstr ""
+msgstr "✅ AI Connect v%s نشط وجاهز!"
 
 msgid "Environment Status"
-msgstr ""
+msgstr "حالة البيئة"
 
 msgid "⚠️ Action Required"
-msgstr ""
+msgstr "الإجراء الواجب اتخاذه"
 
 msgid "Composer dependencies are not installed. Please run:"
-msgstr ""
+msgstr "تبعيات المؤلف غير مثبتة. يرجى التشغيل:"
 
 msgid "🎯 Quick Start"
-msgstr ""
+msgstr "البدء السريع"
 
 msgid "Test the API"
-msgstr ""
+msgstr "اختبار واجهة برمجة التطبيقات"
 
 msgid "View Manifest"
-msgstr ""
+msgstr "عرض البيان"
 
 msgid "Authentication"
-msgstr ""
+msgstr "[ترجمة المصطلح: Authentication]"
 
 msgid "Use WordPress username & password to login via"
-msgstr ""
+msgstr "استخدم اسم مستخدم وكلمة مرور وردبرس لتسجيل الدخول عبر"
 
 msgid "Available Tools"
-msgstr ""
+msgstr "الدوات المتوفرة"
 
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr ""
+msgstr "5 أدوات WordPress الأساسية (searchPosts، getPost، searchPages، getPage، getCurrentUser)"
 
 msgid "Documentation"
-msgstr ""
+msgstr "التوثيق"
 
 msgid "GitHub README"
-msgstr ""
+msgstr "GitHub README"
 
 msgid "User access revoked successfully."
-msgstr ""
+msgstr "تم إبطال وصول المستخدم بنجاح."
 
 msgid "User access restored successfully."
-msgstr ""
+msgstr "تمت استعادة وصول المستخدم بنجاح."
 
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
-msgstr ""
+msgstr "تم تدوير JWT Secret بنجاح! تم إبطال جميع الرموز المميزة الموجودة."
 
 msgid "Settings saved!"
-msgstr ""
+msgstr "تم حفظ الإعدادات!"
 
 msgid "API Rate Limiting"
-msgstr ""
+msgstr "تحديد المعدّل"
 
 msgid "Rate Limit (per minute)"
-msgstr ""
+msgstr "حد السعر (لكل دقيقة)"
 
 msgid "Maximum API requests per minute per user"
-msgstr ""
+msgstr "الحد الأقصى لطلبات واجهة برمجة التطبيقات في الدقيقة لكل مستخدم"
 
 msgid "Rate Limit (per hour)"
-msgstr ""
+msgstr "حد السعر (لكل ساعة)"
 
 msgid "Maximum API requests per hour per user"
-msgstr ""
+msgstr "الحد الأقصى لطلبات واجهة برمجة التطبيقات في الساعة لكل مستخدم"
 
 msgid "Data Management"
-msgstr ""
+msgstr "إدارة البيانات"
 
 msgid "Uninstall Cleanup"
-msgstr ""
+msgstr "إلغاء تثبيت التنظيف"
 
 msgid "Delete all plugin data when uninstalling"
-msgstr ""
+msgstr "حذف جميع بيانات المكون الإضافي عند إلغاء التثبيت"
 
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
-msgstr ""
+msgstr "عند التمكين، سيتم حذف جميع عملاء OAuth والرموز المميزة والإعدادات نهائيًا عند إلغاء تثبيت هذا المكون الإضافي. اتركه دون تحديد للحفاظ على البيانات لإعادة تثبيتها."
 
 msgid "Note:"
-msgstr ""
+msgstr "ملاحظة:"
 
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
-msgstr ""
+msgstr "سيتم دائمًا حذف بيانات الأمان الحساسة (أسرار JWT، رموز التحديث) بغض النظر عن هذا الإعداد."
 
 msgid "Save Settings"
-msgstr ""
+msgstr "احفظ التغييرات"
 
 msgid "Security"
-msgstr ""
+msgstr "الضمان"
 
 msgid "Rotate JWT Secret Key"
-msgstr ""
+msgstr "تدوير المفتاح السري JWT"
 
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
-msgstr ""
+msgstr "سيؤدي هذا إلى إنشاء مفتاح سري جديد لـ JWT <strong>وإبطال جميع رموز الوصول الحالية على الفور</strong>."
 
 msgid "All users will need to authenticate again to get new tokens."
-msgstr ""
+msgstr "سيحتاج جميع المستخدمين إلى المصادقة مرة أخرى للحصول على رموز جديدة."
 
 msgid "Warning:"
-msgstr ""
+msgstr "تحذير :"
 
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
-msgstr ""
+msgstr "لا يمكن التراجع عن هذا الإجراء. سيتم فصل جميع وكلاء الذكاء الاصطناعي المتصلين حاليًا."
 
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
-msgstr ""
+msgstr "هل أنت متأكد أنك تريد تدوير سر JWT ؟ سيؤدي هذا إلى فصل جميع وكلاء الذكاء الاصطناعي المتصلين وسيحتاج المستخدمون إلى إعادة المصادقة."
 
 msgid "Rotate JWT Secret"
-msgstr ""
+msgstr "تدوير سر JWT"
 
 msgid "Manage User Access"
-msgstr ""
+msgstr "إدارة وصول المستخدم"
 
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
-msgstr ""
+msgstr "حظر مستخدمين محددين من الوصول إلى AI Connect. لا يمكن للمستخدمين المحظورين مصادقة أو استخدام الرموز المميزة الموجودة."
 
 msgid "Blocked Users"
-msgstr ""
+msgstr "قائمة الحظر"
 
 msgid "User ID"
-msgstr ""
+msgstr "معرّف المستخدم"
 
 msgid "Username"
-msgstr ""
+msgstr "[ترجمة المصطلح: Username]"
 
 msgid "Email"
-msgstr ""
+msgstr "البريد الإلكتروني:"
 
 msgid "Action"
-msgstr ""
+msgstr "الإجراء"
 
 msgid "Restore Access"
-msgstr ""
+msgstr "استعادة الوصول"
 
 msgid "No users are currently blocked."
-msgstr ""
+msgstr "لا يوجد مستخدمون محظورون حاليًا."
 
 msgid "Block a User"
-msgstr ""
+msgstr "المبنى أ"
 
 msgid "User ID:"
-msgstr ""
+msgstr "كود المستخدم:"
 
 msgid "Enter the WordPress user ID to block"
-msgstr ""
+msgstr "أدخل معرف مستخدم وردبرس لحظره"
 
 msgid "Block User"
-msgstr ""
+msgstr "مسدود کردن کاربر"
 

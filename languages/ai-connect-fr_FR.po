@@ -11,7 +11,7 @@ msgid "https://github.com/chgold/ai-connect"
 msgstr "https://github.com/chgold/ai-connect"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr ""
+msgstr "Combler les agents WordPress et AI avec le protocole WebMCP"
 
 msgid "chgold"
 msgstr "chgold"
@@ -20,161 +20,161 @@ msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
 msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr ""
+msgstr "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr ""
+msgstr "AI Connect : WooCommerce est recommandé pour une fonctionnalité complète."
 
 msgid "Settings"
-msgstr ""
+msgstr "Réglages"
 
 msgid "✅ AI Connect v%s is active and ready!"
-msgstr ""
+msgstr "✅ AI Connect v%s est actif et prêt !"
 
 msgid "Environment Status"
-msgstr ""
+msgstr "État de l'environnement"
 
 msgid "⚠️ Action Required"
-msgstr ""
+msgstr "Action requise"
 
 msgid "Composer dependencies are not installed. Please run:"
-msgstr ""
+msgstr "Les dépendances du compositeur ne sont pas installées. Veuillez exécuter :"
 
 msgid "🎯 Quick Start"
-msgstr ""
+msgstr "  Démarrage rapide"
 
 msgid "Test the API"
-msgstr ""
+msgstr "Tester l'API"
 
 msgid "View Manifest"
-msgstr ""
+msgstr "Afficher le manifeste"
 
 msgid "Authentication"
-msgstr ""
+msgstr "Authentification"
 
 msgid "Use WordPress username & password to login via"
-msgstr ""
+msgstr "Utilisez le nom d'utilisateur et le mot de passe WordPress pour vous connecter via"
 
 msgid "Available Tools"
-msgstr ""
+msgstr "Voir la version PRO"
 
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr ""
+msgstr "5 outils de base WordPress (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
 
 msgid "Documentation"
-msgstr ""
+msgstr "Documentation"
 
 msgid "GitHub README"
-msgstr ""
+msgstr "GitHub README"
 
 msgid "User access revoked successfully."
-msgstr ""
+msgstr "Accès utilisateur révoqué avec succès."
 
 msgid "User access restored successfully."
-msgstr ""
+msgstr "Accès utilisateur restauré avec succès."
 
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
-msgstr ""
+msgstr "Le secret JWT a été tourné avec succès ! Tous les jetons existants ont été invalidés."
 
 msgid "Settings saved!"
-msgstr ""
+msgstr "Options enregistrées !"
 
 msgid "API Rate Limiting"
-msgstr ""
+msgstr "Limitation des tarifs"
 
 msgid "Rate Limit (per minute)"
-msgstr ""
+msgstr "Limite de taux (par minute)"
 
 msgid "Maximum API requests per minute per user"
-msgstr ""
+msgstr "Nombre maximum de demandes d'API par minute et par utilisateur"
 
 msgid "Rate Limit (per hour)"
-msgstr ""
+msgstr "Limite de taux (par heure)"
 
 msgid "Maximum API requests per hour per user"
-msgstr ""
+msgstr "Nombre maximum de demandes d'API par heure et par utilisateur"
 
 msgid "Data Management"
-msgstr ""
+msgstr "Gestion des données"
 
 msgid "Uninstall Cleanup"
-msgstr ""
+msgstr "Désinstaller le nettoyage"
 
 msgid "Delete all plugin data when uninstalling"
-msgstr ""
+msgstr "Supprimer toutes les données du plugin lors de la désinstallation"
 
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
-msgstr ""
+msgstr "Lorsque cette option est activée, tous les clients, jetons et paramètres OAuth seront définitivement supprimés lorsque vous désinstallerez ce plugin. Ne pas cocher pour conserver les données pour la réinstallation."
 
 msgid "Note:"
-msgstr ""
+msgstr "Remarque :"
 
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
-msgstr ""
+msgstr "Les données de sécurité sensibles (secrets JWT, jetons d'actualisation) seront toujours supprimées, quel que soit ce paramètre."
 
 msgid "Save Settings"
-msgstr ""
+msgstr "Sauvegarder les paramètres"
 
 msgid "Security"
-msgstr ""
+msgstr "Sécurité"
 
 msgid "Rotate JWT Secret Key"
-msgstr ""
+msgstr "Faire pivoter la clé secrète JWT"
 
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
-msgstr ""
+msgstr "Cela générera une nouvelle clé secrète JWT et <strong>invalidera immédiatement tous les jetons d'accès existants</strong>."
 
 msgid "All users will need to authenticate again to get new tokens."
-msgstr ""
+msgstr "Tous les utilisateurs devront s'authentifier à nouveau pour obtenir de nouveaux jetons."
 
 msgid "Warning:"
-msgstr ""
+msgstr "Avertissement :"
 
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
-msgstr ""
+msgstr "Cette action est irréversible. Tous les agents IA actuellement connectés seront déconnectés."
 
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
-msgstr ""
+msgstr "Voulez-vous vraiment faire pivoter le secret JWT ? Cela déconnectera tous les agents d'IA connectés et les utilisateurs devront se réauthentifier."
 
 msgid "Rotate JWT Secret"
-msgstr ""
+msgstr "Faire pivoter le secret JWT"
 
 msgid "Manage User Access"
-msgstr ""
+msgstr "Gérer l'accès des utilisateurs"
 
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
-msgstr ""
+msgstr "Empêcher des utilisateurs spécifiques d'accéder à AI Connect. Les utilisateurs bloqués ne peuvent pas s'authentifier ou utiliser des jetons existants."
 
 msgid "Blocked Users"
-msgstr ""
+msgstr "Utilisateurs bloqués "
 
 msgid "User ID"
-msgstr ""
+msgstr "ID de l’utilisateur"
 
 msgid "Username"
-msgstr ""
+msgstr "Identifiant"
 
 msgid "Email"
-msgstr ""
+msgstr "E-mail"
 
 msgid "Action"
-msgstr ""
+msgstr "Action"
 
 msgid "Restore Access"
-msgstr ""
+msgstr "Restaurer l’accès"
 
 msgid "No users are currently blocked."
-msgstr ""
+msgstr "Aucun utilisateur n'est actuellement bloqué."
 
 msgid "Block a User"
-msgstr ""
+msgstr "Bloquer un utilisateur"
 
 msgid "User ID:"
-msgstr ""
+msgstr "ID d'utilisateur :"
 
 msgid "Enter the WordPress user ID to block"
-msgstr ""
+msgstr "Saisissez l'ID utilisateur WordPress à bloquer"
 
 msgid "Block User"
-msgstr ""
+msgstr "Bloquer l’utilisateur"
 

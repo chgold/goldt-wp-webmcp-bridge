@@ -11,7 +11,7 @@ msgid "https://github.com/chgold/ai-connect"
 msgstr "https://github.com/chgold/ai-connect"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr ""
+msgstr "Объедините WordPress и ИИ-агентов с помощью протокола WebMCP."
 
 msgid "chgold"
 msgstr "chgold"
@@ -20,161 +20,161 @@ msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
 msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr ""
+msgstr "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr ""
+msgstr "AI Connect: Для обеспечения полной функциональности рекомендуется использовать WooCommerce."
 
 msgid "Settings"
-msgstr ""
+msgstr "Настройки"
 
 msgid "✅ AI Connect v%s is active and ready!"
-msgstr ""
+msgstr "✅ AI Connect v%s активирован и готов к работе!"
 
 msgid "Environment Status"
-msgstr ""
+msgstr "Состояние окружающей среды"
 
 msgid "⚠️ Action Required"
-msgstr ""
+msgstr "⚠️ Требуются действия"
 
 msgid "Composer dependencies are not installed. Please run:"
-msgstr ""
+msgstr "Зависимости Composer не установлены. Пожалуйста, выполните:"
 
 msgid "🎯 Quick Start"
-msgstr ""
+msgstr "🎯 Быстрый старт"
 
 msgid "Test the API"
-msgstr ""
+msgstr "Протестируйте API"
 
 msgid "View Manifest"
-msgstr ""
+msgstr "Просмотреть манифест"
 
 msgid "Authentication"
-msgstr ""
+msgstr "Аутентификация"
 
 msgid "Use WordPress username & password to login via"
-msgstr ""
+msgstr "Для входа используйте имя пользователя и пароль WordPress."
 
 msgid "Available Tools"
-msgstr ""
+msgstr "Доступные инструменты"
 
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr ""
+msgstr "5 основных инструментов WordPress (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
 
 msgid "Documentation"
-msgstr ""
+msgstr "Документация"
 
 msgid "GitHub README"
-msgstr ""
+msgstr "Файл README на GitHub"
 
 msgid "User access revoked successfully."
-msgstr ""
+msgstr "Доступ пользователя успешно отозван."
 
 msgid "User access restored successfully."
-msgstr ""
+msgstr "Доступ пользователя успешно восстановлен."
 
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
-msgstr ""
+msgstr "JWT Secret успешно прошёл ротацию! Все существующие токены аннулированы."
 
 msgid "Settings saved!"
-msgstr ""
+msgstr "Настройки сохранены!"
 
 msgid "API Rate Limiting"
-msgstr ""
+msgstr "Ограничение скорости запросов к API"
 
 msgid "Rate Limit (per minute)"
-msgstr ""
+msgstr "Лимит скорости (в минуту)"
 
 msgid "Maximum API requests per minute per user"
-msgstr ""
+msgstr "Максимальное количество запросов к API в минуту на одного пользователя"
 
 msgid "Rate Limit (per hour)"
-msgstr ""
+msgstr "Ограничение скорости (в час)"
 
 msgid "Maximum API requests per hour per user"
-msgstr ""
+msgstr "Максимальное количество запросов к API в час на одного пользователя"
 
 msgid "Data Management"
-msgstr ""
+msgstr "Управление данными"
 
 msgid "Uninstall Cleanup"
-msgstr ""
+msgstr "Удаление и очистка"
 
 msgid "Delete all plugin data when uninstalling"
-msgstr ""
+msgstr "При удалении плагина необходимо удалить все его данные."
 
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
-msgstr ""
+msgstr "При включении этой опции все клиенты OAuth, токены и настройки будут безвозвратно удалены при деинсталляции плагина. Оставьте флажок снятым, чтобы сохранить данные для повторной установки."
 
 msgid "Note:"
-msgstr ""
+msgstr "Примечание:"
 
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
-msgstr ""
+msgstr "Конфиденциальные данные безопасности (секретные JWT-токены, токены обновления) всегда будут удаляться независимо от этой настройки."
 
 msgid "Save Settings"
-msgstr ""
+msgstr "Сохраните настройки"
 
 msgid "Security"
-msgstr ""
+msgstr "Безопасность"
 
 msgid "Rotate JWT Secret Key"
-msgstr ""
+msgstr "Поворот секретного ключа JWT"
 
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
-msgstr ""
+msgstr "Это сгенерирует новый секретный ключ JWT и <strong>немедленно аннулирует все существующие токены доступа</strong> ."
 
 msgid "All users will need to authenticate again to get new tokens."
-msgstr ""
+msgstr "Всем пользователям потребуется повторно пройти аутентификацию для получения новых токенов."
 
 msgid "Warning:"
-msgstr ""
+msgstr "Предупреждение:"
 
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
-msgstr ""
+msgstr "Это действие необратимо. Все подключенные в данный момент агенты ИИ будут отключены."
 
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
-msgstr ""
+msgstr "Вы уверены, что хотите повернуть секретный ключ JWT? Это отключит всех подключенных агентов ИИ, и пользователям потребуется пройти повторную аутентификацию."
 
 msgid "Rotate JWT Secret"
-msgstr ""
+msgstr "Повернуть секрет JWT"
 
 msgid "Manage User Access"
-msgstr ""
+msgstr "Управление доступом пользователей"
 
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
-msgstr ""
+msgstr "Заблокируйте доступ к AI Connect для определенных пользователей. Заблокированные пользователи не смогут пройти аутентификацию или использовать имеющиеся токены."
 
 msgid "Blocked Users"
-msgstr ""
+msgstr "Заблокированные пользователи"
 
 msgid "User ID"
-msgstr ""
+msgstr "ID пользователя"
 
 msgid "Username"
-msgstr ""
+msgstr "Имя пользователя"
 
 msgid "Email"
-msgstr ""
+msgstr "Электронная почта"
 
 msgid "Action"
-msgstr ""
+msgstr "Действие"
 
 msgid "Restore Access"
-msgstr ""
+msgstr "Восстановить доступ"
 
 msgid "No users are currently blocked."
-msgstr ""
+msgstr "В данный момент ни один пользователь не заблокирован."
 
 msgid "Block a User"
-msgstr ""
+msgstr "Заблокировать пользователя"
 
 msgid "User ID:"
-msgstr ""
+msgstr "ID пользователя:"
 
 msgid "Enter the WordPress user ID to block"
-msgstr ""
+msgstr "Введите идентификатор пользователя WordPress, чтобы заблокировать"
 
 msgid "Block User"
-msgstr ""
+msgstr "Заблокировать пользователя"
 

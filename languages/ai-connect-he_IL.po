@@ -5,13 +5,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "AI Connect"
-msgstr "\\\\\\\\"
+msgstr "AI Connect"
 
 msgid "https://github.com/chgold/ai-connect"
 msgstr "https://github.com/chgold/ai-connect"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "\\\\\\\\"
+msgstr "Bridge WordPress & AI Agents with WebMCP Protocol"
 
 msgid "chgold"
 msgstr "chgold"
@@ -20,31 +20,31 @@ msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
 msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr ""
+msgstr "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: מומלץ להשתמש ב - WooCommerce לפונקציונליות מלאה."
+msgstr "AI Connect: WooCommerce is recommended for full functionality."
 
 msgid "Settings"
 msgstr "הגדרות"
 
 msgid "✅ AI Connect v%s is active and ready!"
-msgstr "✅ AI Connect v%s פעיל ומוכן!"
+msgstr "✅ AI Connect v%s is active and ready!"
 
 msgid "Environment Status"
-msgstr "מצב הסביבה"
+msgstr "מצב סביבתי"
 
 msgid "⚠️ Action Required"
-msgstr "נדרשת פעולה"
+msgstr "⚠️ נדרשת פעולה"
 
 msgid "Composer dependencies are not installed. Please run:"
-msgstr "תלות במלחין אינה מותקנת. אנא הפעל:"
+msgstr "Composer dependencies are not installed. Please run:"
 
 msgid "🎯 Quick Start"
-msgstr "התחלה מהירה"
+msgstr "🎯 התחלה מהירה"
 
 msgid "Test the API"
-msgstr "בדיקת ה - API"
+msgstr "בדיקת ה-API"
 
 msgid "View Manifest"
 msgstr "הצג מניפסט"
@@ -53,19 +53,19 @@ msgid "Authentication"
 msgstr "אימות"
 
 msgid "Use WordPress username & password to login via"
-msgstr "השתמש בשם משתמש וסיסמה של וורדפרס כדי להתחבר באמצעות"
+msgstr "Use WordPress username & password to login via"
 
 msgid "Available Tools"
 msgstr "כלים זמינים"
 
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 כלי ליבה של WordPress (חיפוש פוסטים, getPost, דפי חיפוש, getPage, getCurrentUser)"
+msgstr "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
 
 msgid "Documentation"
 msgstr "תיעוד"
 
 msgid "GitHub README"
-msgstr "GitHub README"
+msgstr "קובץ README של גיטהאב"
 
 msgid "User access revoked successfully."
 msgstr "גישת המשתמש בוטלה בהצלחה."
@@ -74,7 +74,7 @@ msgid "User access restored successfully."
 msgstr "גישת המשתמש שוחזרה בהצלחה."
 
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
-msgstr "JWT Secret הסתובב בהצלחה! כל האסימונים הקיימים בוטלו."
+msgstr "סוד JWT הסתובב בהצלחה! כל האסימונים הקיימים בוטלו."
 
 msgid "Settings saved!"
 msgstr "ההגדרות נשמרו!"
@@ -83,67 +83,67 @@ msgid "API Rate Limiting"
 msgstr "הגבלת קצב API"
 
 msgid "Rate Limit (per minute)"
-msgstr "הגבלת תעריף (לדקה)"
+msgstr "מגבלת קצב (לדקה)"
 
 msgid "Maximum API requests per minute per user"
-msgstr "בקשות API מקסימליות לדקה לכל משתמש"
+msgstr "מקסימום בקשות API לדקה למשתמש"
 
 msgid "Rate Limit (per hour)"
-msgstr "הגבלת תעריף (לשעה)"
+msgstr "מגבלת תעריף (לשעה)"
 
 msgid "Maximum API requests per hour per user"
-msgstr "בקשות API מקסימליות לשעה לכל משתמש"
+msgstr "מקסימום בקשות API לשעה למשתמש"
 
 msgid "Data Management"
 msgstr "ניהול נתונים"
 
 msgid "Uninstall Cleanup"
-msgstr "הסרת ההתקנה של הניקוי"
+msgstr "ניקוי ההתקנה"
 
 msgid "Delete all plugin data when uninstalling"
-msgstr "מחק את כל נתוני התוסף בעת הסרת ההתקנה"
+msgstr "מחיקת כל נתוני התוסף בעת הסרת ההתקנה"
 
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
-msgstr "כאשר אפשרות זו מופעלת, כל הלקוחות, האסימונים וההגדרות של OAuth יימחקו לצמיתות בעת הסרת ההתקנה של תוסף זה. השאר לא מסומן כדי לשמור נתונים להתקנה מחדש."
+msgstr "כאשר אפשרות זו מופעלת, כל לקוחות, טוקנים והגדרות OAuth יימחקו לצמיתות לאחר הסרת התוסף. השאר את האפשרות לא מסומנת כדי לשמור נתונים להתקנה מחדש."
 
 msgid "Note:"
-msgstr "הערה:"
+msgstr "פֶּתֶק:"
 
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
 msgstr "נתוני אבטחה רגישים (סודות JWT, אסימוני רענון) יימחקו תמיד ללא קשר להגדרה זו."
 
 msgid "Save Settings"
-msgstr "שמירת ההגדרות"
+msgstr "שמור הגדרות"
 
 msgid "Security"
-msgstr "אבטחה"
+msgstr "בִּטָחוֹן"
 
 msgid "Rotate JWT Secret Key"
-msgstr "סובב מפתח סודי JWT"
+msgstr "סיבוב מפתח סודי של JWT"
 
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
-msgstr "פעולה זו תיצור מפתח סודי חדש של JWT ותבטל <strong>באופן מיידי את כל אסימוני הגישה הקיימים</strong>."
+msgstr "פעולה זו תיצור מפתח סודי JWT חדש ותבטל <strong>באופן מיידי את כל אסימוני הגישה הקיימים</strong> ."
 
 msgid "All users will need to authenticate again to get new tokens."
 msgstr "כל המשתמשים יצטרכו לאמת שוב כדי לקבל אסימונים חדשים."
 
 msgid "Warning:"
-msgstr "אזהרה:"
+msgstr "אַזהָרָה:"
 
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
 msgstr "לא ניתן לבטל פעולה זו. כל סוכני הבינה המלאכותית המחוברים כעת ינותקו."
 
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
-msgstr "האם אתה בטוח שברצונך לסובב את סוד ה - JWT? פעולה זו תנתק את כל סוכני הבינה המלאכותית המחוברים והמשתמשים יצטרכו לאמת מחדש."
+msgstr "האם אתה בטוח שברצונך לסובב את סוד ה-JWT? פעולה זו תנתק את כל סוכני הבינה המלאכותית המחוברים והמשתמשים יצטרכו לאמת מחדש."
 
 msgid "Rotate JWT Secret"
-msgstr "סובב סוד JWT"
+msgstr "סובב את סוד JWT"
 
 msgid "Manage User Access"
-msgstr "נהל גישת משתמשים"
+msgstr "ניהול גישת משתמש"
 
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
-msgstr "חסימת גישה של משתמשים ספציפיים ל - AI Connect. משתמשים חסומים אינם יכולים לאמת או להשתמש באסימונים קיימים."
+msgstr "חסום משתמשים ספציפיים מגישה ל-AI Connect. משתמשים חסומים אינם יכולים לאמת או להשתמש באסימונים קיימים."
 
 msgid "Blocked Users"
 msgstr "משתמשים חסומים"
@@ -155,13 +155,13 @@ msgid "Username"
 msgstr "שם משתמש"
 
 msgid "Email"
-msgstr "אימייל"
+msgstr "אֶלֶקטרוֹנִי"
 
 msgid "Action"
-msgstr "פעולה"
+msgstr "פְּעוּלָה"
 
 msgid "Restore Access"
-msgstr "שחזר גישה"
+msgstr "שחזור גישה"
 
 msgid "No users are currently blocked."
 msgstr "אין משתמשים חסומים כרגע."
@@ -173,7 +173,7 @@ msgid "User ID:"
 msgstr "מזהה משתמש:"
 
 msgid "Enter the WordPress user ID to block"
-msgstr "הזן את מזהה המשתמש של WordPress כדי לחסום"
+msgstr "Enter the WordPress user ID to block"
 
 msgid "Block User"
 msgstr "חסימת משתמש"
