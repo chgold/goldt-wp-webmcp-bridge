@@ -1,47 +1,46 @@
 {
-    "name": "ai-connect/wordpress-webmcp",
-    "description": "WebMCP Bridge for WordPress - Connect AI agents to your WordPress site using OAuth 2.0 and industry-standard protocols",
+    "name": "goldt/webmcp-bridge",
+    "description": "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0 - WordPress plugin",
     "type": "wordpress-plugin",
     "keywords": [
         "wordpress",
         "ai",
         "webmcp",
+        "mcp",
         "oauth",
+        "oauth2",
         "api",
         "woocommerce",
         "automation",
         "agent",
         "llm",
         "claude",
-        "chatgpt"
+        "chatgpt",
+        "gemini",
+        "grok",
+        "perplexity"
     ],
-    "homepage": "https://github.com/chgold/ai-connect",
     "license": "GPL-3.0-or-later",
     "authors": [
         {
             "name": "chgold",
-            "homepage": "https://github.com/chgold",
             "role": "Developer"
         }
     ],
-    "support": {
-        "issues": "https://github.com/chgold/ai-connect/issues",
-        "source": "https://github.com/chgold/ai-connect"
-    },
     "require": {
         "php": ">=7.4",
-        "predis/predis": "^2.0"
+        "predis/predis": "^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.0"
     },
     "autoload": {
         "psr-4": {
-            "AIConnect\\": "includes/",
-            "AIConnect\\Core\\": "includes/core/",
-            "AIConnect\\Modules\\": "includes/modules/",
-            "AIConnect\\API\\": "includes/api/",
-            "AIConnect\\Admin\\": "includes/admin/"
+            "GoldtWebMCP\\": "includes/",
+            "GoldtWebMCP\\Core\\": "includes/core/",
+            "GoldtWebMCP\\Modules\\": "includes/modules/",
+            "GoldtWebMCP\\API\\": "includes/api/",
+            "GoldtWebMCP\\OAuth\\": "includes/oauth/"
         }
     },
     "config": {

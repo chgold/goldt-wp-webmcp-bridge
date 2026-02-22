@@ -110,7 +110,13 @@ class Options implements OptionsInterface
         if (isset($this->handlers[$option])) {
             return $this->options[$option] = $this->getDefault($option);
         }
+    }
 
-        return;
+    /**
+     * {@inheritDoc}
+     */
+    public function __set($option, $value)
+    {
+        $this->options[$option] = $value;
     }
 }

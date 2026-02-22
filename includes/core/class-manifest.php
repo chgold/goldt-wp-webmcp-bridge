@@ -8,7 +8,7 @@
  * @since 0.1.0
  */
 
-namespace AIConnect\Core;
+namespace GoldtWebMCP\Core;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -47,7 +47,7 @@ class Manifest {
         $this->manifest_data = [
             'schema_version' => '1.0',
             'name' => 'wordpress-ai-connect',
-            'version' => AI_CONNECT_VERSION,
+            'version' => GOLDTWMCP_VERSION,
             'description' => 'WebMCP bridge for WordPress - manage content, users, and e-commerce',
             'api_version' => 'v1',
             'capabilities' => [
@@ -217,13 +217,13 @@ class Manifest {
         
         // Add server info
         $manifest['server'] = [
-            'url' => \rest_url('ai-connect/v1'),
-            'description' => 'WordPress AI Connect API',
+            'url' => \rest_url('goldt-webmcp-bridge/v1'),
+            'description' => 'GoldT WebMCP Bridge API',
         ];
         
         // Add authentication info
         $site_url = \get_site_url();
-        $scopes_data = \AIConnect\OAuth\Scopes::get_all_scopes();
+        $scopes_data = \GoldtWebMCP\OAuth\Scopes::get_all_scopes();
         $scopes = [];
         foreach ($scopes_data as $scope => $data) {
             $scopes[$scope] = $data['description'];
@@ -232,9 +232,9 @@ class Manifest {
         $manifest['auth'] = [
             'type' => 'oauth2',
             'flow' => 'authorization_code',
-            'authorization_url' => $site_url . '/?ai_connect_oauth_authorize',
-            'token_url' => \rest_url('ai-connect/v1/oauth/token'),
-            'revoke_url' => \rest_url('ai-connect/v1/oauth/revoke'),
+            'authorization_url' => $site_url . '/?goldtwmcp_oauth_authorize',
+            'token_url' => \rest_url('goldt-webmcp-bridge/v1/oauth/token'),
+            'revoke_url' => \rest_url('goldt-webmcp-bridge/v1/oauth/revoke'),
             'pkce_required' => true,
             'code_challenge_method' => 'S256',
             'redirect_uri' => 'urn:ietf:wg:oauth:2.0:oob',
@@ -243,8 +243,8 @@ class Manifest {
         
         // Add usage instructions
         $manifest['usage'] = [
-            'tools_endpoint' => \rest_url('ai-connect/v1/tools/{tool_name}'),
-            'example' => \rest_url('ai-connect/v1/tools/wordpress.searchPosts'),
+            'tools_endpoint' => \rest_url('goldt-webmcp-bridge/v1/tools/{tool_name}'),
+            'example' => \rest_url('goldt-webmcp-bridge/v1/tools/wordpress.searchPosts'),
             'method' => 'POST',
             'headers' => [
                 'Authorization' => 'Bearer {access_token}',
@@ -252,7 +252,7 @@ class Manifest {
             ],
         ];
         
-        return \apply_filters('ai_connect_manifest', $manifest);
+        return \apply_filters('goldtwmcp_manifest', $manifest);
     }
     
     /**

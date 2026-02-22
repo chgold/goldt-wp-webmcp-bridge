@@ -1,18 +1,18 @@
-=== AI Connect ===
+=== GoldT WebMCP Bridge ===
 Contributors: chgold
-Tags: ai, ai-agent, webmcp, rest-api, artificial-intelligence
+Tags: ai, ai-agent, webmcp, rest-api, artificial-intelligence, oauth
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.1.2
+Stable tag: 0.2.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Connect AI agents (ChatGPT, Claude) to your WordPress site with secure OAuth 2.0 authentication.
+Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
 
 == Description ==
 
-**AI Connect** enables AI agents to interact with your WordPress content through secure OAuth 2.0 authentication using the WebMCP protocol.
+**GoldT WebMCP Bridge** enables AI agents to interact with your WordPress content through secure OAuth 2.0 authentication using the WebMCP protocol.
 
 Perfect for AI-powered customer support, automated content analysis, intelligent search, and custom AI integrations.
 
@@ -32,7 +32,7 @@ Perfect for AI-powered customer support, automated content analysis, intelligent
 **Using ChatGPT or Claude?**
 
 Tell your AI agent:
-> "I want to connect you to my WordPress site at https://mysite.com using AI Connect plugin. The manifest is at /wp-json/ai-connect/v1/manifest. Use OAuth 2.0 with client_id: claude-ai"
+> "I want to connect you to my WordPress site at https://mysite.com using GoldT WebMCP Bridge plugin. The manifest is at /wp-json/goldt-webmcp-bridge/v1/manifest. Use OAuth 2.0 with client_id: claude-ai"
 
 The AI will guide you through OAuth authorization - you'll approve access in your browser.
 
@@ -92,11 +92,11 @@ Secure authentication without exposing passwords:
 
 **For Site Administrators:**
 
-Go to **AI Connect → OAuth Tokens** to manage security:
+Go to **GoldT WebMCP → OAuth Tokens** to manage security:
 
 * **Revoke OAuth Tokens** - View and revoke active OAuth access tokens
-* **Block Users** - Revoke access for specific WordPress users (AI Connect → Settings)
-* **Rate Limits** - Configure request limits (AI Connect → Settings, default: 50/min, 1000/hour)
+* **Block Users** - Revoke access for specific WordPress users (GoldT WebMCP → Settings)
+* **Rate Limits** - Configure request limits (GoldT WebMCP → Settings, default: 50/min, 1000/hour)
 
 = 🗺️ Future Development =
 
@@ -107,7 +107,6 @@ We're actively working on new features and improvements!
 * 🐛 Found a bug? Let us know!
 
 **How to provide feedback:**
-* GitHub: https://github.com/chgold/ai-connect/issues/new
 * WordPress.org: Support forum
 
 Your feedback directly influences what we build next!
@@ -117,7 +116,7 @@ Your feedback directly influences what we build next!
 = Automatic Installation =
 
 1. Go to **Plugins → Add New** in WordPress admin
-2. Search for "AI Connect"
+2. Search for "GoldT WebMCP Bridge"
 3. Click **Install Now** and then **Activate**
 
 = Manual Installation =
@@ -128,7 +127,7 @@ Your feedback directly influences what we build next!
 4. Activate the plugin
 
 **Note:** All required dependencies are included:
-* `predis/predis` (v2.4.1) - Redis client for rate limiting (optional)
+* `predis/predis` (v3.4.0) - Redis client for rate limiting (optional)
 
 No manual `composer install` required!
 
@@ -136,7 +135,7 @@ No manual `composer install` required!
 
 **No setup required!** The plugin works immediately after activation.
 
-**Optional:** Configure rate limits in **AI Connect → Settings**
+**Optional:** Configure rate limits in **GoldT WebMCP → Settings**
 
 = Testing Your Setup =
 
@@ -160,10 +159,10 @@ CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base6
 STATE=$(openssl rand -hex 16)
 
 # Step 2: Open authorization URL in browser
-echo "http://yoursite.com/?ai_connect_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
+echo "http://yoursite.com/?goldtwmcp_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
 
 # Step 3: Exchange authorization code for token
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/token" \
   -H "Content-Type: application/json" \
   -d "{
     \"grant_type\": \"authorization_code\",
@@ -174,13 +173,13 @@ curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
   }"
 
 # Step 4: Use the access token
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.getCurrentUser" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
 
-**For detailed examples and HTML demo**, see [README.md](https://github.com/chgold/ai-connect/blob/main/README.md)
+**For detailed examples**, see the plugin README.md file.
 
 == Frequently Asked Questions ==
 
@@ -190,7 +189,7 @@ WebMCP (Web Model Context Protocol) is a standardized protocol for connecting AI
 
 = Does this work with ChatGPT and Claude? =
 
-Yes! AI Connect works with any AI platform that supports REST APIs. This includes ChatGPT (OpenAI), Claude (Anthropic), Make.com, Zapier, and custom applications.
+Yes! GoldT WebMCP Bridge works with any AI platform that supports REST APIs. This includes ChatGPT (OpenAI), Claude (Anthropic), Make.com, Zapier, and custom applications.
 
 = Why does reading public content require authentication? =
 
@@ -224,15 +223,16 @@ No, Redis is optional. The plugin works perfectly with WordPress transients. How
 
 = Can I add custom tools? =
 
-Yes! AI Connect is extensible. Use WordPress hooks to add custom tools:
+Yes! GoldT WebMCP Bridge is extensible. Use WordPress hooks to add custom tools:
 
 ```php
-add_action('ai_connect_register_tools', function($manifest) {
+add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
+    $manifest = $goldtwmcp_plugin->get_manifest_instance();
     $manifest->register_tool('mysite.getStats', [...]);
 });
 ```
 
-[See full documentation →](https://github.com/chgold/ai-connect)
+See the plugin documentation for more details.
 
 = How long do tokens last? =
 
@@ -246,11 +246,11 @@ Use the refresh token to get a new access token without re-authentication.
 Yes! Multiple options:
 
 **Revoke specific OAuth token:**
-* Go to **AI Connect → OAuth Tokens**
+* Go to **GoldT WebMCP → OAuth Tokens**
 * Find the token and click "Revoke"
 
 **Block specific user:**
-* Go to **AI Connect → Settings**
+* Go to **GoldT WebMCP → Settings**
 * Enter user ID in "Block User" section
 * User cannot authenticate or use existing tokens
 
@@ -270,8 +270,6 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 = Where can I get support? =
 
-* **Documentation**: https://github.com/chgold/ai-connect
-* **Bug Reports**: https://github.com/chgold/ai-connect/issues
 * **Community**: WordPress.org support forums
 
 == Screenshots ==
@@ -289,7 +287,7 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * **Added**: 8 pre-registered OAuth clients (claude-ai, chatgpt, gemini, grok, perplexity, copilot, meta-ai, deepseek)
 * **Added**: OAuth consent screen for user authorization
 * **Added**: Refresh token support (30-day validity for seamless token renewal)
-* **Added**: Admin UI for OAuth token management (AI Connect → OAuth Tokens)
+* **Added**: Admin UI for OAuth token management (GoldT WebMCP → OAuth Tokens)
 * **Added**: router.php for PHP built-in server support
 * **Removed**: Direct username/password authentication endpoint (`/auth/login`)
 * **Security**: Authorization codes are one-time use with 10 minute expiry
@@ -343,14 +341,13 @@ Improved distribution - all dependencies now bundled. No manual setup required!
 * ⭐ **Vote on Features** - Star what you want most
 
 **How to provide feedback:**
-* GitHub: https://github.com/chgold/ai-connect/issues/new
 * WordPress.org: Support forum
 
 Your feedback directly influences development priorities!
 
 == Privacy Policy ==
 
-AI Connect does not collect, store, or transmit any personal data to external services. All API requests are handled locally on your WordPress installation.
+GoldT WebMCP Bridge does not collect, store, or transmit any personal data to external services. All API requests are handled locally on your WordPress installation.
 
 **Data stored locally:**
 * OAuth clients (pre-registered: claude-ai, chatgpt, gemini)
@@ -376,13 +373,5 @@ No data leaves your WordPress installation.
 * Built with [firebase/php-jwt](https://github.com/firebase/php-jwt)
 * Optional [predis/predis](https://github.com/predis/predis) support
 * Compliant with WebMCP protocol specification
-
-== Links ==
-
-* [GitHub Repository](https://github.com/chgold/ai-connect)
-* [Documentation](https://github.com/chgold/ai-connect)
-* [Issue Tracker](https://github.com/chgold/ai-connect/issues)
-
----
 
 **Made with ❤️ for the WordPress & AI community**

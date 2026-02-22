@@ -12,7 +12,7 @@
 
 namespace Predis\Command\Redis;
 
-use Predis\Command\Command as RedisCommand;
+use Predis\Command\PrefixableCommand as RedisCommand;
 
 /**
  * @see http://redis.io/commands/rpushx
@@ -25,5 +25,20 @@ class RPUSHX extends RedisCommand
     public function getId()
     {
         return 'RPUSHX';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setArguments(array $arguments)
+    {
+        $arguments = self::normalizeVariadic($arguments);
+
+        parent::setArguments($arguments);
+    }
+
+    public function prefixKeys($prefix)
+    {
+        $this->applyPrefixForFirstArgument($prefix);
     }
 }

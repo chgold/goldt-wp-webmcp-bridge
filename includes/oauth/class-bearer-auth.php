@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\OAuth;
+namespace GoldtWebMCP\OAuth;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -43,7 +43,7 @@ class Bearer_Auth {
             return $result;
         }
         
-        if (!$this->is_ai_connect_request()) {
+        if (!$this->is_goldtwmcp_request()) {
             return $result;
         }
         
@@ -108,7 +108,7 @@ class Bearer_Auth {
         return null;
     }
     
-    private function is_ai_connect_request() {
+    private function is_goldtwmcp_request() {
         $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '';
         return strpos($request_uri, '/wp-json/ai-connect/') !== false;
     }

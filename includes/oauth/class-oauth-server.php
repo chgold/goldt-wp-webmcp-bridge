@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\OAuth;
+namespace GoldtWebMCP\OAuth;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -25,7 +25,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth authorization code generation
         $inserted = $wpdb->insert(
-            "{$wpdb->prefix}ai_connect_oauth_codes",
+            "{$wpdb->prefix}goldtwmcp_oauth_codes",
             [
                 'code' => $code,
                 'client_id' => $client_id,
@@ -54,7 +54,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth code exchange
         $auth_code = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}ai_connect_oauth_codes WHERE code = %s",
+            "SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_codes WHERE code = %s",
             $code
         ));
         
@@ -84,7 +84,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Mark OAuth code as used
         $wpdb->update(
-            "{$wpdb->prefix}ai_connect_oauth_codes",
+            "{$wpdb->prefix}goldtwmcp_oauth_codes",
             ['used_at' => gmdate('Y-m-d H:i:s')],
             ['id' => $auth_code->id],
             ['%s'],
@@ -113,7 +113,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth access token creation
         $inserted = $wpdb->insert(
-            "{$wpdb->prefix}ai_connect_oauth_tokens",
+            "{$wpdb->prefix}goldtwmcp_oauth_tokens",
             [
                 'token' => $token,
                 'refresh_token' => $refresh_token,
@@ -148,7 +148,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token validation
         $token_data = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}ai_connect_oauth_tokens WHERE token = %s",
+            "SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_tokens WHERE token = %s",
             $token
         ));
         
@@ -179,7 +179,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth refresh token exchange
         $token_data = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}ai_connect_oauth_tokens WHERE refresh_token = %s",
+            "SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_tokens WHERE refresh_token = %s",
             $refresh_token
         ));
         
@@ -202,7 +202,7 @@ class OAuth_Server {
         // Revoke the old access token and refresh token
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation
         $wpdb->update(
-            "{$wpdb->prefix}ai_connect_oauth_tokens",
+            "{$wpdb->prefix}goldtwmcp_oauth_tokens",
             ['revoked_at' => gmdate('Y-m-d H:i:s')],
             ['id' => $token_data->id],
             ['%s'],
@@ -227,7 +227,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation
         $updated = $wpdb->update(
-            "{$wpdb->prefix}ai_connect_oauth_tokens",
+            "{$wpdb->prefix}goldtwmcp_oauth_tokens",
             ['revoked_at' => gmdate('Y-m-d H:i:s')],
             ['token' => $token],
             ['%s'],
@@ -260,7 +260,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth client validation
         $client = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}ai_connect_oauth_clients WHERE client_id = %s",
+            "SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
             $client_id
         ));
         
@@ -275,7 +275,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth redirect URI validation
         $client = $wpdb->get_row($wpdb->prepare(
-            "SELECT redirect_uris FROM {$wpdb->prefix}ai_connect_oauth_clients WHERE client_id = %s",
+            "SELECT redirect_uris FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
             $client_id
         ));
         
@@ -295,7 +295,7 @@ class OAuth_Server {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth scope validation
         $client = $wpdb->get_row($wpdb->prepare(
-            "SELECT allowed_scopes FROM {$wpdb->prefix}ai_connect_oauth_clients WHERE client_id = %s",
+            "SELECT allowed_scopes FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
             $client_id
         ));
         

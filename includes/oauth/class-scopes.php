@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\OAuth;
+namespace GoldtWebMCP\OAuth;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -10,20 +10,20 @@ class Scopes {
     public static function get_all_scopes() {
         return [
             'read' => [
-                'label' => __('Read content', 'ai-connect'),
-                'description' => __('Read posts, pages, and other content', 'ai-connect'),
+                'label' => __('Read content', 'goldt-webmcp-bridge'),
+                'description' => __('Read posts, pages, and other content', 'goldt-webmcp-bridge'),
             ],
             'write' => [
-                'label' => __('Write content', 'ai-connect'),
-                'description' => __('Create and update posts and pages', 'ai-connect'),
+                'label' => __('Write content', 'goldt-webmcp-bridge'),
+                'description' => __('Create and update posts and pages', 'goldt-webmcp-bridge'),
             ],
             'delete' => [
-                'label' => __('Delete content', 'ai-connect'),
-                'description' => __('Delete posts and pages', 'ai-connect'),
+                'label' => __('Delete content', 'goldt-webmcp-bridge'),
+                'description' => __('Delete posts and pages', 'goldt-webmcp-bridge'),
             ],
             'manage_users' => [
-                'label' => __('Manage users', 'ai-connect'),
-                'description' => __('View and manage user accounts', 'ai-connect'),
+                'label' => __('Manage users', 'goldt-webmcp-bridge'),
+                'description' => __('View and manage user accounts', 'goldt-webmcp-bridge'),
             ],
         ];
     }

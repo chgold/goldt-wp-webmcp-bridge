@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "╔════════════════════════════════════════════╗"
-echo "║   AI Connect - Complete Endpoint Test     ║"
+echo "║ GoldT WebMCP - Complete Endpoint Test     ║"
 echo "╚════════════════════════════════════════════╝"
 echo ""
 
@@ -12,13 +12,13 @@ echo "📋 Getting manifest and creating auth token..."
 
 # Get site URL and manifest
 SITE_URL=$(wp option get siteurl 2>/dev/null)
-MANIFEST=$(curl -s "$SITE_URL/index.php?rest_route=/ai-connect/v1/manifest")
+MANIFEST=$(curl -s "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/manifest")
 
 # Extract tool names from manifest
 echo "$MANIFEST" | grep -oP '"name":"[^"]*"' | cut -d'"' -f4 > /tmp/tool_list.txt
 
 TOKEN=$(wp eval "
-\$oauth_server = new \AIConnect\OAuth\OAuth_Server();
+\$oauth_server = new \GoldtWebMCP\OAuth\OAuth_Server();
 \$token_data = \$oauth_server->create_access_token('test-client', 1, ['read', 'write']);
 echo \$token_data['access_token'];
 " 2>/dev/null)
@@ -56,7 +56,7 @@ while IFS= read -r TOOL; do
   esac
   
   RESPONSE=$(curl -s -X POST \
-    "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/$TOOL" \
+    "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/tools/$TOOL" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "$TEST_DATA" 2>/dev/null)
@@ -92,7 +92,7 @@ echo ""
 echo "🌐 Testing infrastructure endpoints:"
 echo ""
 
-STATUS=$(curl -s "$SITE_URL/index.php?rest_route=/ai-connect/v1/status")
+STATUS=$(curl -s "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/status")
 if echo "$STATUS" | grep -q '"status":"ok"'; then
   echo "   ✅ Status endpoint"
   ((PASSED++))
@@ -101,7 +101,7 @@ else
   ((FAILED++))
 fi
 
-MANIFEST=$(curl -s "$SITE_URL/index.php?rest_route=/ai-connect/v1/manifest")
+MANIFEST=$(curl -s "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/manifest")
 if echo "$MANIFEST" | grep -q '"tools"'; then
   echo "   ✅ Manifest endpoint"
   ((PASSED++))
@@ -134,7 +134,7 @@ echo \$token;
 " 2>/dev/null)
 
 OAUTH_RESPONSE=$(curl -s -X POST \
-  "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+  "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
   -H "Authorization: Bearer $OAUTH_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}')
@@ -148,7 +148,7 @@ else
 fi
 
 NO_AUTH=$(curl -s -X POST \
-  "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+  "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
   -H "Content-Type: application/json" \
   -d '{}')
 
@@ -160,8 +160,8 @@ else
   ((FAILED++))
 fi
 
-MANIFEST_PUBLIC=$(curl -s "$SITE_URL/index.php?rest_route=/ai-connect/v1/manifest")
-if echo "$MANIFEST_PUBLIC" | grep -q '"name":"wordpress-ai-connect"'; then
+MANIFEST_PUBLIC=$(curl -s "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/manifest")
+if echo "$MANIFEST_PUBLIC" | grep -q '"tools"'; then
   echo "   ✅ Manifest accessible without auth"
   ((PASSED++))
 else
@@ -175,7 +175,7 @@ global \$wpdb;
 " 2>/dev/null
 
 REFRESH_TOKEN_TEST=$(wp eval "
-\$oauth_server = new \AIConnect\OAuth\OAuth_Server();
+\$oauth_server = new \GoldtWebMCP\OAuth\OAuth_Server();
 \$token_data = \$oauth_server->create_access_token('claude-ai', 1, ['read', 'write']);
 echo json_encode(\$token_data);
 " 2>/dev/null)
@@ -185,7 +185,7 @@ REFRESH_TOKEN=$(echo "$REFRESH_TOKEN_TEST" | grep -oP '"refresh_token":"[^"]*"' 
 
 if [ -n "$REFRESH_TOKEN" ]; then
   REFRESH_RESPONSE=$(curl -s -X POST \
-    "$SITE_URL/index.php?rest_route=/ai-connect/v1/oauth/token" \
+    "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/oauth/token" \
     -H "Content-Type: application/json" \
     -d "{\"grant_type\":\"refresh_token\",\"refresh_token\":\"$REFRESH_TOKEN\",\"client_id\":\"claude-ai\"}")
   
@@ -193,7 +193,7 @@ if [ -n "$REFRESH_TOKEN" ]; then
   
   if [ -n "$NEW_ACCESS_TOKEN" ]; then
     TEST_WITH_NEW_TOKEN=$(curl -s -X POST \
-      "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+      "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
       -H "Authorization: Bearer $NEW_ACCESS_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{}')
@@ -207,7 +207,7 @@ if [ -n "$REFRESH_TOKEN" ]; then
     fi
     
     TEST_WITH_OLD_TOKEN=$(curl -s -X POST \
-      "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+      "$SITE_URL/index.php?rest_route=/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
       -H "Authorization: Bearer $OLD_ACCESS_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{}')

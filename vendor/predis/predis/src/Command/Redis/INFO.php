@@ -38,9 +38,9 @@ class INFO extends RedisCommand
 
         if (strpos($lines[0], '#') === 0) {
             return $this->parseNewResponseFormat($lines);
-        } else {
-            return $this->parseOldResponseFormat($lines);
         }
+
+        return $this->parseOldResponseFormat($lines);
     }
 
     /**
@@ -153,5 +153,14 @@ class INFO extends RedisCommand
         }
 
         return $parsedData;
+    }
+
+    /**
+     * @param                          $data
+     * @return array|mixed|string|null
+     */
+    public function parseResp3Response($data)
+    {
+        return $this->parseResponse($data);
     }
 }

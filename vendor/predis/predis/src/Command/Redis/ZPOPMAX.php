@@ -12,7 +12,7 @@
 
 namespace Predis\Command\Redis;
 
-use Predis\Command\Command as RedisCommand;
+use Predis\Command\PrefixableCommand as RedisCommand;
 
 /**
  * @see http://redis.io/commands/zpopmax
@@ -43,5 +43,29 @@ class ZPOPMAX extends RedisCommand
         }
 
         return $result;
+    }
+
+    /**
+     * @param                          $data
+     * @return array|mixed|string|null
+     */
+    public function parseResp3Response($data)
+    {
+        $parsedData = [];
+
+        foreach ($data as $element) {
+            if (is_array($element)) {
+                $parsedData[] = $this->parseResponse($element);
+            } else {
+                return $this->parseResponse($data);
+            }
+        }
+
+        return $parsedData;
+    }
+
+    public function prefixKeys($prefix)
+    {
+        $this->applyPrefixForFirstArgument($prefix);
     }
 }

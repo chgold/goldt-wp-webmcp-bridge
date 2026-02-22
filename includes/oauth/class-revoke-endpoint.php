@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\OAuth;
+namespace GoldtWebMCP\OAuth;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -18,10 +18,11 @@ class Revoke_Endpoint {
     }
     
     public function register_routes() {
-        register_rest_route('ai-connect/v1/oauth', '/revoke', [
+        // Public endpoint - OAuth 2.0 token revocation, token validation handled in callback
+        register_rest_route('goldt-webmcp-bridge/v1/oauth', '/revoke', [
             'methods' => 'POST',
             'callback' => [$this, 'handle_revoke_request'],
-            'permission_callback' => '__return_true',
+            'permission_callback' => '__return_true', // Intentionally public - token revocation per RFC 7009
         ]);
     }
     

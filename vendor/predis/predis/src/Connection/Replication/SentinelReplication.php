@@ -13,24 +13,31 @@
 namespace Predis\Connection\Replication;
 
 use InvalidArgumentException;
+use Predis\Command\Command;
 use Predis\Command\CommandInterface;
 use Predis\Command\RawCommand;
 use Predis\CommunicationException;
+use Predis\Connection\AbstractAggregateConnection;
 use Predis\Connection\ConnectionException;
 use Predis\Connection\FactoryInterface as ConnectionFactoryInterface;
 use Predis\Connection\NodeConnectionInterface;
 use Predis\Connection\Parameters;
+use Predis\Connection\ParametersInterface;
+use Predis\Connection\RelayFactory;
 use Predis\Replication\ReplicationStrategy;
 use Predis\Replication\RoleException;
 use Predis\Response\Error;
 use Predis\Response\ErrorInterface as ErrorResponseInterface;
 use Predis\Response\ServerException;
+use Predis\Retry\Retry;
+use Predis\Retry\Strategy\ExponentialBackoff;
+use Throwable;
 
 /**
  * @author Daniele Alessandri <suppakilla@gmail.com>
  * @author Ville Mattila <ville@eventio.fi>
  */
-class SentinelReplication implements ReplicationInterface
+class SentinelReplication extends AbstractAggregateConnection implements ReplicationInterface
 {
     /**
      * @var NodeConnectionInterface
@@ -264,14 +271,10 @@ class SentinelReplication implements ReplicationInterface
         }
 
         if (is_array($parameters)) {
-            // NOTE: sentinels do not accept AUTH and SELECT commands so we must
-            // explicitly set them to NULL to avoid problems when using default
-            // parameters set via client options. Actually AUTH is supported for
-            // sentinels starting with Redis 5 but we have to differentiate from
-            // sentinels passwords and nodes passwords, this will be implemented
-            // in a later release.
+            // NOTE: sentinels do not accept SELECT command so we must
+            // explicitly set it to NULL to avoid problems when using default
+            // parameters set via client options.
             $parameters['database'] = null;
-            $parameters['username'] = null;
 
             // don't leak password from between configurations
             // https://github.com/predis/predis/pull/807/#discussion_r985764770
@@ -365,9 +368,8 @@ class SentinelReplication implements ReplicationInterface
     {
         if ($error->getErrorType() === 'IDONTKNOW') {
             throw new ConnectionException($sentinel, $error->getMessage());
-        } else {
-            throw new ServerException($error->getMessage());
         }
+        throw new ServerException($error->getMessage());
     }
 
     /**
@@ -567,7 +569,10 @@ class SentinelReplication implements ReplicationInterface
     protected function assertConnectionRole(NodeConnectionInterface $connection, $role)
     {
         $role = strtolower($role);
-        $actualRole = $connection->executeCommand(RawCommand::create('ROLE'));
+        $retry = $connection->getParameters()->retry;
+        $actualRole = $retry->callWithRetry(function () use ($connection) {
+            return $connection->executeCommand(RawCommand::create('ROLE'));
+        });
 
         if ($actualRole instanceof Error) {
             throw new ConnectionException($connection, $actualRole->getMessage());
@@ -618,9 +623,9 @@ class SentinelReplication implements ReplicationInterface
             return $this->pickSlave();
         } elseif ($role === 'sentinel') {
             return $this->getSentinelConnection();
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     /**
@@ -711,27 +716,39 @@ class SentinelReplication implements ReplicationInterface
      */
     private function retryCommandOnFailure(CommandInterface $command, $method)
     {
-        $retries = 0;
+        $parameters = $this->getParameters();
 
-        while ($retries <= $this->retryLimit) {
-            try {
-                $response = $this->getConnectionByCommand($command)->$method($command);
-                break;
-            } catch (CommunicationException $exception) {
-                $this->wipeServerList();
-                $exception->getConnection()->disconnect();
-
-                if ($retries === $this->retryLimit) {
-                    throw $exception;
-                }
-
-                usleep($this->retryWait * 1000);
-
-                ++$retries;
-            }
+        if ($parameters->isDisabledRetry() || $this->connectionFactory instanceof RelayFactory) {
+            // Override default parameters, for backward-compatibility
+            // with current behaviour
+            $retry = new Retry(
+                new ExponentialBackoff($this->retryWait * 1000, -1),
+                $this->retryLimit
+            );
+        } else {
+            $retry = $parameters->retry;
         }
+        $retry->updateCatchableExceptions([Throwable::class]);
 
-        return $response;
+        $doCallback = function () use ($method, $command) {
+            $response = $this->getConnectionByCommand($command)->{$method}($command);
+
+            if ($response instanceof Error && $response->getErrorType() === 'LOADING') {
+                throw new ConnectionException($this->current, $response->getMessage());
+            }
+
+            return $response;
+        };
+
+        $failCallback = function (Throwable $exception) {
+            $this->wipeServerList();
+
+            if ($exception instanceof CommunicationException) {
+                $exception->getConnection()->disconnect();
+            }
+        };
+
+        return $retry->callWithRetry($doCallback, $failCallback);
     }
 
     /**
@@ -776,5 +793,25 @@ class SentinelReplication implements ReplicationInterface
         return [
             'master', 'slaves', 'pool', 'service', 'sentinels', 'connectionFactory', 'strategy',
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getParameters(): ?ParametersInterface
+    {
+        if (isset($this->master)) {
+            return $this->master->getParameters();
+        }
+
+        if (!empty($this->slaves)) {
+            return $this->slaves[0]->getParameters();
+        }
+
+        if (!empty($this->sentinels)) {
+            return $this->sentinels[0]->getParameters();
+        }
+
+        return null;
     }
 }

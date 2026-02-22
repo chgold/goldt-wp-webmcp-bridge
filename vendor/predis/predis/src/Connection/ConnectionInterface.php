@@ -54,6 +54,15 @@ interface ConnectionInterface
     public function readResponse(CommandInterface $command);
 
     /**
+     * Performs a write operation over the stream of the buffer containing a
+     * command serialized with the Redis wire protocol.
+     *
+     * @param  string $buffer
+     * @return void
+     */
+    public function write(string $buffer): void;
+
+    /**
      * Writes a request for the given command over the connection and reads back
      * the response returned by Redis.
      *
@@ -62,4 +71,11 @@ interface ConnectionInterface
      * @return mixed
      */
     public function executeCommand(CommandInterface $command);
+
+    /**
+     * Returns the parameters used to initialize the connection.
+     *
+     * @return ParametersInterface
+     */
+    public function getParameters();
 }

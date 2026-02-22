@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\OAuth;
+namespace GoldtWebMCP\OAuth;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -18,10 +18,11 @@ class Token_Endpoint {
     }
     
     public function register_routes() {
-        register_rest_route('ai-connect/v1/oauth', '/token', [
+        // Public endpoint - OAuth 2.0 token exchange, authentication handled via code_verifier
+        register_rest_route('goldt-webmcp-bridge/v1/oauth', '/token', [
             'methods' => 'POST',
             'callback' => [$this, 'handle_token_request'],
-            'permission_callback' => '__return_true',
+            'permission_callback' => '__return_true', // Intentionally public - OAuth token endpoint per RFC 6749
         ]);
     }
     

@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\OAuth;
+namespace GoldtWebMCP\OAuth;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -19,7 +19,7 @@ class Authorize_Endpoint {
     
     public function handle_authorize_request() {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth flow uses state parameter for CSRF protection
-        if (!isset($_GET['ai_connect_oauth_authorize'])) {
+        if (!isset($_GET['goldtwmcp_oauth_authorize'])) {
             return;
         }
         
@@ -66,13 +66,13 @@ class Authorize_Endpoint {
         }
         
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified inside handle_approval/handle_denial
-        if (isset($_POST['ai_connect_oauth_approve'])) {
+        if (isset($_POST['goldtwmcp_oauth_approve'])) {
             $this->handle_approval($client_id, $redirect_uri, $code_challenge, $code_challenge_method, $scopes, $state);
             return;
         }
         
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified inside handle_denial
-        if (isset($_POST['ai_connect_oauth_deny'])) {
+        if (isset($_POST['goldtwmcp_oauth_deny'])) {
             $this->handle_denial($redirect_uri, $state);
             return;
         }
@@ -87,7 +87,7 @@ class Authorize_Endpoint {
             exit;
         }
         
-        check_admin_referer('ai_connect_oauth_consent');
+        check_admin_referer('goldtwmcp_oauth_consent');
         
         $user_id = get_current_user_id();
         
@@ -120,7 +120,7 @@ class Authorize_Endpoint {
     }
     
     private function handle_denial($redirect_uri, $state) {
-        check_admin_referer('ai_connect_oauth_consent');
+        check_admin_referer('goldtwmcp_oauth_consent');
         
         if ($redirect_uri === 'urn:ietf:wg:oauth:2.0:oob') {
             wp_die('Authorization denied', 'Access Denied', ['response' => 403]);
@@ -146,16 +146,16 @@ class Authorize_Endpoint {
         global $wpdb;
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth client data, not cached
         $client = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}ai_connect_oauth_clients WHERE client_id = %s",
+            "SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
             $client_id
         ));
         
-        include AI_CONNECT_PATH . 'includes/oauth/views/consent-screen.php';
+        include GOLDTWMCP_PATH . 'includes/oauth/views/consent-screen.php';
         exit;
     }
     
     private function show_oob_code($code) {
-        include AI_CONNECT_PATH . 'includes/oauth/views/oob-code.php';
+        include GOLDTWMCP_PATH . 'includes/oauth/views/oob-code.php';
         exit;
     }
     

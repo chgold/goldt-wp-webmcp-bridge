@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\Core;
+namespace GoldtWebMCP\Core;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -14,8 +14,8 @@ class Rate_Limiter {
     
     public function __construct() {
         $this->init_redis();
-        $this->requests_per_minute = apply_filters('ai_connect_rate_limit_per_minute', 50);
-        $this->requests_per_hour = apply_filters('ai_connect_rate_limit_per_hour', 1000);
+        $this->requests_per_minute = apply_filters('goldtwmcp_rate_limit_per_minute', 50);
+        $this->requests_per_hour = apply_filters('goldtwmcp_rate_limit_per_hour', 1000);
     }
     
     /**
@@ -29,7 +29,7 @@ class Rate_Limiter {
             error_log('AI Connect: ' . $message); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         }
         
-        do_action('ai_connect_rate_limiter_error', $message, $context);
+        do_action('goldtwmcp_rate_limiter_error', $message, $context);
     }
     
     private function init_redis() {
@@ -169,7 +169,7 @@ class Rate_Limiter {
             : floor(time() / 3600);
         
         return sprintf(
-            'ai_connect_rate_%s_%s_%s_%d',
+            'goldtwmcp_rate_%s_%s_%s_%d',
             $action,
             $identifier,
             $window,

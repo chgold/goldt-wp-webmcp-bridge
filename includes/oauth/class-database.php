@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\OAuth;
+namespace GoldtWebMCP\OAuth;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -14,14 +14,14 @@ class Database {
      * Get current database version
      */
     public static function get_version() {
-        return get_option('ai_connect_oauth_db_version', '0.0.0');
+        return get_option('goldtwmcp_oauth_db_version', '0.0.0');
     }
     
     /**
      * Set database version
      */
     public static function set_version($version) {
-        update_option('ai_connect_oauth_db_version', $version);
+        update_option('goldtwmcp_oauth_db_version', $version);
     }
     
     /**
@@ -33,7 +33,7 @@ class Database {
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         
-        $sql_clients = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ai_connect_oauth_clients (
+        $sql_clients = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}goldtwmcp_oauth_clients (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             client_id VARCHAR(80) NOT NULL,
             client_name VARCHAR(255) NOT NULL,
@@ -46,7 +46,7 @@ class Database {
             UNIQUE KEY client_id (client_id)
         ) $charset_collate;";
         
-        $sql_codes = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ai_connect_oauth_codes (
+        $sql_codes = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}goldtwmcp_oauth_codes (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             code VARCHAR(128) NOT NULL,
             client_id VARCHAR(80) NOT NULL,
@@ -65,7 +65,7 @@ class Database {
             KEY user_id (user_id)
         ) $charset_collate;";
         
-        $sql_tokens = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ai_connect_oauth_tokens (
+        $sql_tokens = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}goldtwmcp_oauth_tokens (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             token VARCHAR(255) NOT NULL,
             refresh_token VARCHAR(255) DEFAULT NULL,
@@ -115,11 +115,11 @@ class Database {
         
         // Check if columns already exist
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade check
-        $columns = $wpdb->get_results("SHOW COLUMNS FROM {$wpdb->prefix}ai_connect_oauth_tokens LIKE 'refresh_token'");
+        $columns = $wpdb->get_results("SHOW COLUMNS FROM {$wpdb->prefix}goldtwmcp_oauth_tokens LIKE 'refresh_token'");
         
         if (empty($columns)) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Adding refresh token support
-            $wpdb->query("ALTER TABLE {$wpdb->prefix}ai_connect_oauth_tokens 
+            $wpdb->query("ALTER TABLE {$wpdb->prefix}goldtwmcp_oauth_tokens 
                 ADD COLUMN refresh_token VARCHAR(255) DEFAULT NULL AFTER token,
                 ADD COLUMN refresh_token_expires_at DATETIME DEFAULT NULL AFTER expires_at,
                 ADD UNIQUE KEY refresh_token (refresh_token)");
@@ -175,14 +175,14 @@ class Database {
         foreach ($new_clients as $client) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth setup, runs once on upgrade, no caching needed
             $exists = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}ai_connect_oauth_clients WHERE client_id = %s",
+                "SELECT id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
                 $client['client_id']
             ));
             
             if (!$exists) {
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth setup, inserting new AI clients
                 $wpdb->insert(
-                    "{$wpdb->prefix}ai_connect_oauth_clients",
+                    "{$wpdb->prefix}goldtwmcp_oauth_clients",
                     $client
                 );
             }
@@ -259,14 +259,14 @@ class Database {
         foreach ($clients as $client) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth setup, runs once on activation, no caching needed
             $exists = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}ai_connect_oauth_clients WHERE client_id = %s",
+                "SELECT id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
                 $client['client_id']
             ));
             
             if (!$exists) {
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth setup, inserting default clients
                 $wpdb->insert(
-                    "{$wpdb->prefix}ai_connect_oauth_clients",
+                    "{$wpdb->prefix}goldtwmcp_oauth_clients",
                     $client
                 );
             }
@@ -280,13 +280,13 @@ class Database {
         global $wpdb;
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- OAuth cleanup on uninstall
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ai_connect_oauth_tokens");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_oauth_tokens");
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- OAuth cleanup on uninstall
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ai_connect_oauth_codes");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_oauth_codes");
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- OAuth cleanup on uninstall
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ai_connect_oauth_clients");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_oauth_clients");
         
-        delete_option('ai_connect_oauth_db_version');
+        delete_option('goldtwmcp_oauth_db_version');
     }
     
     /**
@@ -297,14 +297,14 @@ class Database {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth cleanup cron job
         $wpdb->query($wpdb->prepare(
-            "DELETE FROM {$wpdb->prefix}ai_connect_oauth_codes 
+            "DELETE FROM {$wpdb->prefix}goldtwmcp_oauth_codes 
              WHERE expires_at < %s",
             current_time('mysql')
         ));
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth cleanup cron job
         $wpdb->query($wpdb->prepare(
-            "DELETE FROM {$wpdb->prefix}ai_connect_oauth_tokens 
+            "DELETE FROM {$wpdb->prefix}goldtwmcp_oauth_tokens 
              WHERE expires_at < %s AND revoked_at IS NULL",
             current_time('mysql')
         ));

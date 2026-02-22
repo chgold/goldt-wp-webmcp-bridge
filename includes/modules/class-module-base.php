@@ -1,5 +1,5 @@
 <?php
-namespace AIConnect\Modules;
+namespace GoldtWebMCP\Modules;
 
 if (!defined('ABSPATH')) {
     exit;

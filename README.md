@@ -1,11 +1,11 @@
-# AI Connect - WebMCP Bridge for WordPress
+# GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.1.2-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
 
-Connect AI agents (ChatGPT, Claude, or any custom AI) to your WordPress site with **secure OAuth 2.0 authentication** using the WebMCP protocol.
+Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
 
 **Secure by design:** OAuth 2.0 Authorization Code Flow with PKCE - no passwords transmitted over the wire!
 
@@ -15,7 +15,7 @@ Connect AI agents (ChatGPT, Claude, or any custom AI) to your WordPress site wit
 
 ### Installation
 
-1. Upload the plugin to `/wp-content/plugins/ai-connect/`
+1. Upload the plugin to `/wp-content/plugins/goldt-webmcp-bridge/`
 2. Activate through WordPress admin
 3. **For local development**: Start server with `php -S 0.0.0.0:8888 router.php` (see [Development Setup](#-development-setup))
 
@@ -23,7 +23,7 @@ Connect AI agents (ChatGPT, Claude, or any custom AI) to your WordPress site wit
 
 **Note:** The plugin includes all required dependencies:
 - `firebase/php-jwt` (v6.10.0) - JWT token handling  
-- `predis/predis` (v2.4.1) - Redis client for rate limiting (optional)
+- `predis/predis` (v3.4.0) - Redis client for rate limiting (optional)
 
 No manual `composer install` required - everything is bundled!
 
@@ -33,7 +33,7 @@ No manual `composer install` required - everything is bundled!
 
 ### How It Works
 
-AI Connect uses **OAuth 2.0 Authorization Code Flow with PKCE** - the industry standard for secure API authentication:
+GoldT WebMCP Bridge uses **OAuth 2.0 Authorization Code Flow with PKCE** - the industry standard for secure API authentication:
 
 1. AI agent requests authorization with a code challenge (PKCE)
 2. User approves in browser → receives one-time authorization code
@@ -72,7 +72,7 @@ STATE=$(openssl rand -hex 16)
 Direct user to this URL in their browser:
 
 ```
-http://yoursite.com/?ai_connect_oauth_authorize=1
+http://yoursite.com/?goldtwmcp_oauth_authorize=1
   &response_type=code
   &client_id=claude-ai
   &redirect_uri=urn:ietf:wg:oauth:2.0:oob
@@ -96,7 +96,7 @@ User will see a consent screen and approve. They'll receive an **authorization c
 
 **Request:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
     "grant_type": "authorization_code",
@@ -132,7 +132,7 @@ curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
 
 **Request:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.searchPosts" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.searchPosts" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -d '{
@@ -174,7 +174,7 @@ Access tokens expire after 1 hour. Use your refresh token to get a new access to
 
 **Request:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
     "grant_type": "refresh_token",
@@ -209,7 +209,7 @@ Revoke an access token when you're done or if it's compromised:
 
 **Request:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/revoke" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/revoke" \
   -H "Content-Type: application/json" \
   -d '{
     "token": "wpc_c6c9f8398c5f7921713011d19676ee2f81470cf7ec7c71ce91925cd129853dd3"
@@ -245,7 +245,7 @@ Search WordPress posts with filters.
 
 **Example:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.searchPosts" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.searchPosts" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -266,7 +266,7 @@ Get a single post by ID or slug.
 
 **Example:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.getPost" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.getPost" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"identifier": 123}'
@@ -286,7 +286,7 @@ Search WordPress pages.
 
 **Example:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.searchPages" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.searchPages" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"search": "about", "limit": 10}'
@@ -303,7 +303,7 @@ Get a single page by ID or slug.
 
 **Example:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.getPage" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.getPage" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"identifier": "about-us"}'
@@ -317,7 +317,7 @@ Get information about the authenticated user.
 
 **Example:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.getCurrentUser" \
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -344,7 +344,7 @@ curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.getCurre
 
 ### Security Features
 
-Navigate to **WordPress Admin → AI Connect → Settings** to manage security:
+Navigate to **WordPress Admin → GoldT WebMCP → Settings** to manage security:
 
 #### 1. Rotate JWT Secret
 
@@ -363,7 +363,7 @@ Navigate to **WordPress Admin → AI Connect → Settings** to manage security:
 #### 2. Block User Access
 
 **Revoke access for specific users:**
-1. Go to **AI Connect → Settings → Manage User Access**
+1. Go to **GoldT WebMCP → Settings → Manage User Access**
 2. Enter WordPress user ID
 3. Click "Block User"
 
@@ -379,7 +379,7 @@ Default limits (per user):
 - **50 requests per minute**
 - **1,000 requests per hour**
 
-**Configure in:** AI Connect → Settings
+**Configure in:** GoldT WebMCP → Settings
 
 **Rate limit response:**
 ```json
@@ -433,7 +433,7 @@ Default limits (per user):
 **Solution:** Ensure you're using the same `code_verifier` that generated the `code_challenge`
 
 #### `"access_denied"` - User blocked
-**Solution:** Check if user is in blacklist (AI Connect → OAuth Tokens)
+**Solution:** Check if user is in blacklist (GoldT WebMCP → OAuth Tokens)
 
 #### `"Token expired"`
 **Solution:** Access tokens expire after 1 hour. Request new authorization.
@@ -441,7 +441,7 @@ Default limits (per user):
 #### `"Rate limit exceeded"`
 **Solution:** 
 - Wait for retry period (check `retry_after` in response)
-- Increase limits in **AI Connect → Settings**
+- Increase limits in **GoldT WebMCP → Settings**
 
 #### REST API 404 errors
 **Solution:** 
@@ -481,10 +481,10 @@ CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base6
 STATE=$(openssl rand -hex 16)
 
 # 2. Open authorization URL in browser (replace localhost:8888 with your server)
-echo "http://localhost:8888/?ai_connect_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
+echo "http://localhost:8888/?goldtwmcp_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
 
 # 3. After approval, exchange code for token
-curl -X POST "http://localhost:8888/wp-json/ai-connect/v1/oauth/token" \
+curl -X POST "http://localhost:8888/wp-json/goldt-webmcp-bridge/v1/oauth/token" \
   -H "Content-Type: application/json" \
   -d "{
     \"grant_type\": \"authorization_code\",
@@ -495,7 +495,7 @@ curl -X POST "http://localhost:8888/wp-json/ai-connect/v1/oauth/token" \
   }"
 
 # 4. Test API with token
-curl -X POST "http://localhost:8888/wp-json/ai-connect/v1/tools/wordpress.getCurrentUser" \
+curl -X POST "http://localhost:8888/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -506,7 +506,7 @@ curl -X POST "http://localhost:8888/wp-json/ai-connect/v1/tools/wordpress.getCur
 ### Running Tests
 
 ```bash
-cd wp-content/plugins/ai-connect
+cd wp-content/plugins/goldt-webmcp-bridge
 ./tests/test-endpoints.sh
 ```
 
@@ -521,8 +521,8 @@ This tests:
 ### Add Custom Tools
 
 ```php
-add_action('ai_connect_register_modules', function($ai_connect) {
-    $manifest = $ai_connect->get_manifest_instance();
+add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
+    $manifest = $goldtwmcp_plugin->get_manifest_instance();
     
     $manifest->register_tool('mysite.customTool', [
         'description' => 'My custom tool',
@@ -551,7 +551,7 @@ add_action('ai_connect_register_modules', function($ai_connect) {
 * **Added:** OAuth 2.0 Authorization Code Flow with PKCE (S256)
 * **Added:** Pre-registered OAuth clients (claude-ai, chatgpt, gemini)
 * **Added:** OAuth consent screen for user authorization
-* **Added:** Admin UI for OAuth token management (AI Connect → OAuth Tokens)
+* **Added:** Admin UI for OAuth token management (GoldT WebMCP → OAuth Tokens)
 * **Added:** `router.php` for PHP built-in server support
 * **Removed:** Direct username/password authentication endpoint (`/auth/login`)
 * **Security:** Authorization codes are one-time use with 10 minute expiry
@@ -589,21 +589,13 @@ add_action('ai_connect_register_modules', function($ai_connect) {
 
 ## 🤝 Contributing
 
-Found a bug or want to contribute? Visit our [GitHub repository](https://github.com/chgold/ai-connect).
+Found a bug or want to contribute? Open an issue on the WordPress.org support forum.
 
 ---
 
 ## 📄 License
 
 GPL-3.0-or-later
-
----
-
-## 🔗 Links
-
-- [GitHub Repository](https://github.com/chgold/ai-connect)
-- [Issue Tracker](https://github.com/chgold/ai-connect/issues)
-- [Documentation](https://github.com/chgold/ai-connect/wiki)
 
 ---
 

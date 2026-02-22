@@ -1,7 +1,7 @@
 <?php
-namespace AIConnect\API;
+namespace GoldtWebMCP\API;
 
-use AIConnect\Core\Rate_Limiter;
+use GoldtWebMCP\Core\Rate_Limiter;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -17,13 +17,13 @@ class Tools_Endpoint {
     }
     
     public function register_routes() {
-        \register_rest_route('ai-connect/v1', '/tools/(?P<tool>[a-zA-Z0-9._-]+)', [
+        \register_rest_route('goldt-webmcp-bridge/v1', '/tools/(?P<tool>[a-zA-Z0-9._-]+)', [
             'methods' => 'POST',
             'callback' => [$this, 'execute_tool'],
             'permission_callback' => [$this, 'check_permission'],
         ]);
         
-        \register_rest_route('ai-connect/v1', '/tools', [
+        \register_rest_route('goldt-webmcp-bridge/v1', '/tools', [
             'methods' => 'GET',
             'callback' => [$this, 'list_tools'],
             'permission_callback' => [$this, 'check_permission'],
@@ -31,7 +31,7 @@ class Tools_Endpoint {
         
         // OAuth endpoints removed - now handled by dedicated OAuth classes
         // Direct username+password authentication DISABLED for security
-        // Use OAuth 2.0 flow instead: /?ai_connect_oauth_authorize
+        // Use OAuth 2.0 flow instead: /?goldtwmcp_oauth_authorize
     }
     
     public function register_module($module) {
@@ -83,7 +83,7 @@ class Tools_Endpoint {
         
         $user_id = \get_current_user_id();
         
-        $blacklisted_users = \get_option('ai_connect_blacklisted_users', []);
+        $blacklisted_users = \get_option('goldtwmcp_blacklisted_users', []);
         if (in_array($user_id, $blacklisted_users, true)) {
             return new \WP_Error('access_denied', 'Your access to AI Connect has been revoked', ['status' => 403]);
         }

@@ -42,11 +42,10 @@ class ConnectionErrorProof extends Pipeline
             return $this->executeSingleNode($connection, $commands);
         } elseif ($connection instanceof ClusterInterface) {
             return $this->executeCluster($connection, $commands);
-        } else {
-            $class = get_class($connection);
-
-            throw new NotSupportedException("The connection class '$class' is not supported.");
         }
+        $class = get_class($connection);
+
+        throw new NotSupportedException("The connection class '$class' is not supported.");
     }
 
     /**
@@ -56,13 +55,16 @@ class ConnectionErrorProof extends Pipeline
     {
         $responses = [];
         $sizeOfPipe = count($commands);
+        $buffer = '';
 
         foreach ($commands as $command) {
-            try {
-                $connection->writeRequest($command);
-            } catch (CommunicationException $exception) {
-                return array_fill(0, $sizeOfPipe, $exception);
-            }
+            $buffer .= $command->serializeCommand();
+        }
+
+        try {
+            $connection->write($buffer);
+        } catch (CommunicationException $exception) {
+            return array_fill(0, $sizeOfPipe, $exception);
         }
 
         for ($i = 0; $i < $sizeOfPipe; ++$i) {
@@ -91,17 +93,8 @@ class ConnectionErrorProof extends Pipeline
         $exceptions = [];
 
         foreach ($commands as $command) {
-            $cmdConnection = $connection->getConnectionByCommand($command);
-
-            if (isset($exceptions[spl_object_hash($cmdConnection)])) {
-                continue;
-            }
-
-            try {
-                $cmdConnection->writeRequest($command);
-            } catch (CommunicationException $exception) {
-                $exceptions[spl_object_hash($cmdConnection)] = $exception;
-            }
+            $nodeConnection = $connection->getConnectionByCommand($command);
+            $nodeConnection->write($command->serializeCommand());
         }
 
         for ($i = 0; $i < $sizeOfPipe; ++$i) {
