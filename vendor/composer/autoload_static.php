@@ -11,10 +11,6 @@ class ComposerStaticInit174d58a9da87b91616345dc7c59e47fe
         array (
             'Predis\\' => 7,
         ),
-        'F' =>
-        array (
-            'Firebase\\JWT\\' => 13,
-        ),
         'A' =>
         array (
             'AIConnect\\Modules\\' => 18,
@@ -29,10 +25,6 @@ class ComposerStaticInit174d58a9da87b91616345dc7c59e47fe
         'Predis\\' =>
         array (
             0 => __DIR__ . '/..' . '/predis/predis/src',
-        ),
-        'Firebase\\JWT\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
         'AIConnect\\Modules\\' =>
         array (
@@ -58,14 +50,6 @@ class ComposerStaticInit174d58a9da87b91616345dc7c59e47fe
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'Firebase\\JWT\\BeforeValidException' => __DIR__ . '/..' . '/firebase/php-jwt/src/BeforeValidException.php',
-        'Firebase\\JWT\\CachedKeySet' => __DIR__ . '/..' . '/firebase/php-jwt/src/CachedKeySet.php',
-        'Firebase\\JWT\\ExpiredException' => __DIR__ . '/..' . '/firebase/php-jwt/src/ExpiredException.php',
-        'Firebase\\JWT\\JWK' => __DIR__ . '/..' . '/firebase/php-jwt/src/JWK.php',
-        'Firebase\\JWT\\JWT' => __DIR__ . '/..' . '/firebase/php-jwt/src/JWT.php',
-        'Firebase\\JWT\\JWTExceptionWithPayloadInterface' => __DIR__ . '/..' . '/firebase/php-jwt/src/JWTExceptionWithPayloadInterface.php',
-        'Firebase\\JWT\\Key' => __DIR__ . '/..' . '/firebase/php-jwt/src/Key.php',
-        'Firebase\\JWT\\SignatureInvalidException' => __DIR__ . '/..' . '/firebase/php-jwt/src/SignatureInvalidException.php',
         'Predis\\Autoloader' => __DIR__ . '/..' . '/predis/predis/src/Autoloader.php',
         'Predis\\Client' => __DIR__ . '/..' . '/predis/predis/src/Client.php',
         'Predis\\ClientConfiguration' => __DIR__ . '/..' . '/predis/predis/src/ClientConfiguration.php',

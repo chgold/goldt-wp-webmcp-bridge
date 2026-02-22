@@ -23,11 +23,20 @@ class AI_Connect {
         }
         
         require_once AI_CONNECT_PATH . 'includes/core/class-manifest.php';
-        require_once AI_CONNECT_PATH . 'includes/core/class-auth.php';
         require_once AI_CONNECT_PATH . 'includes/core/class-rate-limiter.php';
         require_once AI_CONNECT_PATH . 'includes/modules/class-module-base.php';
         require_once AI_CONNECT_PATH . 'includes/modules/class-core-module.php';
         require_once AI_CONNECT_PATH . 'includes/api/class-tools-endpoint.php';
+        
+        // Load OAuth components
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-database.php';
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-oauth-server.php';
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-scopes.php';
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-authorize-endpoint.php';
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-token-endpoint.php';
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-revoke-endpoint.php';
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-bearer-auth.php';
+        require_once AI_CONNECT_PATH . 'includes/oauth/class-admin-ui.php';
     }
     
     private function init_components() {
@@ -74,6 +83,27 @@ class AI_Connect {
     public function run() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('rest_api_init', [$this, 'register_routes']);
+        add_action('init', [$this, 'add_rewrite_rules']);
+        
+        // Initialize OAuth components
+        $authorize_endpoint = new \AIConnect\OAuth\Authorize_Endpoint();
+        $authorize_endpoint->init();
+        
+        $token_endpoint = new \AIConnect\OAuth\Token_Endpoint();
+        $token_endpoint->init();
+        
+        $revoke_endpoint = new \AIConnect\OAuth\Revoke_Endpoint();
+        $revoke_endpoint->init();
+        
+        $bearer_auth = new \AIConnect\OAuth\Bearer_Auth();
+        $bearer_auth->init();
+        
+        $admin_ui = new \AIConnect\OAuth\Admin_UI();
+        $admin_ui->init();
+    }
+    
+    public function add_rewrite_rules() {
+        add_rewrite_tag('%ai_connect_oauth_authorize%', '([^&]+)');
     }
     
     public function add_admin_menu() {

@@ -17,15 +17,11 @@ MANIFEST=$(curl -s "$SITE_URL/index.php?rest_route=/ai-connect/v1/manifest")
 # Extract tool names from manifest
 echo "$MANIFEST" | grep -oP '"name":"[^"]*"' | cut -d'"' -f4 > /tmp/tool_list.txt
 
-OAUTH_DATA=$(wp eval "
-\$auth = new \AIConnect\Core\Auth();
-\$client = \$auth->register_client('Complete Test', 'https://test.com');
-\$token = \$auth->generate_access_token(1, \$client['client_id'], 'read write admin');
-echo \$token . '|' . \$client['client_id'];
+TOKEN=$(wp eval "
+\$oauth_server = new \AIConnect\OAuth\OAuth_Server();
+\$token_data = \$oauth_server->create_access_token('test-client', 1, ['read', 'write']);
+echo \$token_data['access_token'];
 " 2>/dev/null)
-
-TOKEN=$(echo $OAUTH_DATA | cut -d'|' -f1)
-CLIENT_ID=$(echo $OAUTH_DATA | cut -d'|' -f2)
 
 echo "✅ Authentication ready"
 echo "✅ Found $(wc -l < /tmp/tool_list.txt) tools to test"
@@ -115,6 +111,70 @@ else
 fi
 
 echo ""
+echo "🔐 Testing OAuth 2.0 endpoints:"
+echo ""
+
+OAUTH_TOKEN=$(wp eval "
+global \$wpdb;
+\$token = 'wpc_test_' . bin2hex(random_bytes(32));
+\$expires_at = gmdate('Y-m-d H:i:s', time() + 3600);
+\$wpdb->insert(
+    \$wpdb->prefix . 'ai_connect_oauth_tokens',
+    [
+        'token' => \$token,
+        'client_id' => 'test-client',
+        'user_id' => 1,
+        'scopes' => json_encode(['read', 'write']),
+        'expires_at' => \$expires_at,
+        'created_at' => gmdate('Y-m-d H:i:s')
+    ],
+    ['%s', '%s', '%d', '%s', '%s', '%s']
+);
+echo \$token;
+" 2>/dev/null)
+
+OAUTH_RESPONSE=$(curl -s -X POST \
+  "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+  -H "Authorization: Bearer $OAUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}')
+
+if echo "$OAUTH_RESPONSE" | grep -q '"username"'; then
+  echo "   ✅ OAuth Bearer token authentication"
+  ((PASSED++))
+else
+  echo "   ❌ OAuth Bearer token authentication"
+  ((FAILED++))
+fi
+
+NO_AUTH=$(curl -s -X POST \
+  "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+  -H "Content-Type: application/json" \
+  -d '{}')
+
+if echo "$NO_AUTH" | grep -qE '"code":"(rest_not_logged_in|no_token)"'; then
+  echo "   ✅ Auth required for protected endpoints"
+  ((PASSED++))
+else
+  echo "   ❌ Auth required for protected endpoints"
+  ((FAILED++))
+fi
+
+MANIFEST_PUBLIC=$(curl -s "$SITE_URL/index.php?rest_route=/ai-connect/v1/manifest")
+if echo "$MANIFEST_PUBLIC" | grep -q '"name":"wordpress-ai-connect"'; then
+  echo "   ✅ Manifest accessible without auth"
+  ((PASSED++))
+else
+  echo "   ❌ Manifest accessible without auth"
+  ((FAILED++))
+fi
+
+wp eval "
+global \$wpdb;
+\$wpdb->delete(\$wpdb->prefix . 'ai_connect_oauth_tokens', ['token' => '$OAUTH_TOKEN']);
+" 2>/dev/null
+
+echo ""
 echo "╔════════════════════════════════════════════╗"
 echo "║   Test Results                             ║"
 echo "╠════════════════════════════════════════════╣"
@@ -134,7 +194,6 @@ fi
 echo "╚════════════════════════════════════════════╝"
 
 # Cleanup
-wp eval "delete_option('ai_connect_client_$CLIENT_ID');" 2>/dev/null
 rm -f /tmp/tool_list.txt
 
 exit $FAILED

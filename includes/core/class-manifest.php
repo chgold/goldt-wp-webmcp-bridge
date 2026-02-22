@@ -222,26 +222,23 @@ class Manifest {
         ];
         
         // Add authentication info
+        $site_url = \get_site_url();
+        $scopes_data = \AIConnect\OAuth\Scopes::get_all_scopes();
+        $scopes = [];
+        foreach ($scopes_data as $scope => $data) {
+            $scopes[$scope] = $data['description'];
+        }
+        
         $manifest['auth'] = [
             'type' => 'oauth2',
-            'authorization_url' => \rest_url('ai-connect/v1/oauth/authorize'),
+            'flow' => 'authorization_code',
+            'authorization_url' => $site_url . '/?ai_connect_oauth_authorize',
             'token_url' => \rest_url('ai-connect/v1/oauth/token'),
-            'scopes' => [
-                'read' => 'Read WordPress content',
-                'write' => 'Create and modify WordPress content',
-                'admin' => 'Administrative operations',
-            ],
-            // Add simple authentication method
-            'simple_auth' => [
-                'type' => 'direct',
-                'login_url' => \rest_url('ai-connect/v1/auth/login'),
-                'description' => 'Direct authentication with WordPress username and password',
-                'method' => 'POST',
-                'body' => [
-                    'username' => 'WordPress username',
-                    'password' => 'WordPress password',
-                ],
-            ],
+            'revoke_url' => \rest_url('ai-connect/v1/oauth/revoke'),
+            'pkce_required' => true,
+            'code_challenge_method' => 'S256',
+            'redirect_uri' => 'urn:ietf:wg:oauth:2.0:oob',
+            'scopes' => $scopes,
         ];
         
         // Add usage instructions

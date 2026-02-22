@@ -5,9 +5,9 @@
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
 
-Connect AI agents (ChatGPT, Claude, or any custom AI) to your WordPress site with **simple, secure authentication** using the WebMCP protocol.
+Connect AI agents (ChatGPT, Claude, or any custom AI) to your WordPress site with **secure OAuth 2.0 authentication** using the WebMCP protocol.
 
-**No complex OAuth setup required!** Just username + password.
+**Secure by design:** OAuth 2.0 Authorization Code Flow with PKCE - no passwords transmitted over the wire!
 
 ---
 
@@ -17,51 +17,102 @@ Connect AI agents (ChatGPT, Claude, or any custom AI) to your WordPress site wit
 
 1. Upload the plugin to `/wp-content/plugins/ai-connect/`
 2. Activate through WordPress admin
+3. **For local development**: Start server with `php -S 0.0.0.0:8888 router.php` (see [Development Setup](#-development-setup))
 
 **That's it!** No configuration needed.
 
 **Note:** The plugin includes all required dependencies:
-- `firebase/php-jwt` (v6.10.0) - JWT token handling
+- `firebase/php-jwt` (v6.10.0) - JWT token handling  
 - `predis/predis` (v2.4.1) - Redis client for rate limiting (optional)
 
 No manual `composer install` required - everything is bundled!
 
 ---
 
-
-## 📖 Authentication Guide
+## 🔐 OAuth 2.0 Authentication Guide
 
 ### How It Works
 
-AI Connect uses **direct authentication** - any AI agent can connect to your WordPress site using a WordPress username and password. No pre-registration required!
+AI Connect uses **OAuth 2.0 Authorization Code Flow with PKCE** - the industry standard for secure API authentication:
 
-### Step 1: Login and Get Tokens
+1. AI agent requests authorization with a code challenge (PKCE)
+2. User approves in browser → receives one-time authorization code
+3. Agent exchanges code for access token (with code verifier)
+4. Agent uses token for API calls
+
+**Pre-registered clients**: `claude-ai`, `chatgpt`, `gemini` - ready to use!
+
+---
+
+### Step 1: Generate PKCE Parameters
+
+```bash
+# Code verifier (random 128 character string)
+CODE_VERIFIER=$(openssl rand -hex 64)
+
+# Code challenge (SHA256 hash of verifier)
+CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base64 | tr '+/' '-_' | tr -d '=')
+
+# State (for CSRF protection)
+STATE=$(openssl rand -hex 16)
+```
+
+---
+
+### Step 2: Authorization URL
+
+Direct user to this URL in their browser:
+
+```
+http://yoursite.com/?ai_connect_oauth_authorize=1
+  &response_type=code
+  &client_id=claude-ai
+  &redirect_uri=urn:ietf:wg:oauth:2.0:oob
+  &scope=read%20write
+  &state=YOUR_STATE
+  &code_challenge=YOUR_CODE_CHALLENGE
+  &code_challenge_method=S256
+```
+
+**Available scopes:**
+- `read` - Read posts, pages, and content
+- `write` - Create and update posts and pages  
+- `delete` - Delete posts and pages
+- `manage_users` - View and manage user accounts
+
+User will see a consent screen and approve. They'll receive an **authorization code** (valid for 10 minutes).
+
+---
+
+### Step 3: Exchange Code for Token
 
 **Request:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/auth/login" \
+curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "your_wordpress_username",
-    "password": "your_wordpress_password"
+    "grant_type": "authorization_code",
+    "client_id": "claude-ai",
+    "code": "AUTHORIZATION_CODE_HERE",
+    "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+    "code_verifier": "YOUR_CODE_VERIFIER"
   }'
 ```
 
 **Response:**
 ```json
 {
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "access_token": "wpc_c6c9f8398c5f7921713011d19676ee2f81470cf7ec7c71ce91925cd129853dd3",
   "token_type": "Bearer",
   "expires_in": 3600,
-  "refresh_token": "def50200a1b2c3...",
-  "scope": "read write",
-  "user_id": 1,
-  "user_login": "admin",
-  "user_email": "admin@example.com"
+  "scope": "read write"
 }
 ```
 
-⚠️ **Security Note:** Access tokens expire after 1 hour. Store the refresh token to get new access tokens without re-authenticating.
+⚠️ **Security Notes:** 
+- Authorization codes are **one-time use** and expire in 10 minutes
+- Access tokens expire after 1 hour
+- PKCE verification ensures the token can only be claimed by the client that initiated the flow
 
 ---
 
@@ -320,16 +371,24 @@ Default limits (per user):
 
 ## 🐛 Troubleshooting
 
-### Common Errors
+### Common OAuth Errors
 
-#### `"authentication_failed"` - Invalid username or password
-**Solution:** Verify WordPress credentials are correct
+#### `"invalid_client"` - Invalid client_id
+**Solution:** Use one of the pre-registered clients: `claude-ai`, `chatgpt`, or `gemini`
+
+#### `"invalid_grant"` - Authorization code invalid
+**Solution:** 
+- Authorization codes are one-time use and expire after 10 minutes
+- Request a new authorization code
+
+#### `"PKCE verification failed"`
+**Solution:** Ensure you're using the same `code_verifier` that generated the `code_challenge`
 
 #### `"access_denied"` - User blocked
-**Solution:** Check if user is in blacklist (AI Connect → Settings)
+**Solution:** Check if user is in blacklist (AI Connect → OAuth Tokens)
 
 #### `"Token expired"`
-**Solution:** Use refresh token to get a new access token
+**Solution:** Access tokens expire after 1 hour. Request new authorization.
 
 #### `"Rate limit exceeded"`
 **Solution:** 
@@ -344,131 +403,70 @@ Default limits (per user):
 
 ---
 
-## 📝 Code Examples
+## 🔧 Development Setup
 
-### JavaScript
+### Local Development with PHP Built-in Server
 
-```javascript
-// Login and get tokens
-async function loginToWordPress(siteUrl, username, password) {
-  const response = await fetch(`${siteUrl}/wp-json/ai-connect/v1/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  });
-  
-  const tokens = await response.json();
-  return tokens.access_token;
-}
-
-// Use the API
-async function searchPosts(siteUrl, accessToken, query) {
-  const response = await fetch(`${siteUrl}/wp-json/ai-connect/v1/tools/wordpress.searchPosts`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ search: query, limit: 10 })
-  });
-  
-  const data = await response.json();
-  return data;
-}
-
-// Example usage
-const token = await loginToWordPress('https://yoursite.com', 'admin', 'password');
-const posts = await searchPosts('https://yoursite.com', token, 'hello');
-console.log(posts);
-```
-
----
-
-### Python
-
-```python
-import requests
-
-class WordPressAI:
-    def __init__(self, site_url, username, password):
-        self.site_url = site_url
-        self.access_token = None
-        self.refresh_token = None
-        self.login(username, password)
-    
-    def login(self, username, password):
-        """Authenticate and get tokens"""
-        response = requests.post(
-            f"{self.site_url}/wp-json/ai-connect/v1/auth/login",
-            json={'username': username, 'password': password}
-        )
-        response.raise_for_status()
-        
-        data = response.json()
-        self.access_token = data['access_token']
-        self.refresh_token = data['refresh_token']
-    
-    def refresh_access_token(self):
-        """Get new access token using refresh token"""
-        response = requests.post(
-            f"{self.site_url}/wp-json/ai-connect/v1/oauth/refresh",
-            json={'refresh_token': self.refresh_token}
-        )
-        response.raise_for_status()
-        
-        data = response.json()
-        self.access_token = data['access_token']
-    
-    def call_tool(self, tool_name, params):
-        """Call a WordPress tool"""
-        response = requests.post(
-            f"{self.site_url}/wp-json/ai-connect/v1/tools/{tool_name}",
-            headers={'Authorization': f'Bearer {self.access_token}'},
-            json=params
-        )
-        
-        # Handle token expiry
-        if response.status_code == 401:
-            self.refresh_access_token()
-            return self.call_tool(tool_name, params)
-        
-        response.raise_for_status()
-        return response.json()
-
-# Example usage
-wp = WordPressAI('https://yoursite.com', 'admin', 'password')
-
-# Search posts
-posts = wp.call_tool('wordpress.searchPosts', {'search': 'hello', 'limit': 5})
-print(posts)
-
-# Get current user
-user = wp.call_tool('wordpress.getCurrentUser', {})
-print(user)
-```
-
----
-
-## 🔧 Development
-
-### Testing Locally
+**Important:** PHP's built-in server requires a router script for WordPress REST API to work correctly.
 
 ```bash
-# Start WordPress with PHP built-in server
+# Start server with router (REQUIRED for REST API)
 cd /var/www/wp
-php -S localhost:8888
+php -S 0.0.0.0:8888 router.php
+```
 
-# Test login
-curl -X POST "http://localhost:8888/wp-json/ai-connect/v1/auth/login" \
+**Why is `router.php` needed?**
+- PHP built-in server doesn't support WordPress permalinks/rewrite rules by default
+- Without it, requests to `/wp-json/...` return 404
+- The router forwards all non-static requests through WordPress `index.php`
+
+**Production:** On Apache/Nginx, `.htaccess` or nginx config handle this automatically - `router.php` is only for local development.
+
+---
+
+### Testing OAuth Flow Locally
+
+```bash
+# 1. Generate PKCE parameters
+CODE_VERIFIER=$(openssl rand -hex 64)
+CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base64 | tr '+/' '-_' | tr -d '=')
+STATE=$(openssl rand -hex 16)
+
+# 2. Open authorization URL in browser (replace localhost:8888 with your server)
+echo "http://localhost:8888/?ai_connect_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
+
+# 3. After approval, exchange code for token
+curl -X POST "http://localhost:8888/wp-json/ai-connect/v1/oauth/token" \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin"}'
+  -d "{
+    \"grant_type\": \"authorization_code\",
+    \"client_id\": \"claude-ai\",
+    \"code\": \"PASTE_CODE_HERE\",
+    \"redirect_uri\": \"urn:ietf:wg:oauth:2.0:oob\",
+    \"code_verifier\": \"$CODE_VERIFIER\"
+  }"
 
-# Test API call
+# 4. Test API with token
 curl -X POST "http://localhost:8888/wp-json/ai-connect/v1/tools/wordpress.getCurrentUser" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
+
+---
+
+### Running Tests
+
+```bash
+cd wp-content/plugins/ai-connect
+./tests/test-endpoints.sh
+```
+
+This tests:
+- All tool endpoints
+- OAuth 2.0 Bearer token authentication
+- Public vs protected endpoints
+- Error handling
 
 ---
 
@@ -498,6 +496,25 @@ add_action('ai_connect_register_modules', function($ai_connect) {
 
 ## 📋 Changelog
 
+### Version 0.2.0 - 2026-02-22 🔐 **BREAKING CHANGE**
+
+**Security:** Migrated from username/password to OAuth 2.0 Authorization Code Flow with PKCE
+
+* **Added:** OAuth 2.0 Authorization Code Flow with PKCE (S256)
+* **Added:** Pre-registered OAuth clients (claude-ai, chatgpt, gemini)
+* **Added:** OAuth consent screen for user authorization
+* **Added:** Admin UI for OAuth token management (AI Connect → OAuth Tokens)
+* **Added:** `router.php` for PHP built-in server support
+* **Removed:** Direct username/password authentication endpoint (`/auth/login`)
+* **Security:** Authorization codes are one-time use with 10 minute expiry
+* **Security:** Access tokens expire after 1 hour
+* **Security:** PKCE (S256) required to prevent authorization code interception
+* **Fixed:** Timezone handling in token expiration validation
+* **Fixed:** Bearer token authentication middleware
+* **Fixed:** Unreachable code in permission checks
+
+**Migration Required:** Existing username/password integrations must migrate to OAuth 2.0. See documentation for details.
+
 ### Version 0.1.2 - 2026-02-19
 * **Added:** Translation support for 12 languages (ar, de_DE, en_US, es_ES, fr_FR, he_IL, it_IT, ja, nl_NL, pt_BR, ru_RU, zh_CN)
 * **Fix:** Include composer.json and composer.lock in WordPress.org builds
@@ -512,12 +529,13 @@ add_action('ai_connect_register_modules', function($ai_connect) {
 ### Version 0.1.0 - 2025-02-13
 * Initial public release
 * WebMCP protocol support
-* Direct username/password authentication with JWT
 * 5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)
 * Rate limiting (Redis + WordPress transients)
-* Security controls (Rotate JWT Secret, User Blacklist)
+* Security controls (User Blacklist)
 * Automatic manifest generation
 * Production ready
+
+**Note:** v0.1.0 used username/password authentication. This was replaced with OAuth 2.0 in v0.2.0.
 
 ---
 

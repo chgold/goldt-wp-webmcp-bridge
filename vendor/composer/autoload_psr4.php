@@ -7,7 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Predis\\' => array($vendorDir . '/predis/predis/src'),
-    'Firebase\\JWT\\' => array($vendorDir . '/firebase/php-jwt/src'),
     'AIConnect\\Modules\\' => array($baseDir . '/includes/modules'),
     'AIConnect\\Core\\' => array($baseDir . '/includes/core'),
     'AIConnect\\Admin\\' => array($baseDir . '/includes/admin'),

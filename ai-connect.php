@@ -32,6 +32,10 @@ function ai_connect_activate() {
         ai_connect_install_dependencies();
     }
     
+    // Create OAuth database tables
+    require_once AI_CONNECT_PATH . 'includes/oauth/class-database.php';
+    \AIConnect\OAuth\Database::create_tables();
+    
     add_option('ai_connect_version', AI_CONNECT_VERSION);
     add_option('ai_connect_installed', time());
     flush_rewrite_rules();

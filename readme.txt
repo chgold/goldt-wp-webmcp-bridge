@@ -8,21 +8,22 @@ Stable tag: 0.1.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Connect AI agents (ChatGPT, Claude) to your WordPress site with simple, secure authentication.
+Connect AI agents (ChatGPT, Claude) to your WordPress site with secure OAuth 2.0 authentication.
 
 == Description ==
 
-**AI Connect** enables AI agents to interact with your WordPress content through secure JWT authentication using the WebMCP protocol.
+**AI Connect** enables AI agents to interact with your WordPress content through secure OAuth 2.0 authentication using the WebMCP protocol.
 
 Perfect for AI-powered customer support, automated content analysis, intelligent search, and custom AI integrations.
 
 = ✨ Features =
 
 * **WebMCP Protocol Support** - Industry-standard AI integration
-* **Simple Authentication** - Direct username/password login, no complex OAuth setup
+* **OAuth 2.0 with PKCE** - Secure authorization code flow, no passwords transmitted
+* **Pre-registered Clients** - claude-ai, chatgpt, gemini ready to use
 * **5 WordPress Tools** - Search/get posts, pages, and user info
 * **Rate Limiting** - Prevent abuse (50 req/min default)
-* **Security Controls** - Rotate JWT secret, block specific users
+* **Security Controls** - Token management, user blacklist
 * **Zero Configuration** - Works out of the box
 * **Extensible** - Add custom tools via developer hooks
 
@@ -31,9 +32,9 @@ Perfect for AI-powered customer support, automated content analysis, intelligent
 **Using ChatGPT or Claude?**
 
 Tell your AI agent:
-> "I want to connect you to my WordPress site at https://mysite.com using AI Connect plugin. The manifest is at /wp-json/ai-connect/v1/manifest"
+> "I want to connect you to my WordPress site at https://mysite.com using AI Connect plugin. The manifest is at /wp-json/ai-connect/v1/manifest. Use OAuth 2.0 with client_id: claude-ai"
 
-The AI will ask for your WordPress username and password to authenticate.
+The AI will guide you through OAuth authorization - you'll approve access in your browser.
 
 = 🛠️ Available Tools =
 
@@ -45,38 +46,42 @@ The AI will ask for your WordPress username and password to authenticate.
 
 = 🔒 How Authentication Works =
 
-**Simple and Universal:**
+**OAuth 2.0 Authorization Code Flow with PKCE:**
 
-Any AI agent can connect to your WordPress site using:
-* WordPress username
-* WordPress password
+Secure authentication without exposing passwords:
 
-**The AI agent operates as the user who authenticated:**
-* The agent receives a JWT token linked to that user's ID
+1. AI agent initiates OAuth flow with code challenge (PKCE)
+2. User approves in browser (consent screen)
+3. Agent receives one-time authorization code
+4. Agent exchanges code for access token using code verifier
+5. Agent uses token for API calls
+
+**The AI agent operates as the user who authorized:**
+* The agent receives an OAuth token linked to that user's ID
 * All API requests run with that user's permissions
 * The agent respects WordPress user capabilities
 
 **Examples:**
 
-**If Administrator logs in:**
+**If Administrator authorizes:**
 * ✅ Sees all posts (including drafts, private)
 * ✅ Full access based on admin capabilities
 
-**If Subscriber logs in:**
+**If Subscriber authorizes:**
 * ✅ Sees only published content
 * ❌ Cannot see drafts or private content
 
-**Note:** All API calls require authentication, even for reading public content. This prevents abuse and enables rate limiting.
+**Security:** Authorization codes are one-time use (10 min expiry). Access tokens expire after 1 hour. PKCE ensures tokens can't be stolen.
 
 = 🔐 Admin Controls =
 
 **For Site Administrators:**
 
-Go to **AI Connect → Settings** to manage security:
+Go to **AI Connect → OAuth Tokens** to manage security:
 
-* **Rotate JWT Secret** - Emergency disconnect all AI agents (all tokens become invalid)
-* **Block Users** - Revoke access for specific WordPress users
-* **Rate Limits** - Configure request limits (default: 50/min, 1000/hour)
+* **Revoke OAuth Tokens** - View and revoke active OAuth access tokens
+* **Block Users** - Revoke access for specific WordPress users (AI Connect → Settings)
+* **Rate Limits** - Configure request limits (AI Connect → Settings, default: 50/min, 1000/hour)
 
 = 🗺️ Future Development =
 
@@ -108,7 +113,6 @@ Your feedback directly influences what we build next!
 4. Activate the plugin
 
 **Note:** All required dependencies are included:
-* `firebase/php-jwt` (v6.10.0) - JWT token handling
 * `predis/predis` (v2.4.1) - Redis client for rate limiting (optional)
 
 No manual `composer install` required!
@@ -123,38 +127,45 @@ No manual `composer install` required!
 
 **Development Note:**
 
-If using PHP built-in server or environments where pretty permalinks don't work with dots in URLs, use the `index.php?rest_route=` format:
+If using PHP built-in server, you MUST use the router script:
 
 ```bash
-# Development format (PHP built-in server)
-curl "http://localhost:8888/index.php?rest_route=/ai-connect/v1/tools/wordpress.searchPosts"
+cd /var/www/wp
+php -S 0.0.0.0:8888 router.php
 ```
 
-On production servers with Apache/Nginx, use the standard format:
+Without `router.php`, REST API requests will return 404.
+
+**Quick OAuth Test:**
 
 ```bash
-# Production format (Apache/Nginx)
-curl "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.searchPosts"
-```
+# Step 1: Generate PKCE parameters
+CODE_VERIFIER=$(openssl rand -hex 64)
+CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base64 | tr '+/' '-_' | tr -d '=')
+STATE=$(openssl rand -hex 16)
 
-**Quick cURL Test:**
+# Step 2: Open authorization URL in browser
+echo "http://yoursite.com/?ai_connect_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
 
-```bash
-# Step 1: Login and get access token
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/auth/login" \
+# Step 3: Exchange authorization code for token
+curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
   -H "Content-Type: application/json" \
-  -d '{"username":"your_username","password":"your_password"}'
+  -d "{
+    \"grant_type\": \"authorization_code\",
+    \"client_id\": \"claude-ai\",
+    \"code\": \"PASTE_CODE_FROM_BROWSER\",
+    \"redirect_uri\": \"urn:ietf:wg:oauth:2.0:oob\",
+    \"code_verifier\": \"$CODE_VERIFIER\"
+  }"
 
-# You'll receive an access_token
-
-# Step 2: Use the access token
+# Step 4: Use the access token
 curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.getCurrentUser" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
 
-**For detailed examples** (JavaScript, Python), see [README.md](https://github.com/chgold/ai-connect/blob/main/README.md)
+**For detailed examples and HTML demo**, see [README.md](https://github.com/chgold/ai-connect/blob/main/README.md)
 
 == Frequently Asked Questions ==
 
@@ -179,14 +190,18 @@ This is the industry standard (Twitter, GitHub, Google APIs all require auth).
 
 = How does the AI agent authentication work? =
 
-**User authentication:** The AI agent operates as the WordPress user who authenticated.
+**OAuth 2.0 Authorization:** The AI agent operates as the WordPress user who authorized it.
 
-When a user provides their credentials to an AI agent:
-* The agent receives a JWT token linked to that user's ID
+When a user approves access through the OAuth consent screen:
+* The agent receives an access token linked to that user's ID
 * All API requests run with that user's permissions
 * The agent inherits the user's capabilities
 
-**Security:** The agent is NOT a superuser - it respects WordPress user capabilities.
+**Security:** 
+* No passwords are transmitted - only authorization codes
+* PKCE prevents authorization code interception
+* Tokens are time-limited (1 hour) and can be revoked
+* The agent respects WordPress user capabilities
 
 = Is Redis required? =
 
@@ -213,12 +228,14 @@ Use the refresh token to get a new access token without re-authentication.
 
 = Can I revoke access? =
 
-Yes! Go to **AI Connect → Settings** and:
+Yes! Multiple options:
 
-**For all users:**
-* Click **"Rotate JWT Secret"** to invalidate all tokens immediately
+**Revoke specific OAuth token:**
+* Go to **AI Connect → OAuth Tokens**
+* Find the token and click "Revoke"
 
-**For specific user:**
+**Block specific user:**
+* Go to **AI Connect → Settings**
 * Enter user ID in "Block User" section
 * User cannot authenticate or use existing tokens
 
@@ -226,11 +243,13 @@ Yes! Go to **AI Connect → Settings** and:
 
 **Common issues:**
 
-* **"authentication_failed"** - Check username and password
-* **"access_denied"** - User is blocked (check Settings)
-* **"Token expired"** - Use refresh token to get new access token
+* **"invalid_client"** - Check client_id (use: claude-ai, chatgpt, or gemini)
+* **"invalid_grant"** - Authorization code expired or already used (codes are one-time, 10 min expiry)
+* **"PKCE verification failed"** - Code verifier doesn't match code challenge
+* **"access_denied"** - User is blocked (check Settings → OAuth Tokens)
+* **"Token expired"** - Access token expired after 1 hour, request new authorization
 * **"Rate limit exceeded"** - Wait for retry period or increase limits in Settings
-* **REST API 404** - Flush permalinks (Settings → Permalinks → Save)
+* **REST API 404** - Using PHP built-in server? Must use `php -S 0.0.0.0:8888 router.php`
 
 Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
@@ -248,6 +267,21 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. API Response - Example JSON response from API call
 
 == Changelog ==
+
+= 0.2.0 - 2026-02-22 =
+**BREAKING CHANGE: OAuth 2.0 Migration**
+* **Security**: Migrated from username/password to OAuth 2.0 Authorization Code Flow with PKCE
+* **Added**: Pre-registered OAuth clients (claude-ai, chatgpt, gemini)
+* **Added**: OAuth consent screen for user authorization
+* **Added**: Admin UI for OAuth token management (AI Connect → OAuth Tokens)
+* **Added**: router.php for PHP built-in server support
+* **Removed**: Direct username/password authentication endpoint (`/auth/login`)
+* **Security**: Authorization codes are one-time use with 10 minute expiry
+* **Security**: Access tokens expire after 1 hour
+* **Security**: PKCE (S256) required to prevent authorization code interception
+* **Fixed**: Timezone handling in token expiration validation
+* **Improved**: Bearer token authentication middleware
+* **Note**: Existing username/password integrations must migrate to OAuth 2.0
 
 = 0.1.2 - 2026-02-19 =
 * Added: Translation support for 12 languages (ar, de_DE, en_US, es_ES, fr_FR, he_IL, it_IT, ja, nl_NL, pt_BR, ru_RU, zh_CN)
@@ -274,14 +308,14 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Upgrade Notice ==
 
+= 0.2.0 =
+**BREAKING CHANGE**: OAuth 2.0 required. Username/password authentication removed. Existing integrations must migrate to OAuth 2.0 Authorization Code Flow. See changelog and documentation for migration guide.
+
 = 0.1.2 =
 Translation infrastructure added! Plugin now supports 12 languages with full Hebrew translation available.
 
 = 0.1.1 =
 Improved distribution - all dependencies now bundled. No manual setup required!
-
-= 0.1.0 =
-Initial release. Install and start connecting AI agents to your WordPress site!
 
 == Feedback & Roadmap ==
 
@@ -302,8 +336,9 @@ Your feedback directly influences development priorities!
 AI Connect does not collect, store, or transmit any personal data to external services. All API requests are handled locally on your WordPress installation.
 
 **Data stored locally:**
-* JWT secret (for token signing)
-* Access tokens (temporary, 1 hour expiry)
+* OAuth clients (pre-registered: claude-ai, chatgpt, gemini)
+* OAuth authorization codes (temporary, 10 min expiry, one-time use)
+* OAuth access tokens (temporary, 1 hour expiry)
 * Rate limiting counters
 * User blacklist (WordPress user IDs only)
 
