@@ -86,6 +86,10 @@ function ai_connect_init() {
         return;
     }
     
+    // Run database upgrades if needed
+    require_once AI_CONNECT_PATH . 'includes/oauth/class-database.php';
+    \AIConnect\OAuth\Database::maybe_upgrade();
+    
     if (!class_exists('WooCommerce')) {
         add_action('admin_notices', function() {
             echo '<div class="notice notice-warning"><p>';

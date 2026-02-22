@@ -174,6 +174,65 @@ global \$wpdb;
 \$wpdb->delete(\$wpdb->prefix . 'ai_connect_oauth_tokens', ['token' => '$OAUTH_TOKEN']);
 " 2>/dev/null
 
+REFRESH_TOKEN_TEST=$(wp eval "
+\$oauth_server = new \AIConnect\OAuth\OAuth_Server();
+\$token_data = \$oauth_server->create_access_token('claude-ai', 1, ['read', 'write']);
+echo json_encode(\$token_data);
+" 2>/dev/null)
+
+OLD_ACCESS_TOKEN=$(echo "$REFRESH_TOKEN_TEST" | grep -oP '"access_token":"[^"]*"' | cut -d'"' -f4)
+REFRESH_TOKEN=$(echo "$REFRESH_TOKEN_TEST" | grep -oP '"refresh_token":"[^"]*"' | cut -d'"' -f4)
+
+if [ -n "$REFRESH_TOKEN" ]; then
+  REFRESH_RESPONSE=$(curl -s -X POST \
+    "$SITE_URL/index.php?rest_route=/ai-connect/v1/oauth/token" \
+    -H "Content-Type: application/json" \
+    -d "{\"grant_type\":\"refresh_token\",\"refresh_token\":\"$REFRESH_TOKEN\",\"client_id\":\"claude-ai\"}")
+  
+  NEW_ACCESS_TOKEN=$(echo "$REFRESH_RESPONSE" | grep -oP '"access_token":"[^"]*"' | cut -d'"' -f4)
+  
+  if [ -n "$NEW_ACCESS_TOKEN" ]; then
+    TEST_WITH_NEW_TOKEN=$(curl -s -X POST \
+      "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+      -H "Authorization: Bearer $NEW_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{}')
+    
+    if echo "$TEST_WITH_NEW_TOKEN" | grep -q '"username"'; then
+      echo "   ✅ Refresh token flow (new token works)"
+      ((PASSED++))
+    else
+      echo "   ❌ Refresh token flow (new token doesn't work)"
+      ((FAILED++))
+    fi
+    
+    TEST_WITH_OLD_TOKEN=$(curl -s -X POST \
+      "$SITE_URL/index.php?rest_route=/ai-connect/v1/tools/wordpress.getCurrentUser" \
+      -H "Authorization: Bearer $OLD_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{}')
+    
+    if echo "$TEST_WITH_OLD_TOKEN" | grep -qE '"code":"(invalid_token|no_token)"'; then
+      echo "   ✅ Old token revoked after refresh"
+      ((PASSED++))
+    else
+      echo "   ❌ Old token not revoked after refresh"
+      ((FAILED++))
+    fi
+  else
+    echo "   ❌ Refresh token exchange failed"
+    ((FAILED++))
+  fi
+else
+  echo "   ❌ No refresh token in response"
+  ((FAILED++))
+fi
+
+wp eval "
+global \$wpdb;
+\$wpdb->query(\"DELETE FROM {\$wpdb->prefix}ai_connect_oauth_tokens WHERE client_id = 'claude-ai' AND user_id = 1\");
+" 2>/dev/null
+
 echo ""
 echo "╔════════════════════════════════════════════╗"
 echo "║   Test Results                             ║"

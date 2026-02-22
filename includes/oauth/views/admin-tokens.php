@@ -14,14 +14,15 @@ if (!defined('ABSPATH')) {
                 <th><?php esc_html_e('User', 'ai-connect'); ?></th>
                 <th><?php esc_html_e('Scopes', 'ai-connect'); ?></th>
                 <th><?php esc_html_e('Created', 'ai-connect'); ?></th>
-                <th><?php esc_html_e('Expires', 'ai-connect'); ?></th>
+                <th><?php esc_html_e('Access Token Expires', 'ai-connect'); ?></th>
+                <th><?php esc_html_e('Refresh Token Expires', 'ai-connect'); ?></th>
                 <th><?php esc_html_e('Actions', 'ai-connect'); ?></th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($tokens)): ?>
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px;">
+                    <td colspan="7" style="text-align: center; padding: 20px;">
                         <?php esc_html_e('No active tokens found.', 'ai-connect'); ?>
                     </td>
                 </tr>
@@ -39,12 +40,26 @@ if (!defined('ABSPATH')) {
                         <td><?php echo esc_html(mysql2date('Y-m-d H:i', $ai_connect_token->created_at)); ?></td>
                         <td>
                             <?php 
-                            $ai_connect_expires = strtotime($ai_connect_token->expires_at);
+                            $ai_connect_expires = strtotime($ai_connect_token->expires_at . ' UTC');
                             $ai_connect_now = time();
                             if ($ai_connect_expires < $ai_connect_now) {
                                 echo '<span style="color: #dc3232;">' . esc_html__('Expired', 'ai-connect') . '</span>';
                             } else {
                                 echo esc_html(mysql2date('Y-m-d H:i', $ai_connect_token->expires_at));
+                            }
+                            ?>
+                        </td>
+                        <td>
+                            <?php 
+                            if (!empty($ai_connect_token->refresh_token_expires_at)) {
+                                $ai_connect_refresh_expires = strtotime($ai_connect_token->refresh_token_expires_at . ' UTC');
+                                if ($ai_connect_refresh_expires < $ai_connect_now) {
+                                    echo '<span style="color: #dc3232;">' . esc_html__('Expired', 'ai-connect') . '</span>';
+                                } else {
+                                    echo esc_html(mysql2date('Y-m-d H:i', $ai_connect_token->refresh_token_expires_at));
+                                }
+                            } else {
+                                echo '<span style="color: #999;">' . esc_html__('N/A', 'ai-connect') . '</span>';
                             }
                             ?>
                         </td>

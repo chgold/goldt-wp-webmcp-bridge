@@ -68,14 +68,17 @@ class Database {
         $sql_tokens = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ai_connect_oauth_tokens (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             token VARCHAR(255) NOT NULL,
+            refresh_token VARCHAR(255) DEFAULT NULL,
             client_id VARCHAR(80) NOT NULL,
             user_id BIGINT(20) UNSIGNED NOT NULL,
             scopes TEXT DEFAULT NULL,
             expires_at DATETIME NOT NULL,
+            refresh_token_expires_at DATETIME DEFAULT NULL,
             revoked_at DATETIME DEFAULT NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY token (token),
+            UNIQUE KEY refresh_token (refresh_token),
             KEY user_id (user_id),
             KEY client_id (client_id),
             KEY expires_at (expires_at)
@@ -86,7 +89,106 @@ class Database {
         dbDelta($sql_tokens);
         
         self::insert_default_clients();
-        self::set_version('1.0.0');
+        self::set_version('1.2.0');
+    }
+    
+    /**
+     * Run database upgrades if needed
+     */
+    public static function maybe_upgrade() {
+        $current_version = self::get_version();
+        
+        if (version_compare($current_version, '1.1.0', '<')) {
+            self::upgrade_to_1_1_0();
+        }
+        
+        if (version_compare($current_version, '1.2.0', '<')) {
+            self::upgrade_to_1_2_0();
+        }
+    }
+    
+    /**
+     * Upgrade to version 1.1.0 - Add refresh token support
+     */
+    private static function upgrade_to_1_1_0() {
+        global $wpdb;
+        
+        // Check if columns already exist
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade check
+        $columns = $wpdb->get_results("SHOW COLUMNS FROM {$wpdb->prefix}ai_connect_oauth_tokens LIKE 'refresh_token'");
+        
+        if (empty($columns)) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Adding refresh token support
+            $wpdb->query("ALTER TABLE {$wpdb->prefix}ai_connect_oauth_tokens 
+                ADD COLUMN refresh_token VARCHAR(255) DEFAULT NULL AFTER token,
+                ADD COLUMN refresh_token_expires_at DATETIME DEFAULT NULL AFTER expires_at,
+                ADD UNIQUE KEY refresh_token (refresh_token)");
+        }
+        
+        self::set_version('1.1.0');
+    }
+    
+    /**
+     * Upgrade to version 1.2.0 - Add popular AI clients
+     */
+    private static function upgrade_to_1_2_0() {
+        global $wpdb;
+        
+        $new_clients = [
+            [
+                'client_id' => 'grok',
+                'client_name' => 'Grok (xAI)',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'perplexity',
+                'client_name' => 'Perplexity AI',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'copilot',
+                'client_name' => 'Microsoft Copilot',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'meta-ai',
+                'client_name' => 'Meta AI (Facebook)',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'deepseek',
+                'client_name' => 'DeepSeek AI',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ]
+        ];
+        
+        foreach ($new_clients as $client) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth setup, runs once on upgrade, no caching needed
+            $exists = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}ai_connect_oauth_clients WHERE client_id = %s",
+                $client['client_id']
+            ));
+            
+            if (!$exists) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth setup, inserting new AI clients
+                $wpdb->insert(
+                    "{$wpdb->prefix}ai_connect_oauth_clients",
+                    $client
+                );
+            }
+        }
+        
+        self::set_version('1.2.0');
     }
     
     /**
@@ -113,6 +215,41 @@ class Database {
             [
                 'client_id' => 'gemini',
                 'client_name' => 'Gemini (Google)',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'grok',
+                'client_name' => 'Grok (xAI)',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'perplexity',
+                'client_name' => 'Perplexity AI',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'copilot',
+                'client_name' => 'Microsoft Copilot',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'meta-ai',
+                'client_name' => 'Meta AI (Facebook)',
+                'client_type' => 'public',
+                'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
+                'allowed_scopes' => json_encode(['read', 'write'])
+            ],
+            [
+                'client_id' => 'deepseek',
+                'client_name' => 'DeepSeek AI',
                 'client_type' => 'public',
                 'redirect_uris' => json_encode(['urn:ietf:wg:oauth:2.0:oob']),
                 'allowed_scopes' => json_encode(['read', 'write'])

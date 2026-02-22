@@ -32,6 +32,10 @@ class Token_Endpoint {
             return $this->handle_authorization_code_grant($request);
         }
         
+        if ($grant_type === 'refresh_token') {
+            return $this->handle_refresh_token_grant($request);
+        }
+        
         return new \WP_Error(
             'unsupported_grant_type',
             'Grant type not supported',
@@ -58,6 +62,34 @@ class Token_Endpoint {
             $client_id,
             $code_verifier,
             $redirect_uri
+        );
+        
+        if (is_wp_error($token)) {
+            return new \WP_Error(
+                $token->get_error_code(),
+                $token->get_error_message(),
+                ['status' => 400]
+            );
+        }
+        
+        return rest_ensure_response($token);
+    }
+    
+    private function handle_refresh_token_grant($request) {
+        $refresh_token = $request->get_param('refresh_token');
+        $client_id = $request->get_param('client_id');
+        
+        if (empty($refresh_token) || empty($client_id)) {
+            return new \WP_Error(
+                'invalid_request',
+                'Missing required parameters',
+                ['status' => 400]
+            );
+        }
+        
+        $token = $this->oauth_server->exchange_refresh_token(
+            $refresh_token,
+            $client_id
         );
         
         if (is_wp_error($token)) {

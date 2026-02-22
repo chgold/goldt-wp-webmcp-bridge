@@ -40,7 +40,15 @@ AI Connect uses **OAuth 2.0 Authorization Code Flow with PKCE** - the industry s
 3. Agent exchanges code for access token (with code verifier)
 4. Agent uses token for API calls
 
-**Pre-registered clients**: `claude-ai`, `chatgpt`, `gemini` - ready to use!
+**Pre-registered clients** (ready to use!):
+- `claude-ai` - Claude AI (Anthropic)
+- `chatgpt` - ChatGPT (OpenAI)
+- `gemini` - Gemini (Google)
+- `grok` - Grok (xAI)
+- `perplexity` - Perplexity AI
+- `copilot` - Microsoft Copilot
+- `meta-ai` - Meta AI (Facebook)
+- `deepseek` - DeepSeek AI
 
 ---
 
@@ -105,18 +113,22 @@ curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
   "access_token": "wpc_c6c9f8398c5f7921713011d19676ee2f81470cf7ec7c71ce91925cd129853dd3",
   "token_type": "Bearer",
   "expires_in": 3600,
+  "refresh_token": "wpr_8a7b6c5d4e3f2a1b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b",
+  "refresh_token_expires_in": 2592000,
   "scope": "read write"
 }
 ```
 
 ⚠️ **Security Notes:** 
 - Authorization codes are **one-time use** and expire in 10 minutes
-- Access tokens expire after 1 hour
+- Access tokens expire after **1 hour**
+- Refresh tokens expire after **30 days**
 - PKCE verification ensures the token can only be claimed by the client that initiated the flow
+- **Save your refresh token** - you'll need it to get new access tokens without re-authenticating!
 
 ---
 
-### Step 2: Use the API
+### Step 4: Use the API
 
 **Request:**
 ```bash
@@ -156,27 +168,63 @@ curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/tools/wordpress.searchPo
 
 ---
 
-### Step 3: Refresh Token (After 1 Hour)
+### Step 4: Refresh Access Token (After 1 Hour)
 
-Access tokens expire after 1 hour. Use your refresh token to get a new one:
+Access tokens expire after 1 hour. Use your refresh token to get a new access token **without** re-authenticating:
 
 **Request:**
 ```bash
-curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/refresh" \
+curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
-    "refresh_token": "def50200a1b2c3..."
+    "grant_type": "refresh_token",
+    "client_id": "claude-ai",
+    "refresh_token": "wpr_8a7b6c5d4e3f2a1b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b"
   }'
 ```
 
 **Response:**
 ```json
 {
-  "access_token": "NEW_ACCESS_TOKEN",
+  "access_token": "wpc_NEW_ACCESS_TOKEN_HERE",
   "token_type": "Bearer",
-  "expires_in": 3600
+  "expires_in": 3600,
+  "refresh_token": "wpr_NEW_REFRESH_TOKEN_HERE",
+  "refresh_token_expires_in": 2592000,
+  "scope": "read write"
 }
 ```
+
+**Important:**
+- The old access token and refresh token are **automatically revoked**
+- You receive **new** access token AND refresh token
+- Refresh tokens are valid for 30 days
+- If the refresh token expires, user must re-authorize from Step 1
+
+---
+
+### Step 5: Revoke Token (Optional)
+
+Revoke an access token when you're done or if it's compromised:
+
+**Request:**
+```bash
+curl -X POST "http://yoursite.com/wp-json/ai-connect/v1/oauth/revoke" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "wpc_c6c9f8398c5f7921713011d19676ee2f81470cf7ec7c71ce91925cd129853dd3"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Token revoked successfully"
+}
+```
+
+**Note:** Revoking an access token also revokes its associated refresh token.
 
 ---
 

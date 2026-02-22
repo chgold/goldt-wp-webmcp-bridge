@@ -20,8 +20,8 @@ Perfect for AI-powered customer support, automated content analysis, intelligent
 
 * **WebMCP Protocol Support** - Industry-standard AI integration
 * **OAuth 2.0 with PKCE** - Secure authorization code flow, no passwords transmitted
-* **Pre-registered Clients** - claude-ai, chatgpt, gemini ready to use
-* **5 WordPress Tools** - Search/get posts, pages, and user info
+* **8 Pre-registered AI Clients** - Claude, ChatGPT, Gemini, Grok, Perplexity, Copilot, Meta AI, DeepSeek
+* **11 WordPress Tools** - Search/get posts, pages, products, cart, orders, and user info
 * **Rate Limiting** - Prevent abuse (50 req/min default)
 * **Security Controls** - Token management, user blacklist
 * **Zero Configuration** - Works out of the box
@@ -35,6 +35,21 @@ Tell your AI agent:
 > "I want to connect you to my WordPress site at https://mysite.com using AI Connect plugin. The manifest is at /wp-json/ai-connect/v1/manifest. Use OAuth 2.0 with client_id: claude-ai"
 
 The AI will guide you through OAuth authorization - you'll approve access in your browser.
+
+= 🤖 Supported AI Agents =
+
+**Pre-registered and ready to connect:**
+
+* **Claude AI** - Use `client_id: claude-ai` (Anthropic)
+* **ChatGPT** - Use `client_id: chatgpt` (OpenAI)
+* **Gemini** - Use `client_id: gemini` (Google)
+* **Grok** - Use `client_id: grok` (xAI)
+* **Perplexity AI** - Use `client_id: perplexity`
+* **Microsoft Copilot** - Use `client_id: copilot`
+* **Meta AI** - Use `client_id: meta-ai` (Facebook)
+* **DeepSeek** - Use `client_id: deepseek`
+
+All clients use OAuth 2.0 with PKCE and `redirect_uri: urn:ietf:wg:oauth:2.0:oob` (out-of-band).
 
 = 🛠️ Available Tools =
 
@@ -71,7 +86,7 @@ Secure authentication without exposing passwords:
 * ✅ Sees only published content
 * ❌ Cannot see drafts or private content
 
-**Security:** Authorization codes are one-time use (10 min expiry). Access tokens expire after 1 hour. PKCE ensures tokens can't be stolen.
+**Security:** Authorization codes are one-time use (10 min expiry). Access tokens expire after 1 hour. Refresh tokens valid for 30 days. PKCE ensures tokens can't be stolen.
 
 = 🔐 Admin Controls =
 
@@ -271,13 +286,15 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 = 0.2.0 - 2026-02-22 =
 **BREAKING CHANGE: OAuth 2.0 Migration**
 * **Security**: Migrated from username/password to OAuth 2.0 Authorization Code Flow with PKCE
-* **Added**: Pre-registered OAuth clients (claude-ai, chatgpt, gemini)
+* **Added**: 8 pre-registered OAuth clients (claude-ai, chatgpt, gemini, grok, perplexity, copilot, meta-ai, deepseek)
 * **Added**: OAuth consent screen for user authorization
+* **Added**: Refresh token support (30-day validity for seamless token renewal)
 * **Added**: Admin UI for OAuth token management (AI Connect → OAuth Tokens)
 * **Added**: router.php for PHP built-in server support
 * **Removed**: Direct username/password authentication endpoint (`/auth/login`)
 * **Security**: Authorization codes are one-time use with 10 minute expiry
 * **Security**: Access tokens expire after 1 hour
+* **Security**: Refresh tokens expire after 30 days
 * **Security**: PKCE (S256) required to prevent authorization code interception
 * **Fixed**: Timezone handling in token expiration validation
 * **Improved**: Bearer token authentication middleware

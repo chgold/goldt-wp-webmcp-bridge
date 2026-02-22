@@ -10,8 +10,9 @@ if (!defined('ABSPATH')) {
  */
 class OAuth_Server {
     
-    private $default_token_lifetime = 3600;
-    private $default_code_lifetime = 600;
+    private $default_token_lifetime = 3600; // 1 hour
+    private $default_code_lifetime = 600; // 10 minutes
+    private $default_refresh_token_lifetime = 2592000; // 30 days
     
     /**
      * Generate authorization code
@@ -100,25 +101,29 @@ class OAuth_Server {
     }
     
     /**
-     * Create access token
+     * Create access token with refresh token
      */
     public function create_access_token($client_id, $user_id, $scopes) {
         global $wpdb;
         
         $token = 'wpc_' . $this->generate_token(64);
+        $refresh_token = 'wpr_' . $this->generate_token(64);
         $expires_at = gmdate('Y-m-d H:i:s', time() + $this->default_token_lifetime);
+        $refresh_token_expires_at = gmdate('Y-m-d H:i:s', time() + $this->default_refresh_token_lifetime);
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth access token creation
         $inserted = $wpdb->insert(
             "{$wpdb->prefix}ai_connect_oauth_tokens",
             [
                 'token' => $token,
+                'refresh_token' => $refresh_token,
                 'client_id' => $client_id,
                 'user_id' => $user_id,
                 'scopes' => json_encode($scopes),
-                'expires_at' => $expires_at
+                'expires_at' => $expires_at,
+                'refresh_token_expires_at' => $refresh_token_expires_at
             ],
-            ['%s', '%s', '%d', '%s', '%s']
+            ['%s', '%s', '%s', '%d', '%s', '%s', '%s']
         );
         
         if (!$inserted) {
@@ -129,6 +134,8 @@ class OAuth_Server {
             'access_token' => $token,
             'token_type' => 'Bearer',
             'expires_in' => $this->default_token_lifetime,
+            'refresh_token' => $refresh_token,
+            'refresh_token_expires_in' => $this->default_refresh_token_lifetime,
             'scope' => implode(' ', $scopes)
         ];
     }
@@ -162,6 +169,54 @@ class OAuth_Server {
             'client_id' => $token_data->client_id,
             'scopes' => json_decode($token_data->scopes, true)
         ];
+    }
+    
+    /**
+     * Exchange refresh token for new access token
+     */
+    public function exchange_refresh_token($refresh_token, $client_id) {
+        global $wpdb;
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth refresh token exchange
+        $token_data = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}ai_connect_oauth_tokens WHERE refresh_token = %s",
+            $refresh_token
+        ));
+        
+        if (!$token_data) {
+            return new \WP_Error('invalid_grant', 'Refresh token not found');
+        }
+        
+        if ($token_data->client_id !== $client_id) {
+            return new \WP_Error('invalid_client', 'Client ID mismatch');
+        }
+        
+        if ($token_data->revoked_at !== null) {
+            return new \WP_Error('invalid_grant', 'Refresh token has been revoked');
+        }
+        
+        if (strtotime($token_data->refresh_token_expires_at . ' UTC') < time()) {
+            return new \WP_Error('invalid_grant', 'Refresh token expired');
+        }
+        
+        // Revoke the old access token and refresh token
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation
+        $wpdb->update(
+            "{$wpdb->prefix}ai_connect_oauth_tokens",
+            ['revoked_at' => gmdate('Y-m-d H:i:s')],
+            ['id' => $token_data->id],
+            ['%s'],
+            ['%d']
+        );
+        
+        // Create new access token and refresh token
+        $new_token = $this->create_access_token(
+            $token_data->client_id,
+            $token_data->user_id,
+            json_decode($token_data->scopes, true)
+        );
+        
+        return $new_token;
     }
     
     /**
