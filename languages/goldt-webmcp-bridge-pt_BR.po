@@ -7,8 +7,8 @@ msgstr ""
 msgid "AI Connect"
 msgstr "Conexão de IA"
 
-msgid "https://github.com/chgold/goldt-webmcp-bridge"
-msgstr "https://github.com/chgold/goldt-webmcp-bridge"
+msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
+msgstr "https://github.com/chgold/goldt-wp-webmcp-bridge"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
 msgstr "Faça a ponte entre o WordPress e os agentes de IA com o protocolo WebMCP"

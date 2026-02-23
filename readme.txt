@@ -107,7 +107,7 @@ Help us build what YOU need:
 * ⭐ **Feature requests** - We prioritize based on community feedback
 
 **How to provide feedback:**
-* GitHub: https://github.com/chgold/goldt-webmcp-bridge/issues
+* GitHub: https://github.com/chgold/goldt-wp-webmcp-bridge/issues
 * WordPress.org: Support forum
 
 Your feedback directly shapes the future of this plugin!
@@ -135,7 +135,7 @@ Your feedback directly shapes the future of this plugin!
 
 **Optional:** Configure rate limits in **GoldT WebMCP → Settings**
 
-**For detailed setup and testing examples**, see the [plugin documentation on GitHub](https://github.com/chgold/goldt-webmcp-bridge).
+**For detailed setup and testing examples**, see the [plugin documentation on GitHub](https://github.com/chgold/goldt-wp-webmcp-bridge).
 
 == Frequently Asked Questions ==
 
@@ -190,7 +190,7 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 
 **Important:** Place your custom tools in your theme's `functions.php` or a separate plugin - they will be preserved during plugin updates.
 
-See the [plugin documentation](https://github.com/chgold/goldt-webmcp-bridge) for more details.
+See the [plugin documentation](https://github.com/chgold/goldt-wp-webmcp-bridge) for more details.
 
 = How long do tokens last? =
 

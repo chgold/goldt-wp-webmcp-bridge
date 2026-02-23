@@ -523,7 +523,7 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 * ⭐ **Feature requests** - We prioritize based on community feedback
 
 **How to provide feedback:**
-* [GitHub Issues](https://github.com/chgold/goldt-webmcp-bridge/issues) - For bug reports and feature requests
+* [GitHub Issues](https://github.com/chgold/goldt-wp-webmcp-bridge/issues) - For bug reports and feature requests
 * [WordPress.org Support Forum](https://wordpress.org/support/plugin/goldt-webmcp-bridge/) - For questions and discussions
 
 Your feedback directly shapes the future of this plugin!

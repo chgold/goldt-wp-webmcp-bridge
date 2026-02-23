@@ -23,7 +23,7 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #: goldt-webmcp-bridge.php
-msgid "https://github.com/chgold/goldt-webmcp-bridge"
+msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
 msgstr ""
 
 #. Description of the plugin
