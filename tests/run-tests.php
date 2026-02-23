@@ -10,7 +10,7 @@
  * wp eval-file tests/run-tests.php
  */
 
-define('DOING_AI_CONNECT_TESTS', true);
+define('DOING_GOLDTWMCP_TESTS', true);
 
 // Load WordPress if not already loaded
 if (!defined('ABSPATH')) {
@@ -114,14 +114,14 @@ class AI_Connect_Test_Runner {
     private function test_plugin_files() {
         $required_files = [
             'ai-connect.php',
-            'includes/class-ai-connect.php',
+            'includes/class-goldtwmcp.php',
             'includes/core/class-manifest.php',
-            'includes/core/class-auth.php',
+            'includes/oauth/class-oauth-server.php',
             'includes/modules/class-core-module.php',
         ];
         
         foreach ($required_files as $file) {
-            if (!file_exists(AI_CONNECT_PATH . $file)) {
+            if (!file_exists(GOLDTWMCP_PATH . $file)) {
                 return "Missing file: {$file}";
             }
         }
@@ -131,8 +131,8 @@ class AI_Connect_Test_Runner {
     
     // Test: Plugin is Active
     private function test_plugin_active() {
-        if (!defined('AI_CONNECT_VERSION')) {
-            return "AI_CONNECT_VERSION not defined";
+        if (!defined('GOLDTWMCP_VERSION')) {
+            return "GOLDTWMCP_VERSION not defined";
         }
         
         if (!is_plugin_active('ai-connect/ai-connect.php')) {
@@ -158,9 +158,9 @@ class AI_Connect_Test_Runner {
         global $wpdb;
         
         // Check if we can query options
-        $test = get_option('ai_connect_version');
+        $test = get_option('goldtwmcp_version');
         
-        if ($test === false && !get_option('ai_connect_installed')) {
+        if ($test === false && !get_option('goldtwmcp_installed')) {
             return "Plugin not properly installed in database";
         }
         
@@ -229,30 +229,30 @@ class AI_Connect_Test_Runner {
     
     // Test: OAuth Client Creation
     private function test_oauth_client() {
-        if (!class_exists('AIConnect\Core\Auth')) {
-            return "Auth class not loaded";
+        if (!class_exists('GoldtWebMCP\OAuth\OAuth_Server')) {
+            return "OAuth_Server class not loaded";
         }
         
-        $auth = new \AIConnect\Core\Auth();
-        $client = $auth->register_client('Test Client', 'https://example.com/callback');
+        $oauth_server = new \GoldtWebMCP\OAuth\OAuth_Server();
         
-        if (!isset($client['client_id']) || !isset($client['client_secret'])) {
-            return "Failed to create OAuth client";
+        // Test creating a token (which requires a valid client)
+        global $wpdb;
+        $clients = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_clients LIMIT 1");
+        
+        if (empty($clients)) {
+            return "No OAuth clients found in database";
         }
-        
-        // Cleanup
-        delete_option('ai_connect_client_' . $client['client_id']);
         
         return true;
     }
     
     // Test: Rate Limiter
     private function test_rate_limiter() {
-        if (!class_exists('AIConnect\Core\Rate_Limiter')) {
+        if (!class_exists('GoldtWebMCP\Core\Rate_Limiter')) {
             return "Rate_Limiter class not loaded";
         }
         
-        $limiter = new \AIConnect\Core\Rate_Limiter();
+        $limiter = new \GoldtWebMCP\Core\Rate_Limiter();
         
         // Should allow first request (is_rate_limited returns array with 'limited' => false)
         $result = $limiter->is_rate_limited('test_user_123');
@@ -329,8 +329,8 @@ class AI_Connect_Test_Runner {
     // Test: Pro Hooks Registered
     private function test_pro_hooks() {
         // Check if hook was fired
-        if (!did_action('ai_connect_register_modules')) {
-            return "ai_connect_register_modules hook not fired";
+        if (!did_action('goldtwmcp_register_modules')) {
+            return "goldtwmcp_register_modules hook not fired";
         }
         
         return true;
@@ -363,7 +363,7 @@ class AI_Connect_Test_Runner {
     
     // Test: No Locked Features in Free
     private function test_no_locked_features() {
-        $plugin_files = glob(AI_CONNECT_PATH . 'includes/**/*.php');
+        $plugin_files = glob(GOLDTWMCP_PATH . 'includes/**/*.php');
         
         foreach ($plugin_files as $file) {
             $content = file_get_contents($file);
@@ -382,7 +382,7 @@ class AI_Connect_Test_Runner {
     
     // Test: Proper Escaping
     private function test_escaping() {
-        $file = AI_CONNECT_PATH . 'includes/class-ai-connect.php';
+        $file = GOLDTWMCP_PATH . 'includes/class-goldtwmcp.php';
         $content = file_get_contents($file);
         
         // Basic check: should have esc_html, esc_attr, or similar

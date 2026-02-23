@@ -119,7 +119,7 @@ global \$wpdb;
 \$token = 'wpc_test_' . bin2hex(random_bytes(32));
 \$expires_at = gmdate('Y-m-d H:i:s', time() + 3600);
 \$wpdb->insert(
-    \$wpdb->prefix . 'ai_connect_oauth_tokens',
+    \$wpdb->prefix . 'goldtwmcp_oauth_tokens',
     [
         'token' => \$token,
         'client_id' => 'test-client',
@@ -171,7 +171,7 @@ fi
 
 wp eval "
 global \$wpdb;
-\$wpdb->delete(\$wpdb->prefix . 'ai_connect_oauth_tokens', ['token' => '$OAUTH_TOKEN']);
+\$wpdb->delete(\$wpdb->prefix . 'goldtwmcp_oauth_tokens', ['token' => '$OAUTH_TOKEN']);
 " 2>/dev/null
 
 REFRESH_TOKEN_TEST=$(wp eval "
@@ -230,7 +230,7 @@ fi
 
 wp eval "
 global \$wpdb;
-\$wpdb->query(\"DELETE FROM {\$wpdb->prefix}ai_connect_oauth_tokens WHERE client_id = 'claude-ai' AND user_id = 1\");
+\$wpdb->query(\"DELETE FROM {\$wpdb->prefix}goldtwmcp_oauth_tokens WHERE client_id = 'claude-ai' AND user_id = 1\");
 " 2>/dev/null
 
 echo ""
