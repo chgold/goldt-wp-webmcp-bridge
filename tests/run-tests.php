@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * AI Connect - Comprehensive Test Suite
+ * GoldT WebMCP Bridge - Comprehensive Test Suite
  * 
  * Run from command line:
  * php tests/run-tests.php
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     require_once dirname(__DIR__, 4) . '/wp-load.php';
 }
 
-class AI_Connect_Test_Runner {
+class GoldT_WebMCP_Test_Runner {
     
     private $passed = 0;
     private $failed = 0;
@@ -86,7 +86,7 @@ class AI_Connect_Test_Runner {
     private function print_header() {
         echo "\n";
         echo "╔════════════════════════════════════════════╗\n";
-        echo "║   AI Connect - Test Suite                 ║\n";
+        echo "║   GoldT WebMCP Bridge - Test Suite        ║\n";
         echo "╚════════════════════════════════════════════╝\n";
         echo "\n";
     }
@@ -135,7 +135,7 @@ class AI_Connect_Test_Runner {
             return "GOLDTWMCP_VERSION not defined";
         }
         
-        if (!is_plugin_active('ai-connect/ai-connect.php')) {
+        if (!is_plugin_active('goldt-webmcp-bridge/ai-connect.php')) {
             return "Plugin not active in WordPress";
         }
         
@@ -171,11 +171,11 @@ class AI_Connect_Test_Runner {
     private function test_rest_api() {
         $routes = rest_get_server()->get_routes();
         
-        if (!isset($routes['/ai-connect/v1/manifest'])) {
+        if (!isset($routes['/goldt-webmcp-bridge/v1/manifest'])) {
             return "Manifest route not registered";
         }
         
-        if (!isset($routes['/ai-connect/v1/status'])) {
+        if (!isset($routes['/goldt-webmcp-bridge/v1/status'])) {
             return "Status route not registered";
         }
         
@@ -184,7 +184,7 @@ class AI_Connect_Test_Runner {
     
     // Test: Manifest Endpoint
     private function test_manifest() {
-        $request = new WP_REST_Request('GET', '/ai-connect/v1/manifest');
+        $request = new WP_REST_Request('GET', '/goldt-webmcp-bridge/v1/manifest');
         $response = rest_get_server()->dispatch($request);
         
         if ($response->is_error()) {
@@ -211,7 +211,7 @@ class AI_Connect_Test_Runner {
     
     // Test: Status Endpoint
     private function test_status() {
-        $request = new WP_REST_Request('GET', '/ai-connect/v1/status');
+        $request = new WP_REST_Request('GET', '/goldt-webmcp-bridge/v1/status');
         $response = rest_get_server()->dispatch($request);
         
         if ($response->is_error()) {
@@ -273,7 +273,7 @@ class AI_Connect_Test_Runner {
     
     // Test: WordPress Core Tools
     private function test_core_tools() {
-        $request = new WP_REST_Request('GET', '/ai-connect/v1/manifest');
+        $request = new WP_REST_Request('GET', '/goldt-webmcp-bridge/v1/manifest');
         $response = rest_get_server()->dispatch($request);
         $data = $response->get_data();
         
@@ -300,7 +300,7 @@ class AI_Connect_Test_Runner {
     
     // Test: No WooCommerce in Free
     private function test_no_woocommerce_in_free() {
-        $request = new WP_REST_Request('GET', '/ai-connect/v1/manifest');
+        $request = new WP_REST_Request('GET', '/goldt-webmcp-bridge/v1/manifest');
         $response = rest_get_server()->dispatch($request);
         $data = $response->get_data();
         
@@ -319,8 +319,8 @@ class AI_Connect_Test_Runner {
     
     // Test: Pro Plugin Detected
     private function test_pro_detected() {
-        if (!defined('AI_CONNECT_PRO_VERSION')) {
-            return "AI_CONNECT_PRO_VERSION not defined";
+        if (!defined('GOLDTWMCP_PRO_VERSION')) {
+            return "GOLDTWMCP_PRO_VERSION not defined";
         }
         
         return true;
@@ -338,7 +338,7 @@ class AI_Connect_Test_Runner {
     
     // Test: WooCommerce Tools in Pro
     private function test_woocommerce_tools() {
-        $request = new WP_REST_Request('GET', '/ai-connect/v1/manifest');
+        $request = new WP_REST_Request('GET', '/goldt-webmcp-bridge/v1/manifest');
         $response = rest_get_server()->dispatch($request);
         $data = $response->get_data();
         
@@ -397,10 +397,10 @@ class AI_Connect_Test_Runner {
     // Helper: Check if Pro is Active
     private function is_pro_active() {
         // Pro plugin defines this constant when active
-        return defined('AI_CONNECT_PRO_VERSION');
+        return defined('GOLDTWMCP_PRO_VERSION');
     }
 }
 
 // Run tests
-$runner = new AI_Connect_Test_Runner();
+$runner = new GoldT_WebMCP_Test_Runner();
 $runner->run();
