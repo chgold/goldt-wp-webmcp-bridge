@@ -19,11 +19,11 @@ Perfect for AI-powered customer support, automated content analysis, intelligent
 = ✨ Features =
 
 * **WebMCP Protocol Support** - Industry-standard AI integration
-* **OAuth 2.0 with PKCE** - Secure authorization code flow, no passwords transmitted
+* **Secure OAuth 2.0** - Same security standard as Google, Facebook, GitHub - your passwords stay safe
 * **8 Pre-registered AI Clients** - Claude, ChatGPT, Gemini, Grok, Perplexity, Copilot, Meta AI, DeepSeek
-* **11 WordPress Tools** - Search/get posts, pages, products, cart, orders, and user info
+* **5 WordPress Tools** - Search/get posts, pages, and user info
 * **Rate Limiting** - Prevent abuse (50 req/min default)
-* **Security Controls** - Token management, user blacklist
+* **Security Controls** - Token management, block specific users
 * **Zero Configuration** - Works out of the box
 * **Extensible** - Add custom tools via developer hooks
 
@@ -61,9 +61,9 @@ All clients use OAuth 2.0 with PKCE and `redirect_uri: urn:ietf:wg:oauth:2.0:oob
 
 = 🔒 How Authentication Works =
 
-**OAuth 2.0 Authorization Code Flow with PKCE:**
+**Secure OAuth 2.0 Authentication:**
 
-Secure authentication without exposing passwords:
+Uses the same security standard trusted by Google, Facebook, and GitHub:
 
 1. AI agent initiates OAuth flow with code challenge (PKCE)
 2. User approves in browser (consent screen)
@@ -92,24 +92,25 @@ Secure authentication without exposing passwords:
 
 **For Site Administrators:**
 
-Go to **GoldT WebMCP → OAuth Tokens** to manage security:
+Manage security from the WordPress admin panel:
 
-* **Revoke OAuth Tokens** - View and revoke active OAuth access tokens
-* **Block Users** - Revoke access for specific WordPress users (GoldT WebMCP → Settings)
-* **Rate Limits** - Configure request limits (GoldT WebMCP → Settings, default: 50/min, 1000/hour)
+* **Revoke OAuth Tokens** - Go to **GoldT WebMCP → OAuth Tokens** to view and revoke active tokens
+* **Block Users** - Go to **GoldT WebMCP → Settings** → scroll to "Manage User Access" section
+* **Rate Limits** - Configure request limits in **GoldT WebMCP → Settings** (default: 50/min, 1000/hour)
 
-= 🗺️ Future Development =
+= 💬 We Need Your Feedback! =
 
-We're actively working on new features and improvements!
+Help us build what YOU need:
 
-**We want your feedback:**
-* 💡 What features do you need most?
-* 🐛 Found a bug? Let us know!
+* 💡 **What tools would be most useful?** Tell us which WordPress features you'd like AI agents to access
+* 🐛 **Found a bug?** Report it so we can fix it quickly  
+* ⭐ **Feature requests** - We prioritize based on community feedback
 
 **How to provide feedback:**
+* GitHub: https://github.com/chgold/goldt-webmcp-bridge/issues
 * WordPress.org: Support forum
 
-Your feedback directly influences what we build next!
+Your feedback directly shapes the future of this plugin!
 
 == Installation ==
 
@@ -126,10 +127,7 @@ Your feedback directly influences what we build next!
 3. Upload the zip file and click **Install Now**
 4. Activate the plugin
 
-**Note:** All required dependencies are included:
-* `predis/predis` (v3.4.0) - Redis client for rate limiting (optional)
-
-No manual `composer install` required!
+**Note:** All required dependencies are included. No manual setup required!
 
 = Setup =
 
@@ -137,49 +135,7 @@ No manual `composer install` required!
 
 **Optional:** Configure rate limits in **GoldT WebMCP → Settings**
 
-= Testing Your Setup =
-
-**Development Note:**
-
-If using PHP built-in server, you MUST use the router script:
-
-```bash
-cd /var/www/wp
-php -S 0.0.0.0:8888 router.php
-```
-
-Without `router.php`, REST API requests will return 404.
-
-**Quick OAuth Test:**
-
-```bash
-# Step 1: Generate PKCE parameters
-CODE_VERIFIER=$(openssl rand -hex 64)
-CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base64 | tr '+/' '-_' | tr -d '=')
-STATE=$(openssl rand -hex 16)
-
-# Step 2: Open authorization URL in browser
-echo "http://yoursite.com/?goldtwmcp_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
-
-# Step 3: Exchange authorization code for token
-curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/token" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"grant_type\": \"authorization_code\",
-    \"client_id\": \"claude-ai\",
-    \"code\": \"PASTE_CODE_FROM_BROWSER\",
-    \"redirect_uri\": \"urn:ietf:wg:oauth:2.0:oob\",
-    \"code_verifier\": \"$CODE_VERIFIER\"
-  }"
-
-# Step 4: Use the access token
-curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-**For detailed examples**, see the plugin README.md file.
+**For detailed setup and testing examples**, see the [plugin documentation on GitHub](https://github.com/chgold/goldt-webmcp-bridge).
 
 == Frequently Asked Questions ==
 
@@ -232,7 +188,9 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 });
 ```
 
-See the plugin documentation for more details.
+**Important:** Place your custom tools in your theme's `functions.php` or a separate plugin - they will be preserved during plugin updates.
+
+See the [plugin documentation](https://github.com/chgold/goldt-webmcp-bridge) for more details.
 
 = How long do tokens last? =
 
@@ -260,11 +218,9 @@ Yes! Multiple options:
 
 * **"invalid_client"** - Check client_id (use: claude-ai, chatgpt, or gemini)
 * **"invalid_grant"** - Authorization code expired or already used (codes are one-time, 10 min expiry)
-* **"PKCE verification failed"** - Code verifier doesn't match code challenge
-* **"access_denied"** - User is blocked (check Settings → OAuth Tokens)
-* **"Token expired"** - Access token expired after 1 hour, request new authorization
+* **"access_denied"** - User is blocked (check GoldT WebMCP → Settings → Manage User Access)
+* **"Token expired"** - Access token expired after 1 hour, use refresh token to get new access token
 * **"Rate limit exceeded"** - Wait for retry period or increase limits in Settings
-* **REST API 404** - Using PHP built-in server? Must use `php -S 0.0.0.0:8888 router.php`
 
 Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
@@ -281,69 +237,29 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
-= 0.2.0 - 2026-02-22 =
-**BREAKING CHANGE: OAuth 2.0 Migration**
-* **Security**: Migrated from username/password to OAuth 2.0 Authorization Code Flow with PKCE
-* **Added**: 8 pre-registered OAuth clients (claude-ai, chatgpt, gemini, grok, perplexity, copilot, meta-ai, deepseek)
-* **Added**: OAuth consent screen for user authorization
-* **Added**: Refresh token support (30-day validity for seamless token renewal)
-* **Added**: Admin UI for OAuth token management (GoldT WebMCP → OAuth Tokens)
-* **Added**: router.php for PHP built-in server support
-* **Removed**: Direct username/password authentication endpoint (`/auth/login`)
-* **Security**: Authorization codes are one-time use with 10 minute expiry
-* **Security**: Access tokens expire after 1 hour
-* **Security**: Refresh tokens expire after 30 days
-* **Security**: PKCE (S256) required to prevent authorization code interception
-* **Fixed**: Timezone handling in token expiration validation
-* **Improved**: Bearer token authentication middleware
-* **Note**: Existing username/password integrations must migrate to OAuth 2.0
+= 0.2.0 - 2026-02-23 =
+* **Security**: Migrated to OAuth 2.0 with PKCE for secure authentication
+* **Added**: 8 pre-registered AI clients (Claude, ChatGPT, Gemini, and more)
+* **Added**: Parameter validation and resource limits (prevents abuse)
+* **Improved**: Security hardening - comprehensive input validation
 
 = 0.1.2 - 2026-02-19 =
-* Added: Translation support for 12 languages (ar, de_DE, en_US, es_ES, fr_FR, he_IL, it_IT, ja, nl_NL, pt_BR, ru_RU, zh_CN)
-* Improved: Full Hebrew translation completed with emoji and placeholder support
-* Fix: Include composer.json and composer.lock in WordPress.org builds
-* Improved: Ready for community translations via translate.wordpress.org
+* Added: Translation support for 12 languages
 
 = 0.1.1 - 2026-02-16 =
-* Include vendor dependencies (firebase/php-jwt, predis/predis) in distribution
-* Update installation documentation - no manual composer install required
-* Add .distignore for WordPress.org distribution
-* Add dependency check with admin notice
-* Improve plugin distribution workflow
+* Improved: Bundled all dependencies - no manual setup required
 
 = 0.1.0 - 2025-02-13 =
 * Initial public release
 * WebMCP protocol support
-* Direct username/password authentication with JWT
-* 5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)
-* Rate limiting (Redis + WordPress transients)
-* Security controls (Rotate JWT Secret, User Blacklist)
-* Automatic manifest generation
-* Production ready
+* 5 WordPress core tools
 
 == Upgrade Notice ==
 
 = 0.2.0 =
-**BREAKING CHANGE**: OAuth 2.0 required. Username/password authentication removed. Existing integrations must migrate to OAuth 2.0 Authorization Code Flow. See changelog and documentation for migration guide.
+Security update: OAuth 2.0 authentication now enabled. See documentation for setup guide.
 
-= 0.1.2 =
-Translation infrastructure added! Plugin now supports 12 languages with full Hebrew translation available.
 
-= 0.1.1 =
-Improved distribution - all dependencies now bundled. No manual setup required!
-
-== Feedback & Roadmap ==
-
-**This is an early release (v0.1.0)** and we want your input!
-
-* 💡 **Feature Requests** - What tools do you need?
-* 🐛 **Bug Reports** - Found an issue?
-* ⭐ **Vote on Features** - Star what you want most
-
-**How to provide feedback:**
-* WordPress.org: Support forum
-
-Your feedback directly influences development priorities!
 
 == Privacy Policy ==
 
@@ -370,8 +286,7 @@ No data leaves your WordPress installation.
 
 == Credits ==
 
-* Built with [firebase/php-jwt](https://github.com/firebase/php-jwt)
-* Optional [predis/predis](https://github.com/predis/predis) support
+* Optional [predis/predis](https://github.com/predis/predis) support for rate limiting
 * Compliant with WebMCP protocol specification
 
 **Made with ❤️ for the WordPress & AI community**

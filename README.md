@@ -7,7 +7,7 @@
 
 Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
 
-**Secure by design:** OAuth 2.0 Authorization Code Flow with PKCE - no passwords transmitted over the wire!
+**Secure authentication:** Uses OAuth 2.0 (the same security standard as Google, Facebook, and GitHub) - your passwords stay safe and private!
 
 ---
 
@@ -15,14 +15,12 @@ Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
 
 ### Installation
 
-1. Upload the plugin to `/wp-content/plugins/goldt-webmcp-bridge/`
+1. Upload the plugin folder to `/wp-content/plugins/`
 2. Activate through WordPress admin
-3. **For local development**: Start server with `php -S 0.0.0.0:8888 router.php` (see [Development Setup](#-development-setup))
 
 **That's it!** No configuration needed.
 
 **Note:** The plugin includes all required dependencies:
-- `firebase/php-jwt` (v6.10.0) - JWT token handling  
 - `predis/predis` (v3.4.0) - Redis client for rate limiting (optional)
 
 No manual `composer install` required - everything is bundled!
@@ -363,13 +361,14 @@ Navigate to **WordPress Admin → GoldT WebMCP → Settings** to manage security
 #### 2. Block User Access
 
 **Revoke access for specific users:**
-1. Go to **GoldT WebMCP → Settings → Manage User Access**
-2. Enter WordPress user ID
-3. Click "Block User"
+1. Go to **WordPress Admin → GoldT WebMCP → Settings**
+2. Scroll to "Manage User Access" section
+3. Enter WordPress user ID
+4. Click "Block User"
 
 **Result:** User cannot authenticate or use existing tokens, even if valid.
 
-**To restore access:** Click "Restore Access" next to blocked user.
+**To restore access:** Find the blocked user in the list and click "Restore Access".
 
 ---
 
@@ -451,57 +450,7 @@ Default limits (per user):
 
 ---
 
-## 🔧 Development Setup
-
-### Local Development with PHP Built-in Server
-
-**Important:** PHP's built-in server requires a router script for WordPress REST API to work correctly.
-
-```bash
-# Start server with router (REQUIRED for REST API)
-cd /var/www/wp
-php -S 0.0.0.0:8888 router.php
-```
-
-**Why is `router.php` needed?**
-- PHP built-in server doesn't support WordPress permalinks/rewrite rules by default
-- Without it, requests to `/wp-json/...` return 404
-- The router forwards all non-static requests through WordPress `index.php`
-
-**Production:** On Apache/Nginx, `.htaccess` or nginx config handle this automatically - `router.php` is only for local development.
-
----
-
-### Testing OAuth Flow Locally
-
-```bash
-# 1. Generate PKCE parameters
-CODE_VERIFIER=$(openssl rand -hex 64)
-CODE_CHALLENGE=$(echo -n "$CODE_VERIFIER" | openssl dgst -sha256 -binary | base64 | tr '+/' '-_' | tr -d '=')
-STATE=$(openssl rand -hex 16)
-
-# 2. Open authorization URL in browser (replace localhost:8888 with your server)
-echo "http://localhost:8888/?goldtwmcp_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read%20write&state=$STATE&code_challenge=$CODE_CHALLENGE&code_challenge_method=S256"
-
-# 3. After approval, exchange code for token
-curl -X POST "http://localhost:8888/wp-json/goldt-webmcp-bridge/v1/oauth/token" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"grant_type\": \"authorization_code\",
-    \"client_id\": \"claude-ai\",
-    \"code\": \"PASTE_CODE_HERE\",
-    \"redirect_uri\": \"urn:ietf:wg:oauth:2.0:oob\",
-    \"code_verifier\": \"$CODE_VERIFIER\"
-  }"
-
-# 4. Test API with token
-curl -X POST "http://localhost:8888/wp-json/goldt-webmcp-bridge/v1/tools/wordpress.getCurrentUser" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
----
+## 🔧 For Developers
 
 ### Running Tests
 
@@ -540,56 +489,44 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 });
 ```
 
+**Important:** Custom tools are preserved during plugin updates. Place your code in your theme's `functions.php` or a custom plugin to ensure it persists across updates.
+
 ---
 
 ## 📋 Changelog
 
-### Version 0.2.0 - 2026-02-22 🔐 **BREAKING CHANGE**
-
-**Security:** Migrated from username/password to OAuth 2.0 Authorization Code Flow with PKCE
-
-* **Added:** OAuth 2.0 Authorization Code Flow with PKCE (S256)
-* **Added:** Pre-registered OAuth clients (claude-ai, chatgpt, gemini)
-* **Added:** OAuth consent screen for user authorization
-* **Added:** Admin UI for OAuth token management (GoldT WebMCP → OAuth Tokens)
-* **Added:** `router.php` for PHP built-in server support
-* **Removed:** Direct username/password authentication endpoint (`/auth/login`)
-* **Security:** Authorization codes are one-time use with 10 minute expiry
-* **Security:** Access tokens expire after 1 hour
-* **Security:** PKCE (S256) required to prevent authorization code interception
-* **Fixed:** Timezone handling in token expiration validation
-* **Fixed:** Bearer token authentication middleware
-* **Fixed:** Unreachable code in permission checks
-
-**Migration Required:** Existing username/password integrations must migrate to OAuth 2.0. See documentation for details.
+### Version 0.2.0 - 2026-02-23
+* **Security:** Migrated to OAuth 2.0 with PKCE for secure authentication
+* **Added:** 8 pre-registered AI clients (Claude, ChatGPT, Gemini, and more)
+* **Added:** Parameter validation and resource limits (prevents abuse)
+* **Improved:** Security hardening - comprehensive input validation
 
 ### Version 0.1.2 - 2026-02-19
-* **Added:** Translation support for 12 languages (ar, de_DE, en_US, es_ES, fr_FR, he_IL, it_IT, ja, nl_NL, pt_BR, ru_RU, zh_CN)
-* **Fix:** Include composer.json and composer.lock in WordPress.org builds
+* **Added:** Translation support for 12 languages
 
 ### Version 0.1.1 - 2026-02-16
-* Include vendor dependencies (firebase/php-jwt, predis/predis) in distribution
-* Update installation documentation - no manual composer install required
-* Add .distignore for WordPress.org distribution
-* Add dependency check with admin notice
-* Improve plugin distribution workflow
+* **Improved:** Bundled all dependencies - no manual setup required
 
 ### Version 0.1.0 - 2025-02-13
 * Initial public release
 * WebMCP protocol support
-* 5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)
-* Rate limiting (Redis + WordPress transients)
-* Security controls (User Blacklist)
-* Automatic manifest generation
-* Production ready
-
-**Note:** v0.1.0 used username/password authentication. This was replaced with OAuth 2.0 in v0.2.0.
+* 5 WordPress core tools
 
 ---
 
-## 🤝 Contributing
+## 💬 We Need Your Feedback!
 
-Found a bug or want to contribute? Open an issue on the WordPress.org support forum.
+**Help us build what YOU need:**
+
+* 💡 **What tools would be most useful?** Tell us which WordPress features you'd like AI agents to access
+* 🐛 **Found a bug?** Report it so we can fix it quickly
+* ⭐ **Feature requests** - We prioritize based on community feedback
+
+**How to provide feedback:**
+* [GitHub Issues](https://github.com/chgold/goldt-webmcp-bridge/issues) - For bug reports and feature requests
+* [WordPress.org Support Forum](https://wordpress.org/support/plugin/goldt-webmcp-bridge/) - For questions and discussions
+
+Your feedback directly shapes the future of this plugin!
 
 ---
 
