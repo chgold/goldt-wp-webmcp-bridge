@@ -4,14 +4,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "AI Connect"
-msgstr "اتصال الذكاء الاصطناعي"
+msgid "GoldT WebMCP Bridge"
+msgstr "جسر GoldT WebMCP"
 
-msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
-msgstr "https://github.com/chgold/goldt-wp-webmcp-bridge"
-
-msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "وكلاء بريدج ووردبريس والذكاء الاصطناعي مع بروتوكول WebMCP"
+msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0"
+msgstr "جسر لثمانية وكلاء ذكاء اصطناعي (كلود، تشات جي بي تي، جروك، وغيرهم) عبر WebMCP باستخدام OAuth 2.0"
 
 msgid "chgold"
 msgstr "chgold"
@@ -19,14 +16,17 @@ msgstr "chgold"
 msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
-msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr "AI Connect: هناك تبعيات مفقودة. يرجى تشغيل \\"composer install\\" في مجلد الإضافة."
+msgid "GoldT WebMCP Bridge: Missing dependencies. Please run \"composer install\" in the plugin directory."
+msgstr "جسر GoldT WebMCP: هناك تبعيات مفقودة. يرجى تشغيل \"composer install\" في مجلد الإضافة."
 
-msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: يوصى باستخدام WooCommerce للوظائف الكاملة."
+msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
+msgstr "جسر GoldT WebMCP: يُنصح باستخدام WooCommerce للحصول على وظائف كاملة."
 
 msgid "Settings"
 msgstr "الإعدادات"
+
+msgid "AI Connect"
+msgstr "اتصال الذكاء الاصطناعي"
 
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr "✅ AI Connect v%s نشط وجاهز!"
@@ -34,38 +34,11 @@ msgstr "✅ AI Connect v%s نشط وجاهز!"
 msgid "Environment Status"
 msgstr "حالة البيئة"
 
-msgid "⚠️ Action Required"
-msgstr "الإجراء الواجب اتخاذه"
+msgid "Dependencies Missing"
+msgstr "التبعيات مفقودة"
 
-msgid "Composer dependencies are not installed. Please run:"
-msgstr "تبعيات المؤلف غير مثبتة. يرجى التشغيل:"
-
-msgid "🎯 Quick Start"
-msgstr "البدء السريع"
-
-msgid "Test the API"
-msgstr "اختبار واجهة برمجة التطبيقات"
-
-msgid "View Manifest"
-msgstr "عرض البيان"
-
-msgid "Authentication"
-msgstr "[ترجمة المصطلح: Authentication]"
-
-msgid "Use WordPress username & password to login via"
-msgstr "استخدم اسم مستخدم وكلمة مرور وردبرس لتسجيل الدخول عبر"
-
-msgid "Available Tools"
-msgstr "الدوات المتوفرة"
-
-msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 أدوات WordPress الأساسية (searchPosts، getPost، searchPages، getPage، getCurrentUser)"
-
-msgid "Documentation"
-msgstr "التوثيق"
-
-msgid "GitHub README"
-msgstr "ملف README على GitHub"
+msgid "Run the following command in the plugin directory:"
+msgstr "قم بتشغيل الأمر التالي في مجلد الإضافة:"
 
 msgid "User access revoked successfully."
 msgstr "تم إبطال وصول المستخدم بنجاح."
@@ -177,4 +150,124 @@ msgstr "أدخل معرف مستخدم وردبرس لحظره"
 
 msgid "Block User"
 msgstr "مسدود کردن کاربر"
+
+msgid "OAuth Tokens"
+msgstr "رموز OAuth"
+
+msgid "Token revoked successfully."
+msgstr "تم إلغاء الرمز بنجاح."
+
+msgid "Read content"
+msgstr "اقرأ المحتوى"
+
+msgid "Read posts, pages, and other content"
+msgstr "اقرأ المنشورات والصفحات والمحتويات الأخرى"
+
+msgid "Write content"
+msgstr "كتابة المحتوى"
+
+msgid "Create and update posts and pages"
+msgstr "إنشاء وتحديث المنشورات والصفحات"
+
+msgid "Delete content"
+msgstr "حذف المحتوى"
+
+msgid "Delete posts and pages"
+msgstr "حذف المنشورات والصفحات"
+
+msgid "Manage users"
+msgstr "إدارة المستخدمين"
+
+msgid "View and manage user accounts"
+msgstr "عرض وإدارة حسابات المستخدمين"
+
+msgid "OAuth Access Tokens"
+msgstr "رموز الوصول OAuth"
+
+msgid "Manage OAuth access tokens that have been granted to AI applications."
+msgstr "إدارة رموز الوصول OAuth الممنوحة لتطبيقات الذكاء الاصطناعي."
+
+msgid "Client"
+msgstr "عميل"
+
+msgid "User"
+msgstr "مستخدم"
+
+msgid "Scopes"
+msgstr "النطاقات"
+
+msgid "Created"
+msgstr "مخلوق"
+
+msgid "Access Token Expires"
+msgstr "تنتهي صلاحية رمز الوصول"
+
+msgid "Refresh Token Expires"
+msgstr "تنتهي صلاحية رمز التحديث"
+
+msgid "Actions"
+msgstr "الإجراءات"
+
+msgid "No active tokens found."
+msgstr "لم يتم العثور على أي رموز نشطة."
+
+msgid "Expired"
+msgstr "منتهي الصلاحية"
+
+msgid "N/A"
+msgstr "غير متوفر"
+
+msgid "Are you sure you want to revoke this token?"
+msgstr "هل أنت متأكد من رغبتك في إلغاء هذا الرمز المميز؟"
+
+msgid "Revoke"
+msgstr "إلغاء"
+
+msgid "Authorization Request"
+msgstr "طلب تفويض"
+
+msgid "is requesting access to your account"
+msgstr "يطلب الوصول إلى حسابك"
+
+msgid "This will allow the application to:"
+msgstr "سيسمح هذا للتطبيق بما يلي:"
+
+msgid "Deny"
+msgstr "ينكر"
+
+msgid "Approve"
+msgstr "يعتمد"
+
+msgid "Only approve if you trust this application. It will have access to your account data based on the permissions above."
+msgstr "لا توافق إلا إذا كنت تثق بهذا التطبيق. سيتمكن التطبيق من الوصول إلى بيانات حسابك بناءً على الأذونات المذكورة أعلاه."
+
+msgid "Read your posts and content"
+msgstr "اقرأ منشوراتك ومحتواك"
+
+msgid "Create and modify posts"
+msgstr "إنشاء وتعديل المنشورات"
+
+msgid "Delete posts"
+msgstr "حذف المنشورات"
+
+msgid "Authorization Successful"
+msgstr "تمت الموافقة بنجاح"
+
+msgid "Copy this authorization code and paste it back to the AI application:"
+msgstr "انسخ رمز التفويض هذا والصقه مرة أخرى في تطبيق الذكاء الاصطناعي:"
+
+msgid "Authorization Code"
+msgstr "رمز التفويض"
+
+msgid "Copy Code"
+msgstr "انسخ الكود"
+
+msgid "Code copied to clipboard!"
+msgstr "تم نسخ الكود إلى الحافظة!"
+
+msgid "Important:"
+msgstr "مهم:"
+
+msgid "This code expires in 10 minutes and can only be used once."
+msgstr "ينتهي صلاحية هذا الرمز خلال 10 دقائق ولا يمكن استخدامه إلا مرة واحدة."
 

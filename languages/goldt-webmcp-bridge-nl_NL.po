@@ -4,14 +4,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "AI Connect"
-msgstr "AI Connect"
+msgid "GoldT WebMCP Bridge"
+msgstr "GoldT WebMCP-brug"
 
-msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
-msgstr "https://github.com/chgold/goldt-wp-webmcp-bridge"
-
-msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "Overbrug WordPress- en AI-agenten met WebMCP-protocol"
+msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0"
+msgstr "Brug voor 8 AI-agenten (Claude, ChatGPT, Grok, en meer) via WebMCP met OAuth 2.0"
 
 msgid "chgold"
 msgstr "chgold"
@@ -19,14 +16,17 @@ msgstr "chgold"
 msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
-msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr "AI Connect: Ontbrekende afhankelijkheden. Voer \\"composer install\\" uit in de pluginmap."
+msgid "GoldT WebMCP Bridge: Missing dependencies. Please run \"composer install\" in the plugin directory."
+msgstr "GoldT WebMCP Bridge: Ontbrekende afhankelijkheden. Voer \"composer install\" uit in de pluginmap."
 
-msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: WooCommerce wordt aanbevolen voor volledige functionaliteit."
+msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
+msgstr "GoldT WebMCP Bridge: WooCommerce wordt aanbevolen voor volledige functionaliteit."
 
 msgid "Settings"
 msgstr "Instellingen"
+
+msgid "AI Connect"
+msgstr "AI Connect"
 
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr "✅ AI Connect v%s is actief en klaar!"
@@ -34,38 +34,11 @@ msgstr "✅ AI Connect v%s is actief en klaar!"
 msgid "Environment Status"
 msgstr "Omgevingsstatus"
 
-msgid "⚠️ Action Required"
-msgstr "Actie vereist"
+msgid "Dependencies Missing"
+msgstr "Ontbrekende afhankelijkheden"
 
-msgid "Composer dependencies are not installed. Please run:"
-msgstr "Componistafhankelijkheden zijn niet geïnstalleerd. Voer uit:"
-
-msgid "🎯 Quick Start"
-msgstr " Quick Start"
-
-msgid "Test the API"
-msgstr "Test de API"
-
-msgid "View Manifest"
-msgstr "Manifest bekijken"
-
-msgid "Authentication"
-msgstr "Legalisatie"
-
-msgid "Use WordPress username & password to login via"
-msgstr "Gebruik WordPress gebruikersnaam en wachtwoord om in te loggen via"
-
-msgid "Available Tools"
-msgstr "Beschikbare tools"
-
-msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 WordPress kerntools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-
-msgid "Documentation"
-msgstr "Documentatie"
-
-msgid "GitHub README"
-msgstr "GitHub README"
+msgid "Run the following command in the plugin directory:"
+msgstr "Voer de volgende opdracht uit in de pluginmap:"
 
 msgid "User access revoked successfully."
 msgstr "Gebruikerstoegang met succes ingetrokken."
@@ -177,4 +150,124 @@ msgstr "Voer de WordPress-gebruikers-ID in om te blokkeren"
 
 msgid "Block User"
 msgstr "Blokkeer Gebruiker"
+
+msgid "OAuth Tokens"
+msgstr "OAuth-tokens"
+
+msgid "Token revoked successfully."
+msgstr "Token succesvol ingetrokken."
+
+msgid "Read content"
+msgstr "Lees de inhoud"
+
+msgid "Read posts, pages, and other content"
+msgstr "Lees berichten, pagina's en andere inhoud."
+
+msgid "Write content"
+msgstr "Schrijf inhoud"
+
+msgid "Create and update posts and pages"
+msgstr "Berichten en pagina's maken en bijwerken"
+
+msgid "Delete content"
+msgstr "Inhoud verwijderen"
+
+msgid "Delete posts and pages"
+msgstr "Berichten en pagina's verwijderen"
+
+msgid "Manage users"
+msgstr "Gebruikers beheren"
+
+msgid "View and manage user accounts"
+msgstr "Gebruikersaccounts bekijken en beheren"
+
+msgid "OAuth Access Tokens"
+msgstr "OAuth-toegangstokens"
+
+msgid "Manage OAuth access tokens that have been granted to AI applications."
+msgstr "Beheer de OAuth-toegangstokens die aan AI-toepassingen zijn verleend."
+
+msgid "Client"
+msgstr "Cliënt"
+
+msgid "User"
+msgstr "Gebruiker"
+
+msgid "Scopes"
+msgstr "Scopes"
+
+msgid "Created"
+msgstr "Gemaakt"
+
+msgid "Access Token Expires"
+msgstr "Toegangstoken verloopt"
+
+msgid "Refresh Token Expires"
+msgstr "Vernieuwingstoken verloopt"
+
+msgid "Actions"
+msgstr "Acties"
+
+msgid "No active tokens found."
+msgstr "Geen actieve tokens gevonden."
+
+msgid "Expired"
+msgstr "Verlopen"
+
+msgid "N/A"
+msgstr "Niet van toepassing"
+
+msgid "Are you sure you want to revoke this token?"
+msgstr "Weet je zeker dat je dit token wilt intrekken?"
+
+msgid "Revoke"
+msgstr "Herroepen"
+
+msgid "Authorization Request"
+msgstr "Autorisatieverzoek"
+
+msgid "is requesting access to your account"
+msgstr "verzoekt om toegang tot uw account"
+
+msgid "This will allow the application to:"
+msgstr "Dit stelt de applicatie in staat om:"
+
+msgid "Deny"
+msgstr "Ontkennen"
+
+msgid "Approve"
+msgstr "Goedkeuren"
+
+msgid "Only approve if you trust this application. It will have access to your account data based on the permissions above."
+msgstr "Ga alleen akkoord als u deze applicatie vertrouwt. De applicatie krijgt toegang tot uw accountgegevens op basis van de hierboven vermelde machtigingen."
+
+msgid "Read your posts and content"
+msgstr "Ik lees je berichten en content."
+
+msgid "Create and modify posts"
+msgstr "Berichten maken en bewerken"
+
+msgid "Delete posts"
+msgstr "Berichten verwijderen"
+
+msgid "Authorization Successful"
+msgstr "Autorisatie succesvol"
+
+msgid "Copy this authorization code and paste it back to the AI application:"
+msgstr "Kopieer deze autorisatiecode en plak deze terug in de AI-applicatie:"
+
+msgid "Authorization Code"
+msgstr "Autorisatiecode"
+
+msgid "Copy Code"
+msgstr "Kopieer code"
+
+msgid "Code copied to clipboard!"
+msgstr "Code gekopieerd naar het klembord!"
+
+msgid "Important:"
+msgstr "Belangrijk:"
+
+msgid "This code expires in 10 minutes and can only be used once."
+msgstr "Deze code is 10 minuten geldig en kan slechts één keer gebruikt worden."
 

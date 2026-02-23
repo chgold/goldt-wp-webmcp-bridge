@@ -4,14 +4,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "AI Connect"
-msgstr "בינה מלאכותית קונקט"
+msgid "GoldT WebMCP Bridge"
+msgstr "גשר WebMCP של GoldT"
 
-msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
-msgstr "https://github.com/chgold/goldt-wp-webmcp-bridge"
-
-msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "גישור בין סוכני WordPress ובינה מלאכותית לבין פרוטוקול WebMCP"
+msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0"
+msgstr "גשר עבור 8 סוכני בינה מלאכותית (Claude, ChatGPT, Grok ועוד) דרך WebMCP עם OAuth 2.0"
 
 msgid "chgold"
 msgstr "chgold"
@@ -19,14 +16,17 @@ msgstr "chgold"
 msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
-msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr "AI Connect: תלויות חסרות. אנא הפעל את \\"composer install\\" בספריית התוספים."
+msgid "GoldT WebMCP Bridge: Missing dependencies. Please run \"composer install\" in the plugin directory."
+msgstr "גשר WebMCP של GoldT: תלויות חסרות. אנא הפעל את \"composer install\" בספריית התוספים."
 
-msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: מומלץ להשתמש ב-WooCommerce לפונקציונליות מלאה."
+msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
+msgstr "גשר WebMCP של GoldT: מומלץ להשתמש ב-WooCommerce לפונקציונליות מלאה."
 
 msgid "Settings"
 msgstr "הגדרות"
+
+msgid "AI Connect"
+msgstr "בינה מלאכותית קונקט"
 
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr "✅ AI Connect v%s פעיל ומוכן!"
@@ -34,38 +34,11 @@ msgstr "✅ AI Connect v%s פעיל ומוכן!"
 msgid "Environment Status"
 msgstr "מצב סביבתי"
 
-msgid "⚠️ Action Required"
-msgstr "⚠️ נדרשת פעולה"
+msgid "Dependencies Missing"
+msgstr "תלויות חסרות"
 
-msgid "Composer dependencies are not installed. Please run:"
-msgstr "תלויות Composer אינן מותקנות. אנא הפעל:"
-
-msgid "🎯 Quick Start"
-msgstr "🎯 התחלה מהירה"
-
-msgid "Test the API"
-msgstr "בדיקת ה-API"
-
-msgid "View Manifest"
-msgstr "הצג מניפסט"
-
-msgid "Authentication"
-msgstr "אימות"
-
-msgid "Use WordPress username & password to login via"
-msgstr "השתמשו בשם המשתמש והסיסמה של WordPress כדי להתחבר דרך"
-
-msgid "Available Tools"
-msgstr "כלים זמינים"
-
-msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 כלי ליבה של WordPress (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-
-msgid "Documentation"
-msgstr "תיעוד"
-
-msgid "GitHub README"
-msgstr "קובץ README של גיטהאב"
+msgid "Run the following command in the plugin directory:"
+msgstr "הפעל את הפקודה הבאה בספריית התוסף:"
 
 msgid "User access revoked successfully."
 msgstr "גישת המשתמש בוטלה בהצלחה."
@@ -177,4 +150,124 @@ msgstr "הזן את שם המשתמש של WordPress כדי לחסום"
 
 msgid "Block User"
 msgstr "חסימת משתמש"
+
+msgid "OAuth Tokens"
+msgstr "אסימוני OAuth"
+
+msgid "Token revoked successfully."
+msgstr "האסימון בוטל בהצלחה."
+
+msgid "Read content"
+msgstr "קרא תוכן"
+
+msgid "Read posts, pages, and other content"
+msgstr "קריאת פוסטים, דפים ותוכן אחר"
+
+msgid "Write content"
+msgstr "כתיבת תוכן"
+
+msgid "Create and update posts and pages"
+msgstr "יצירה ועדכון של פוסטים ודפים"
+
+msgid "Delete content"
+msgstr "מחיקת תוכן"
+
+msgid "Delete posts and pages"
+msgstr "מחיקת פוסטים ודפים"
+
+msgid "Manage users"
+msgstr "ניהול משתמשים"
+
+msgid "View and manage user accounts"
+msgstr "הצג ונהל חשבונות משתמשים"
+
+msgid "OAuth Access Tokens"
+msgstr "אסימוני גישה של OAuth"
+
+msgid "Manage OAuth access tokens that have been granted to AI applications."
+msgstr "ניהול אסימוני גישה של OAuth שהוענקו ליישומי בינה מלאכותית."
+
+msgid "Client"
+msgstr "לָקוּחַ"
+
+msgid "User"
+msgstr "מִשׁתַמֵשׁ"
+
+msgid "Scopes"
+msgstr "טווחים"
+
+msgid "Created"
+msgstr "נוצר"
+
+msgid "Access Token Expires"
+msgstr "תוקף אסימון הגישה פג"
+
+msgid "Refresh Token Expires"
+msgstr "תוקף אסימון הרענון פג"
+
+msgid "Actions"
+msgstr "פעולות"
+
+msgid "No active tokens found."
+msgstr "לא נמצאו אסימונים פעילים."
+
+msgid "Expired"
+msgstr "פג תוקף"
+
+msgid "N/A"
+msgstr "לא רלוונטי"
+
+msgid "Are you sure you want to revoke this token?"
+msgstr "האם אתה בטוח שאתה רוצה לבטל את האסימון הזה?"
+
+msgid "Revoke"
+msgstr "לְבַטֵל"
+
+msgid "Authorization Request"
+msgstr "בקשת אישור"
+
+msgid "is requesting access to your account"
+msgstr "מבקש גישה לחשבונך"
+
+msgid "This will allow the application to:"
+msgstr "זה יאפשר לאפליקציה:"
+
+msgid "Deny"
+msgstr "לְהַכּחִישׁ"
+
+msgid "Approve"
+msgstr "לְאַשֵׁר"
+
+msgid "Only approve if you trust this application. It will have access to your account data based on the permissions above."
+msgstr "אשר רק אם אתה סומך על אפליקציה זו. תהיה לה גישה לנתוני החשבון שלך בהתבסס על ההרשאות לעיל."
+
+msgid "Read your posts and content"
+msgstr "קרא את הפוסטים והתוכן שלך"
+
+msgid "Create and modify posts"
+msgstr "יצירה ושינוי של פוסטים"
+
+msgid "Delete posts"
+msgstr "מחיקת פוסטים"
+
+msgid "Authorization Successful"
+msgstr "האישור הצליח"
+
+msgid "Copy this authorization code and paste it back to the AI application:"
+msgstr "העתק את קוד ההרשאה הזה והדבק אותו בחזרה לאפליקציית הבינה המלאכותית:"
+
+msgid "Authorization Code"
+msgstr "קוד אישור"
+
+msgid "Copy Code"
+msgstr "העתקת קוד"
+
+msgid "Code copied to clipboard!"
+msgstr "קוד הועתק ללוח!"
+
+msgid "Important:"
+msgstr "חָשׁוּב:"
+
+msgid "This code expires in 10 minutes and can only be used once."
+msgstr "קוד זה פג תוקף בעוד 10 דקות וניתן להשתמש בו פעם אחת בלבד."
 

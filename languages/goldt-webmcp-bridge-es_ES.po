@@ -4,14 +4,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "AI Connect"
-msgstr "Conexión de IA"
+msgid "GoldT WebMCP Bridge"
+msgstr "Puente WebMCP de GoldT"
 
-msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
-msgstr "https://github.com/chgold/goldt-wp-webmcp-bridge"
-
-msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "Une a los agentes de WordPress e IA con el protocolo WebMCP"
+msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0"
+msgstr "Puente para 8 agentes de IA (Claude, ChatGPT, Grok, más) a través de WebMCP con OAuth 2.0"
 
 msgid "chgold"
 msgstr "chgold"
@@ -19,14 +16,17 @@ msgstr "chgold"
 msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
-msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr "AI Connect: Dependencias faltantes. Ejecute \\"composer install\\" en el directorio del plugin."
+msgid "GoldT WebMCP Bridge: Missing dependencies. Please run \"composer install\" in the plugin directory."
+msgstr "Puente WebMCP de GoldT: Dependencias faltantes. Ejecute \"composer install\" en el directorio del plugin."
 
-msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: se recomienda WooCommerce para una funcionalidad completa."
+msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
+msgstr "GoldT WebMCP Bridge: se recomienda WooCommerce para una funcionalidad completa."
 
 msgid "Settings"
 msgstr "Ajustes"
+
+msgid "AI Connect"
+msgstr "Conexión de IA"
 
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr "¡✅ AI Connect v%s está activo y listo!"
@@ -34,38 +34,11 @@ msgstr "¡✅ AI Connect v%s está activo y listo!"
 msgid "Environment Status"
 msgstr "Estado medioambiental"
 
-msgid "⚠️ Action Required"
-msgstr "Acción requerida"
+msgid "Dependencies Missing"
+msgstr "Dependencias faltantes"
 
-msgid "Composer dependencies are not installed. Please run:"
-msgstr "Las dependencias del compositor no están instaladas. Ejecute:"
-
-msgid "🎯 Quick Start"
-msgstr "arranque rápido"
-
-msgid "Test the API"
-msgstr "Probar la API"
-
-msgid "View Manifest"
-msgstr "Ver manifiesto"
-
-msgid "Authentication"
-msgstr "Autenticación"
-
-msgid "Use WordPress username & password to login via"
-msgstr "Utilice el nombre de usuario y la contraseña de WordPress para iniciar sesión a través de"
-
-msgid "Available Tools"
-msgstr "Herramientas disponibles"
-
-msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 herramientas principales de WordPress (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-
-msgid "Documentation"
-msgstr "Documentación"
-
-msgid "GitHub README"
-msgstr "Archivo README de GitHub"
+msgid "Run the following command in the plugin directory:"
+msgstr "Ejecute el siguiente comando en el directorio del complemento:"
 
 msgid "User access revoked successfully."
 msgstr "Acceso de usuario revocado con éxito."
@@ -177,4 +150,124 @@ msgstr "Introduzca el ID de usuario de WordPress para bloquear"
 
 msgid "Block User"
 msgstr "Bloquear"
+
+msgid "OAuth Tokens"
+msgstr "Tokens OAuth"
+
+msgid "Token revoked successfully."
+msgstr "Token revocado exitosamente."
+
+msgid "Read content"
+msgstr "Leer el contenido"
+
+msgid "Read posts, pages, and other content"
+msgstr "Leer publicaciones, páginas y otros contenidos"
+
+msgid "Write content"
+msgstr "Escribir contenido"
+
+msgid "Create and update posts and pages"
+msgstr "Crear y actualizar publicaciones y páginas"
+
+msgid "Delete content"
+msgstr "Eliminar contenido"
+
+msgid "Delete posts and pages"
+msgstr "Eliminar publicaciones y páginas"
+
+msgid "Manage users"
+msgstr "Administrar usuarios"
+
+msgid "View and manage user accounts"
+msgstr "Ver y administrar cuentas de usuario"
+
+msgid "OAuth Access Tokens"
+msgstr "Tokens de acceso OAuth"
+
+msgid "Manage OAuth access tokens that have been granted to AI applications."
+msgstr "Administrar los tokens de acceso OAuth que se han otorgado a las aplicaciones de IA."
+
+msgid "Client"
+msgstr "Cliente"
+
+msgid "User"
+msgstr "Usuario"
+
+msgid "Scopes"
+msgstr "Ámbitos"
+
+msgid "Created"
+msgstr "Creado"
+
+msgid "Access Token Expires"
+msgstr "El token de acceso caduca"
+
+msgid "Refresh Token Expires"
+msgstr "El token de actualización expira"
+
+msgid "Actions"
+msgstr "Comportamiento"
+
+msgid "No active tokens found."
+msgstr "No se encontraron tokens activos."
+
+msgid "Expired"
+msgstr "Venció"
+
+msgid "N/A"
+msgstr "N / A"
+
+msgid "Are you sure you want to revoke this token?"
+msgstr "¿Estás seguro de que deseas revocar este token?"
+
+msgid "Revoke"
+msgstr "Revocar"
+
+msgid "Authorization Request"
+msgstr "Solicitud de autorización"
+
+msgid "is requesting access to your account"
+msgstr "está solicitando acceso a su cuenta"
+
+msgid "This will allow the application to:"
+msgstr "Esto permitirá que la aplicación:"
+
+msgid "Deny"
+msgstr "Denegar"
+
+msgid "Approve"
+msgstr "Aprobar"
+
+msgid "Only approve if you trust this application. It will have access to your account data based on the permissions above."
+msgstr "Solo apruébala si confías en esta aplicación. Tendrá acceso a los datos de tu cuenta según los permisos mencionados."
+
+msgid "Read your posts and content"
+msgstr "Lee tus publicaciones y contenido"
+
+msgid "Create and modify posts"
+msgstr "Crear y modificar publicaciones"
+
+msgid "Delete posts"
+msgstr "Eliminar publicaciones"
+
+msgid "Authorization Successful"
+msgstr "Autorización exitosa"
+
+msgid "Copy this authorization code and paste it back to the AI application:"
+msgstr "Copie este código de autorización y péguelo nuevamente en la aplicación de IA:"
+
+msgid "Authorization Code"
+msgstr "Código de autorización"
+
+msgid "Copy Code"
+msgstr "Copiar código"
+
+msgid "Code copied to clipboard!"
+msgstr "¡Código copiado al portapapeles!"
+
+msgid "Important:"
+msgstr "Importante:"
+
+msgid "This code expires in 10 minutes and can only be used once."
+msgstr "Este código caduca en 10 minutos y solo se puede utilizar una vez."
 

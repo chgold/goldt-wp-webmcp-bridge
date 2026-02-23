@@ -4,14 +4,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "AI Connect"
-msgstr "AI Connect"
+msgid "GoldT WebMCP Bridge"
+msgstr "Ponte WebMCP GoldT"
 
-msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
-msgstr "https://github.com/chgold/goldt-wp-webmcp-bridge"
-
-msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "Collega gli agenti WordPress e AI con il protocollo WebMCP"
+msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0"
+msgstr "Bridge per 8 agenti AI (Claude, ChatGPT, Grok, altri) tramite WebMCP con OAuth 2.0"
 
 msgid "chgold"
 msgstr "chgold"
@@ -19,14 +16,17 @@ msgstr "chgold"
 msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
-msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr "AI Connect: dipendenze mancanti. Eseguire \\"composer install\\" nella directory del plugin."
+msgid "GoldT WebMCP Bridge: Missing dependencies. Please run \"composer install\" in the plugin directory."
+msgstr "GoldT WebMCP Bridge: dipendenze mancanti. Eseguire \"composer install\" nella directory del plugin."
 
-msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: WooCommerce è consigliato per la piena funzionalità."
+msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
+msgstr "GoldT WebMCP Bridge: per una funzionalità completa si consiglia WooCommerce."
 
 msgid "Settings"
 msgstr "Impostazioni"
+
+msgid "AI Connect"
+msgstr "AI Connect"
 
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr "✅ AI Connect v%s è attivo e pronto!"
@@ -34,38 +34,11 @@ msgstr "✅ AI Connect v%s è attivo e pronto!"
 msgid "Environment Status"
 msgstr "Stato dell'ambiente"
 
-msgid "⚠️ Action Required"
-msgstr "Azione richiesta"
+msgid "Dependencies Missing"
+msgstr "Dipendenze mancanti"
 
-msgid "Composer dependencies are not installed. Please run:"
-msgstr "Le dipendenze del compositore non sono installate. Eseguire:"
-
-msgid "🎯 Quick Start"
-msgstr "Avvio rapido"
-
-msgid "Test the API"
-msgstr "Testare l'API"
-
-msgid "View Manifest"
-msgstr "Visualizza manifesto"
-
-msgid "Authentication"
-msgstr "Autenticazione"
-
-msgid "Use WordPress username & password to login via"
-msgstr "Usa il nome utente e la password di WordPress per accedere tramite"
-
-msgid "Available Tools"
-msgstr "Strumenti disponibili"
-
-msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 strumenti principali di WordPress (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-
-msgid "Documentation"
-msgstr "Documentazione"
-
-msgid "GitHub README"
-msgstr "LEGGIMI di GitHub"
+msgid "Run the following command in the plugin directory:"
+msgstr "Eseguire il seguente comando nella directory del plugin:"
 
 msgid "User access revoked successfully."
 msgstr "Accesso utente revocato correttamente."
@@ -177,4 +150,124 @@ msgstr "Inserisci l'ID utente WordPress da bloccare"
 
 msgid "Block User"
 msgstr "Blocca utente"
+
+msgid "OAuth Tokens"
+msgstr "Token OAuth"
+
+msgid "Token revoked successfully."
+msgstr "Token revocato con successo."
+
+msgid "Read content"
+msgstr "Leggi il contenuto"
+
+msgid "Read posts, pages, and other content"
+msgstr "Leggi post, pagine e altri contenuti"
+
+msgid "Write content"
+msgstr "Scrivi contenuti"
+
+msgid "Create and update posts and pages"
+msgstr "Crea e aggiorna post e pagine"
+
+msgid "Delete content"
+msgstr "Elimina contenuto"
+
+msgid "Delete posts and pages"
+msgstr "Elimina post e pagine"
+
+msgid "Manage users"
+msgstr "Gestisci utenti"
+
+msgid "View and manage user accounts"
+msgstr "Visualizza e gestisci gli account utente"
+
+msgid "OAuth Access Tokens"
+msgstr "Token di accesso OAuth"
+
+msgid "Manage OAuth access tokens that have been granted to AI applications."
+msgstr "Gestisci i token di accesso OAuth concessi alle applicazioni di intelligenza artificiale."
+
+msgid "Client"
+msgstr "Cliente"
+
+msgid "User"
+msgstr "Utente"
+
+msgid "Scopes"
+msgstr "Ambiti di applicazione"
+
+msgid "Created"
+msgstr "Creato"
+
+msgid "Access Token Expires"
+msgstr "Scadenza del token di accesso"
+
+msgid "Refresh Token Expires"
+msgstr "Scadenza del token di aggiornamento"
+
+msgid "Actions"
+msgstr "Azioni"
+
+msgid "No active tokens found."
+msgstr "Nessun token attivo trovato."
+
+msgid "Expired"
+msgstr "Scaduto"
+
+msgid "N/A"
+msgstr "N / A"
+
+msgid "Are you sure you want to revoke this token?"
+msgstr "Sei sicuro di voler revocare questo token?"
+
+msgid "Revoke"
+msgstr "Revocare"
+
+msgid "Authorization Request"
+msgstr "Richiesta di autorizzazione"
+
+msgid "is requesting access to your account"
+msgstr "sta richiedendo l'accesso al tuo account"
+
+msgid "This will allow the application to:"
+msgstr "Ciò consentirà all'applicazione di:"
+
+msgid "Deny"
+msgstr "Negare"
+
+msgid "Approve"
+msgstr "Approvare"
+
+msgid "Only approve if you trust this application. It will have access to your account data based on the permissions above."
+msgstr "Approva solo se ritieni attendibile questa applicazione. Avrà accesso ai dati del tuo account in base alle autorizzazioni di cui sopra."
+
+msgid "Read your posts and content"
+msgstr "Leggi i tuoi post e contenuti"
+
+msgid "Create and modify posts"
+msgstr "Creare e modificare post"
+
+msgid "Delete posts"
+msgstr "Elimina i post"
+
+msgid "Authorization Successful"
+msgstr "Autorizzazione riuscita"
+
+msgid "Copy this authorization code and paste it back to the AI application:"
+msgstr "Copia questo codice di autorizzazione e incollalo nuovamente nell'applicazione AI:"
+
+msgid "Authorization Code"
+msgstr "Codice di autorizzazione"
+
+msgid "Copy Code"
+msgstr "Copia il codice"
+
+msgid "Code copied to clipboard!"
+msgstr "Codice copiato negli appunti!"
+
+msgid "Important:"
+msgstr "Importante:"
+
+msgid "This code expires in 10 minutes and can only be used once."
+msgstr "Questo codice scade tra 10 minuti e può essere utilizzato una sola volta."
 

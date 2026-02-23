@@ -4,14 +4,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "AI Connect"
-msgstr "AI Connect"
+msgid "GoldT WebMCP Bridge"
+msgstr "GoldT WebMCP-Brücke"
 
-msgid "https://github.com/chgold/goldt-wp-webmcp-bridge"
-msgstr "https://github.com/chgold/goldt-wp-webmcp-bridge"
-
-msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "Brücke zwischen WordPress- und KI-Agenten mit dem WebMCP-Protokoll"
+msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0"
+msgstr "Brücke für 8 KI-Agenten (Claude, ChatGPT, Grok u. a.) über WebMCP mit OAuth 2.0"
 
 msgid "chgold"
 msgstr "chgold"
@@ -19,14 +16,17 @@ msgstr "chgold"
 msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
-msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr "AI Connect: Fehlende Abhängigkeiten. Bitte führen Sie \\"composer install\\" im Plugin-Verzeichnis aus."
+msgid "GoldT WebMCP Bridge: Missing dependencies. Please run \"composer install\" in the plugin directory."
+msgstr "GoldT WebMCP Bridge: Fehlende Abhängigkeiten. Bitte führen Sie „composer install“ im Plugin-Verzeichnis aus."
 
-msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: WooCommerce wird für die volle Funktionalität empfohlen."
+msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
+msgstr "GoldT WebMCP Bridge: Für den vollen Funktionsumfang wird WooCommerce empfohlen."
 
 msgid "Settings"
 msgstr "Einstellungen"
+
+msgid "AI Connect"
+msgstr "AI Connect"
 
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr "✅ AI Connect v%s ist aktiv und bereit!"
@@ -34,38 +34,11 @@ msgstr "✅ AI Connect v%s ist aktiv und bereit!"
 msgid "Environment Status"
 msgstr "Umgebungsstatus"
 
-msgid "⚠️ Action Required"
-msgstr "Maßnahme erforderlich"
+msgid "Dependencies Missing"
+msgstr "Fehlende Abhängigkeiten"
 
-msgid "Composer dependencies are not installed. Please run:"
-msgstr "Composer-Abhängigkeiten sind nicht installiert. Bitte ausführen:"
-
-msgid "🎯 Quick Start"
-msgstr "SCHNELLSTART"
-
-msgid "Test the API"
-msgstr "Testen Sie die API"
-
-msgid "View Manifest"
-msgstr "Manifest anzeigen"
-
-msgid "Authentication"
-msgstr "Authentifizierung"
-
-msgid "Use WordPress username & password to login via"
-msgstr "Verwenden Sie den WordPress-Benutzernamen und das Passwort, um sich über anzumelden"
-
-msgid "Available Tools"
-msgstr "Verfügbar Tools"
-
-msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 WordPress-Kernwerkzeuge (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-
-msgid "Documentation"
-msgstr "Dokumentation"
-
-msgid "GitHub README"
-msgstr "GitHub README"
+msgid "Run the following command in the plugin directory:"
+msgstr "Führen Sie folgenden Befehl im Plugin-Verzeichnis aus:"
 
 msgid "User access revoked successfully."
 msgstr "Benutzerzugriff erfolgreich widerrufen."
@@ -177,4 +150,124 @@ msgstr "Geben Sie die WordPress-Benutzer-ID ein, die blockiert werden soll"
 
 msgid "Block User"
 msgstr "Benutzer blockieren"
+
+msgid "OAuth Tokens"
+msgstr "OAuth-Tokens"
+
+msgid "Token revoked successfully."
+msgstr "Token erfolgreich widerrufen."
+
+msgid "Read content"
+msgstr "Inhalt lesen"
+
+msgid "Read posts, pages, and other content"
+msgstr "Lesen Sie Beiträge, Seiten und andere Inhalte"
+
+msgid "Write content"
+msgstr "Inhalte schreiben"
+
+msgid "Create and update posts and pages"
+msgstr "Beiträge und Seiten erstellen und aktualisieren"
+
+msgid "Delete content"
+msgstr "Inhalte löschen"
+
+msgid "Delete posts and pages"
+msgstr "Beiträge und Seiten löschen"
+
+msgid "Manage users"
+msgstr "Benutzer verwalten"
+
+msgid "View and manage user accounts"
+msgstr "Benutzerkonten anzeigen und verwalten"
+
+msgid "OAuth Access Tokens"
+msgstr "OAuth-Zugriffstoken"
+
+msgid "Manage OAuth access tokens that have been granted to AI applications."
+msgstr "Verwalten Sie OAuth-Zugriffstoken, die KI-Anwendungen gewährt wurden."
+
+msgid "Client"
+msgstr "Kunde"
+
+msgid "User"
+msgstr "Benutzer"
+
+msgid "Scopes"
+msgstr "Zielfernrohre"
+
+msgid "Created"
+msgstr "Erstellt"
+
+msgid "Access Token Expires"
+msgstr "Zugriffstoken läuft ab"
+
+msgid "Refresh Token Expires"
+msgstr "Aktualisierungstoken läuft ab"
+
+msgid "Actions"
+msgstr "Aktionen"
+
+msgid "No active tokens found."
+msgstr "Es wurden keine aktiven Token gefunden."
+
+msgid "Expired"
+msgstr "Abgelaufen"
+
+msgid "N/A"
+msgstr "N / A"
+
+msgid "Are you sure you want to revoke this token?"
+msgstr "Sind Sie sicher, dass Sie dieses Token widerrufen möchten?"
+
+msgid "Revoke"
+msgstr "Widerrufen"
+
+msgid "Authorization Request"
+msgstr "Autorisierungsanfrage"
+
+msgid "is requesting access to your account"
+msgstr "beantragt Zugriff auf Ihr Konto"
+
+msgid "This will allow the application to:"
+msgstr "Dies ermöglicht der Anwendung Folgendes:"
+
+msgid "Deny"
+msgstr "Leugnen"
+
+msgid "Approve"
+msgstr "Genehmigen"
+
+msgid "Only approve if you trust this application. It will have access to your account data based on the permissions above."
+msgstr "Bitte bestätigen Sie dies nur, wenn Sie dieser Anwendung vertrauen. Sie erhält basierend auf den oben genannten Berechtigungen Zugriff auf Ihre Kontodaten."
+
+msgid "Read your posts and content"
+msgstr "Ich lese eure Beiträge und Inhalte."
+
+msgid "Create and modify posts"
+msgstr "Beiträge erstellen und bearbeiten"
+
+msgid "Delete posts"
+msgstr "Beiträge löschen"
+
+msgid "Authorization Successful"
+msgstr "Autorisierung erfolgreich"
+
+msgid "Copy this authorization code and paste it back to the AI application:"
+msgstr "Kopieren Sie diesen Autorisierungscode und fügen Sie ihn in die KI-Anwendung ein:"
+
+msgid "Authorization Code"
+msgstr "Autorisierungscode"
+
+msgid "Copy Code"
+msgstr "Code kopieren"
+
+msgid "Code copied to clipboard!"
+msgstr "Code in die Zwischenablage kopiert!"
+
+msgid "Important:"
+msgstr "Wichtig:"
+
+msgid "This code expires in 10 minutes and can only be used once."
+msgstr "Dieser Code ist 10 Minuten gültig und kann nur einmal verwendet werden."
 
