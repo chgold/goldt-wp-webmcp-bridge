@@ -115,11 +115,19 @@ class Core_Module extends Module_Base {
     }
     
     public function execute_searchPosts($params) {
+        // Validate and sanitize limit parameter
+        $limit = isset($params['limit']) ? absint($params['limit']) : 10;
+        if ($limit < 1) $limit = 10;
+        if ($limit > 100) $limit = 100; // Cap at 100 to prevent resource exhaustion
+        
+        // Validate and sanitize offset parameter
+        $offset = isset($params['offset']) ? absint($params['offset']) : 0;
+        
         $args = [
             'post_type' => 'post',
             'post_status' => $params['status'] ?? 'publish',
-            'posts_per_page' => $params['limit'] ?? 10,
-            'offset' => $params['offset'] ?? 0,
+            'posts_per_page' => $limit,
+            'offset' => $offset,
         ];
         
         if (isset($params['search']) && !empty($params['search'])) {
@@ -155,7 +163,17 @@ class Core_Module extends Module_Base {
     }
     
     public function execute_getPost($params) {
+        // Validate required parameter
+        if (!isset($params['identifier'])) {
+            return $this->error_response('Missing required parameter: identifier', 'missing_parameter');
+        }
+        
         $identifier = $params['identifier'];
+        
+        // Reject empty identifiers
+        if ($identifier === '' || $identifier === null) {
+            return $this->error_response('Parameter "identifier" cannot be empty', 'invalid_parameter');
+        }
         
         if (is_numeric($identifier)) {
             $post = \get_post(absint($identifier));
@@ -171,10 +189,15 @@ class Core_Module extends Module_Base {
     }
     
     public function execute_searchPages($params) {
+        // Validate and sanitize limit parameter
+        $limit = isset($params['limit']) ? absint($params['limit']) : 10;
+        if ($limit < 1) $limit = 10;
+        if ($limit > 100) $limit = 100; // Cap at 100 to prevent resource exhaustion
+        
         $args = [
             'post_type' => 'page',
             'post_status' => $params['status'] ?? 'publish',
-            'posts_per_page' => $params['limit'] ?? 10,
+            'posts_per_page' => $limit,
         ];
         
         if (isset($params['search']) && !empty($params['search'])) {
@@ -202,7 +225,17 @@ class Core_Module extends Module_Base {
     }
     
     public function execute_getPage($params) {
+        // Validate required parameter
+        if (!isset($params['identifier'])) {
+            return $this->error_response('Missing required parameter: identifier', 'missing_parameter');
+        }
+        
         $identifier = $params['identifier'];
+        
+        // Reject empty identifiers
+        if ($identifier === '' || $identifier === null) {
+            return $this->error_response('Parameter "identifier" cannot be empty', 'invalid_parameter');
+        }
         
         if (is_numeric($identifier)) {
             $page = \get_post(absint($identifier));
