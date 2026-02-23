@@ -1,6 +1,6 @@
 === GoldT WebMCP Bridge ===
 Contributors: chgold
-Tags: ai, ai-agent, webmcp, rest-api, artificial-intelligence, oauth
+Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4

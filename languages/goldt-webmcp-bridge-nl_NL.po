@@ -7,8 +7,8 @@ msgstr ""
 msgid "AI Connect"
 msgstr "AI Connect"
 
-msgid "https://github.com/chgold/ai-connect"
-msgstr "https://github.com/chgold/ai-connect"
+msgid "https://github.com/chgold/goldt-webmcp-bridge"
+msgstr "https://github.com/chgold/goldt-webmcp-bridge"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
 msgstr "Overbrug WordPress- en AI-agenten met WebMCP-protocol"
@@ -20,7 +20,7 @@ msgid "https://github.com/chgold"
 msgstr "https://github.com/chgold"
 
 msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
-msgstr "AI Connect: Missing dependencies. Please run \\"composer install\\" in the plugin directory."
+msgstr "AI Connect: Ontbrekende afhankelijkheden. Voer \\"composer install\\" uit in de pluginmap."
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
 msgstr "AI Connect: WooCommerce wordt aanbevolen voor volledige functionaliteit."
