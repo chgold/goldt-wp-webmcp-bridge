@@ -65,7 +65,7 @@ msgid "Documentation"
 msgstr "Documentazione"
 
 msgid "GitHub README"
-msgstr "GitHub README"
+msgstr "LEGGIMI di GitHub"
 
 msgid "User access revoked successfully."
 msgstr "Accesso utente revocato correttamente."
@@ -152,13 +152,13 @@ msgid "User ID"
 msgstr "Codice utente"
 
 msgid "Username"
-msgstr "Username"
+msgstr "Nome utente"
 
 msgid "Email"
 msgstr "E-mail"
 
 msgid "Action"
-msgstr "Action"
+msgstr "Azione"
 
 msgid "Restore Access"
 msgstr "Ripristina accesso"

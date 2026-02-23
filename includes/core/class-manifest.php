@@ -46,7 +46,7 @@ class Manifest {
     public function __construct() {
         $this->manifest_data = [
             'schema_version' => '1.0',
-            'name' => 'wordpress-ai-connect',
+            'name' => 'goldt-webmcp-bridge',
             'version' => GOLDTWMCP_VERSION,
             'description' => 'WebMCP bridge for WordPress - manage content, users, and e-commerce',
             'api_version' => 'v1',

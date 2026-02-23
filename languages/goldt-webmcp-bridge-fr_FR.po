@@ -65,7 +65,7 @@ msgid "Documentation"
 msgstr "Documentation"
 
 msgid "GitHub README"
-msgstr "GitHub README"
+msgstr "Fichier README de GitHub"
 
 msgid "User access revoked successfully."
 msgstr "Accès utilisateur révoqué avec succès."

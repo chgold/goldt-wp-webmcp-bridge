@@ -5,7 +5,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "AI Connect"
-msgstr "AI Connect"
+msgstr "AIコネクト"
 
 msgid "https://github.com/chgold/goldt-webmcp-bridge"
 msgstr "https://github.com/chgold/goldt-webmcp-bridge"

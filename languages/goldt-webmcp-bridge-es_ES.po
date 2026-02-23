@@ -5,7 +5,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "AI Connect"
-msgstr "AI Connect"
+msgstr "Conexión de IA"
 
 msgid "https://github.com/chgold/goldt-webmcp-bridge"
 msgstr "https://github.com/chgold/goldt-webmcp-bridge"
@@ -50,7 +50,7 @@ msgid "View Manifest"
 msgstr "Ver manifiesto"
 
 msgid "Authentication"
-msgstr "Authentication"
+msgstr "Autenticación"
 
 msgid "Use WordPress username & password to login via"
 msgstr "Utilice el nombre de usuario y la contraseña de WordPress para iniciar sesión a través de"
@@ -65,7 +65,7 @@ msgid "Documentation"
 msgstr "Documentación"
 
 msgid "GitHub README"
-msgstr "GitHub README"
+msgstr "Archivo README de GitHub"
 
 msgid "User access revoked successfully."
 msgstr "Acceso de usuario revocado con éxito."

@@ -5,7 +5,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "AI Connect"
-msgstr "AI Connect"
+msgstr "اتصال الذكاء الاصطناعي"
 
 msgid "https://github.com/chgold/goldt-webmcp-bridge"
 msgstr "https://github.com/chgold/goldt-webmcp-bridge"
@@ -65,7 +65,7 @@ msgid "Documentation"
 msgstr "التوثيق"
 
 msgid "GitHub README"
-msgstr "GitHub README"
+msgstr "ملف README على GitHub"
 
 msgid "User access revoked successfully."
 msgstr "تم إبطال وصول المستخدم بنجاح."

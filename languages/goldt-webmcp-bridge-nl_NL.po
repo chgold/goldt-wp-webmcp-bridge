@@ -26,7 +26,7 @@ msgid "AI Connect: WooCommerce is recommended for full functionality."
 msgstr "AI Connect: WooCommerce wordt aanbevolen voor volledige functionaliteit."
 
 msgid "Settings"
-msgstr "Settings"
+msgstr "Instellingen"
 
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr "✅ AI Connect v%s is actief en klaar!"
@@ -113,10 +113,10 @@ msgid "Sensitive security data (JWT secrets, refresh tokens) will always be dele
 msgstr "Gevoelige beveiligingsgegevens (JWT-geheimen, refresh tokens) worden altijd verwijderd, ongeacht deze instelling."
 
 msgid "Save Settings"
-msgstr "Save Settings"
+msgstr "Instellingen opslaan"
 
 msgid "Security"
-msgstr "Security"
+msgstr "Beveiliging"
 
 msgid "Rotate JWT Secret Key"
 msgstr "JWT-geheime sleutel draaien"

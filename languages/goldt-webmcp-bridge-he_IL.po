@@ -5,13 +5,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "AI Connect"
-msgstr "AI Connect"
+msgstr "בינה מלאכותית קונקט"
 
 msgid "https://github.com/chgold/goldt-webmcp-bridge"
 msgstr "https://github.com/chgold/goldt-webmcp-bridge"
 
 msgid "Bridge WordPress & AI Agents with WebMCP Protocol"
-msgstr "Bridge WordPress & AI Agents with WebMCP Protocol"
+msgstr "גישור בין סוכני WordPress ובינה מלאכותית לבין פרוטוקול WebMCP"
 
 msgid "chgold"
 msgstr "chgold"
@@ -23,13 +23,13 @@ msgid "AI Connect: Missing dependencies. Please run \\"composer install\\" in th
 msgstr "AI Connect: תלויות חסרות. אנא הפעל את \\"composer install\\" בספריית התוספים."
 
 msgid "AI Connect: WooCommerce is recommended for full functionality."
-msgstr "AI Connect: WooCommerce is recommended for full functionality."
+msgstr "AI Connect: מומלץ להשתמש ב-WooCommerce לפונקציונליות מלאה."
 
 msgid "Settings"
 msgstr "הגדרות"
 
 msgid "✅ AI Connect v%s is active and ready!"
-msgstr "✅ AI Connect v%s is active and ready!"
+msgstr "✅ AI Connect v%s פעיל ומוכן!"
 
 msgid "Environment Status"
 msgstr "מצב סביבתי"
@@ -38,7 +38,7 @@ msgid "⚠️ Action Required"
 msgstr "⚠️ נדרשת פעולה"
 
 msgid "Composer dependencies are not installed. Please run:"
-msgstr "Composer dependencies are not installed. Please run:"
+msgstr "תלויות Composer אינן מותקנות. אנא הפעל:"
 
 msgid "🎯 Quick Start"
 msgstr "🎯 התחלה מהירה"
@@ -53,13 +53,13 @@ msgid "Authentication"
 msgstr "אימות"
 
 msgid "Use WordPress username & password to login via"
-msgstr "Use WordPress username & password to login via"
+msgstr "השתמשו בשם המשתמש והסיסמה של WordPress כדי להתחבר דרך"
 
 msgid "Available Tools"
 msgstr "כלים זמינים"
 
 msgid "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
-msgstr "5 WordPress core tools (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
+msgstr "5 כלי ליבה של WordPress (searchPosts, getPost, searchPages, getPage, getCurrentUser)"
 
 msgid "Documentation"
 msgstr "תיעוד"
@@ -173,7 +173,7 @@ msgid "User ID:"
 msgstr "מזהה משתמש:"
 
 msgid "Enter the WordPress user ID to block"
-msgstr "Enter the WordPress user ID to block"
+msgstr "הזן את שם המשתמש של WordPress כדי לחסום"
 
 msgid "Block User"
 msgstr "חסימת משתמש"
