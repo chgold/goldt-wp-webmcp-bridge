@@ -11,19 +11,19 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-add_action('admin_menu', 'ai_connect_add_test_page');
+add_action('admin_menu', 'goldtwmcp_add_test_page');
 
-function ai_connect_add_test_page() {
+function goldtwmcp_add_test_page() {
     add_management_page(
         'AI Connect Tests',
         'AI Connect Tests',
         'manage_options',
         'ai-connect-tests',
-        'ai_connect_render_test_page'
+        'goldtwmcp_render_test_page'
     );
 }
 
-function ai_connect_render_test_page() {
+function goldtwmcp_render_test_page() {
     ?>
     <div class="wrap">
         <h1>🧪 AI Connect - Interactive Tests</h1>
@@ -32,7 +32,7 @@ function ai_connect_render_test_page() {
             <p><strong>Test Suite:</strong> Run comprehensive tests to verify plugin functionality.</p>
         </div>
         
-        <?php ai_connect_run_admin_tests(); ?>
+        <?php goldtwmcp_run_admin_tests(); ?>
     </div>
     
     <style>
@@ -59,15 +59,15 @@ function ai_connect_render_test_page() {
     <?php
 }
 
-function ai_connect_run_admin_tests() {
+function goldtwmcp_run_admin_tests() {
     $tests = [];
     
     // Test 1: Plugin Activated
     $tests[] = [
         'name' => 'Plugin Activated',
-        'result' => defined('AI_CONNECT_VERSION'),
-        'message' => defined('AI_CONNECT_VERSION') ? 
-            'Version: ' . AI_CONNECT_VERSION : 
+        'result' => defined('GOLDTWMCP_VERSION'),
+        'message' => defined('GOLDTWMCP_VERSION') ? 
+            'Version: ' . GOLDTWMCP_VERSION : 
             'Plugin constant not defined'
     ];
     
@@ -89,7 +89,7 @@ function ai_connect_run_admin_tests() {
         
         $tests[] = [
             'name' => 'Tool Count',
-            'result' => $tool_count === 5 || (defined('AI_CONNECT_PRO_VERSION') && $tool_count > 5),
+            'result' => $tool_count === 5 || (defined('GOLDTWMCP_PRO_VERSION') && $tool_count > 5),
             'message' => "Found {$tool_count} tools"
         ];
         
@@ -114,7 +114,7 @@ function ai_connect_run_admin_tests() {
             }
         }
         
-        if (!defined('AI_CONNECT_PRO_VERSION')) {
+        if (!defined('GOLDTWMCP_PRO_VERSION')) {
             $tests[] = [
                 'name' => 'No WooCommerce in Free',
                 'result' => !$has_wc,
@@ -124,11 +124,11 @@ function ai_connect_run_admin_tests() {
     }
     
     // Test 6: Pro Plugin
-    if (defined('AI_CONNECT_PRO_VERSION')) {
+    if (defined('GOLDTWMCP_PRO_VERSION')) {
         $tests[] = [
             'name' => 'Pro Plugin Active',
             'result' => true,
-            'message' => 'Version: ' . AI_CONNECT_PRO_VERSION
+            'message' => 'Version: ' . GOLDTWMCP_PRO_VERSION
         ];
         
         // Test 7: WooCommerce Tools in Pro
@@ -153,7 +153,7 @@ function ai_connect_run_admin_tests() {
         ];
         
         if ($oauth_works) {
-            delete_option('ai_connect_client_' . $client['client_id']);
+            delete_option('goldtwmcp_client_' . $client['client_id']);
         }
     }
     
@@ -194,10 +194,10 @@ function ai_connect_run_admin_tests() {
     echo '</div>';
     
     // Manual Test Buttons
-    ai_connect_render_manual_tests();
+    goldtwmcp_render_manual_tests();
 }
 
-function ai_connect_render_manual_tests() {
+function goldtwmcp_render_manual_tests() {
     ?>
     <div class="test-section">
         <h2>Manual Tests</h2>
