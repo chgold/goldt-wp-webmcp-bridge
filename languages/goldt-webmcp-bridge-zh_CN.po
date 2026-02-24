@@ -2,6 +2,7 @@
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_CN
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "GoldT WebMCP Bridge"

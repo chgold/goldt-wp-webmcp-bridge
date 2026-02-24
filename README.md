@@ -27,6 +27,23 @@ No manual `composer install` required - everything is bundled!
 
 ---
 
+## 🤖 For AI Agent Users
+
+**Already installed the plugin? Here's all you need!**
+
+Just copy and paste this instruction to your AI agent (Claude, ChatGPT, etc.):
+
+```
+Connect to my WordPress site and follow the instructions at:
+https://github.com/chgold/goldt-wp-webmcp-bridge
+```
+
+The AI agent will handle the rest - OAuth authorization, API connection, and tool discovery.
+
+**That's it!** No technical knowledge required. ✨
+
+---
+
 ## 🔐 OAuth 2.0 Authentication Guide
 
 ### How It Works
@@ -527,6 +544,23 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 * [WordPress.org Support Forum](https://wordpress.org/support/plugin/goldt-webmcp-bridge/) - For questions and discussions
 
 Your feedback directly shapes the future of this plugin!
+
+---
+
+## 🤝 Contributing
+
+**This plugin is maintained by a single developer.**
+
+To ensure code quality and maintain a consistent architecture, 
+we do not accept code contributions (Pull Requests) at this time.
+
+**How you can help:**
+- 🐛 **Report bugs** - Open an issue with reproduction steps
+- 💡 **Request features** - Tell us what would make the plugin better
+- ⭐ **Spread the word** - Rate, review, and share if you find it useful
+- 📖 **Improve docs** - Suggest clarifications or corrections
+
+Thank you for your understanding!
 
 ---
 

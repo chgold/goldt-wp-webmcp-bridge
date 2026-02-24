@@ -113,7 +113,7 @@ class GoldT_WebMCP_Test_Runner {
     // Test: Plugin Files Exist
     private function test_plugin_files() {
         $required_files = [
-            'ai-connect.php',
+            'goldt-webmcp-bridge.php',
             'includes/class-goldtwmcp.php',
             'includes/core/class-manifest.php',
             'includes/oauth/class-oauth-server.php',
@@ -135,7 +135,7 @@ class GoldT_WebMCP_Test_Runner {
             return "GOLDTWMCP_VERSION not defined";
         }
         
-        if (!is_plugin_active('goldt-webmcp-bridge/ai-connect.php')) {
+        if (!is_plugin_active('goldt-webmcp-bridge/goldt-webmcp-bridge.php')) {
             return "Plugin not active in WordPress";
         }
         

@@ -84,6 +84,7 @@ class GoldtWebMCP_Plugin {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('rest_api_init', [$this, 'register_routes']);
         add_action('init', [$this, 'add_rewrite_rules']);
+        add_filter('query_vars', [$this, 'register_query_vars']);
         
         // Initialize OAuth components
         $authorize_endpoint = new \GoldtWebMCP\OAuth\Authorize_Endpoint();
@@ -104,6 +105,11 @@ class GoldtWebMCP_Plugin {
     
     public function add_rewrite_rules() {
         add_rewrite_tag('%goldtwmcp_oauth_authorize%', '([^&]+)');
+    }
+    
+    public function register_query_vars($vars) {
+        $vars[] = 'goldtwmcp_oauth_authorize';
+        return $vars;
     }
     
     public function add_admin_menu() {
