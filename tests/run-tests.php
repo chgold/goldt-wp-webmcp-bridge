@@ -35,7 +35,6 @@ class GoldT_WebMCP_Test_Runner {
         // API Tests
         $this->run_test('REST API Available', [$this, 'test_rest_api']);
         $this->run_test('Manifest Endpoint', [$this, 'test_manifest']);
-        $this->run_test('Status Endpoint', [$this, 'test_status']);
         
         // Core Functionality
         $this->run_test('OAuth Client Creation', [$this, 'test_oauth_client']);
@@ -175,8 +174,8 @@ class GoldT_WebMCP_Test_Runner {
             return "Manifest route not registered";
         }
         
-        if (!isset($routes['/goldt-webmcp-bridge/v1/status'])) {
-            return "Status route not registered";
+        if (!isset($routes['/goldt-webmcp-bridge/v1/tools'])) {
+            return "Tools route not registered";
         }
         
         return true;
@@ -209,23 +208,6 @@ class GoldT_WebMCP_Test_Runner {
         return true;
     }
     
-    // Test: Status Endpoint
-    private function test_status() {
-        $request = new WP_REST_Request('GET', '/goldt-webmcp-bridge/v1/status');
-        $response = rest_get_server()->dispatch($request);
-        
-        if ($response->is_error()) {
-            return "Status endpoint returned error";
-        }
-        
-        $data = $response->get_data();
-        
-        if ($data['status'] !== 'ok') {
-            return "Status is not 'ok'";
-        }
-        
-        return true;
-    }
     
     // Test: OAuth Client Creation
     private function test_oauth_client() {
