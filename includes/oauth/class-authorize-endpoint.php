@@ -143,6 +143,8 @@ class Authorize_Endpoint {
             exit;
         }
         
+        $this->enqueue_oauth_assets();
+        
         global $wpdb;
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth client data, not cached
         $client = $wpdb->get_row($wpdb->prepare(
@@ -155,8 +157,26 @@ class Authorize_Endpoint {
     }
     
     private function show_oob_code($code) {
+        $this->enqueue_oauth_assets();
         include GOLDTWMCP_PATH . 'includes/oauth/views/oob-code.php';
         exit;
+    }
+    
+    private function enqueue_oauth_assets() {
+        wp_enqueue_style(
+            'goldtwmcp-oauth',
+            GOLDTWMCP_URL . 'assets/css/oauth.css',
+            [],
+            GOLDTWMCP_VERSION
+        );
+        
+        wp_enqueue_script(
+            'goldtwmcp-oauth',
+            GOLDTWMCP_URL . 'assets/js/oauth.js',
+            [],
+            GOLDTWMCP_VERSION,
+            true
+        );
     }
     
     private function send_error($error, $description) {

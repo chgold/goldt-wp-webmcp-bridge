@@ -137,6 +137,107 @@ Your feedback directly shapes the future of this plugin!
 
 **For detailed setup and testing examples**, see the [plugin documentation on GitHub](https://github.com/chgold/goldt-wp-webmcp-bridge).
 
+== Troubleshooting ==
+
+= Missing Dependencies Error =
+
+**Symptoms:**
+* Red error notice in WordPress admin
+* Plugin appears active but doesn't work
+* REST API endpoints return 404
+
+**Solutions:**
+
+1. **Download complete plugin** (Recommended)
+   * Get the full ZIP with dependencies from [GitHub Releases](https://github.com/chgold/goldt-wp-webmcp-bridge/releases)
+   * Delete the incomplete plugin folder
+   * Upload and activate the complete version
+
+2. **Manual composer install** (Advanced)
+   * SSH into your server
+   * Run: `cd /path/to/wp-content/plugins/goldt-webmcp-bridge && composer install --no-dev`
+
+**Common causes:**
+* `exec()` function disabled on server
+* Composer not available on shared hosting
+* Plugin directory not writable
+
+**How to diagnose:**
+* Go to **AI Connect → Settings** in WordPress admin
+* Check the "Environment Status" table
+* Look for red ✗ marks showing the exact issue
+
+= Database Tables Missing Error =
+
+**Symptoms:**
+* Red error notice: "OAuth database tables were not created"
+* OAuth authorization fails
+
+**Solution:**
+1. Deactivate the plugin
+2. Reactivate the plugin
+3. Check **AI Connect → Settings** to verify "OAuth Tables: ✓ Created"
+
+**If problem persists:**
+* Your database user may not have CREATE TABLE permissions
+* Contact your hosting provider or check wp-config.php
+
+= OAuth Authorization Fails =
+
+**Symptoms:**
+* Clicking "Authorize" button does nothing
+* Redirect loop during OAuth flow
+* "invalid_client" or "invalid_request" errors
+
+**Solutions:**
+
+1. **Clear WordPress rewrite rules:**
+   * Go to **Settings → Permalinks**
+   * Click "Save Changes" (flushes rewrite rules)
+
+2. **Verify OAuth tables exist:**
+   * Go to **AI Connect → Settings**
+   * Check "OAuth Tables: ✓ Created"
+
+3. **Verify client exists:**
+   * Default clients (claude-ai, chatgpt, etc.) are auto-created
+   * If missing, deactivate and reactivate plugin
+
+= REST API Returns 404 =
+
+**Symptoms:**
+* `/wp-json/goldt-webmcp-bridge/v1/manifest` returns 404
+* Tools API calls fail with 404
+
+**Solutions:**
+
+1. **Flush permalinks:**
+   * Go to **Settings → Permalinks**
+   * Click "Save Changes"
+
+2. **Reactivate plugin:**
+   * Go to **Plugins** page
+   * Deactivate and reactivate "GoldT WebMCP Bridge"
+
+3. **Check WordPress REST API:**
+   * Visit: `http://yoursite.com/wp-json/`
+   * If this also returns 404, your REST API is disabled or blocked
+   * Check for conflicting security plugins
+   * Review .htaccess rules
+
+= Still Having Issues? =
+
+**Before asking for help, gather this information:**
+
+1. Go to **AI Connect → Settings**
+2. Take screenshot of "Environment Status" table
+3. Check browser console for errors (F12 → Console)
+4. Check WordPress debug log (if enabled)
+
+**Get support:**
+* GitHub: https://github.com/chgold/goldt-wp-webmcp-bridge/issues
+* WordPress.org: Support forum
+
 == Frequently Asked Questions ==
 
 = What is WebMCP? =

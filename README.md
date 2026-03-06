@@ -531,6 +531,142 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 
 ---
 
+## 🔧 Troubleshooting
+
+### Common Issues & Solutions
+
+#### "Missing Dependencies" Error
+
+**Symptoms:**
+- Red error notice in WordPress admin
+- Plugin appears active but doesn't work
+- REST API endpoints return 404
+
+**Causes & Solutions:**
+
+1. **vendor/autoload.php missing**
+   
+   **Solution Option 1 (Recommended):**
+   - Download the complete plugin ZIP with dependencies from [GitHub Releases](https://github.com/chgold/goldt-wp-webmcp-bridge/releases)
+   - Delete the incomplete plugin folder
+   - Upload and activate the complete version
+   
+   **Solution Option 2 (Advanced):**
+   ```bash
+   cd /path/to/wp-content/plugins/goldt-webmcp-bridge
+   composer install --no-dev
+   ```
+
+2. **exec() function disabled on server**
+   
+   The plugin tries to auto-install composer dependencies during activation. If your hosting provider disables the `exec()` PHP function, this will fail silently.
+   
+   **Solution:** Download the complete plugin with vendor/ included (see Solution Option 1 above)
+
+3. **Composer not available on server**
+   
+   Many shared hosting plans don't have composer installed.
+   
+   **Solution:** Download the complete plugin with vendor/ included (see Solution Option 1 above)
+
+4. **Plugin directory not writable**
+   
+   The server can't create the vendor/ folder due to file permissions.
+   
+   **Solution:** 
+   - Contact your hosting provider to fix permissions, OR
+   - Download the complete plugin with vendor/ included (see Solution Option 1 above)
+
+**How to diagnose:**
+1. Go to **AI Connect → Settings** in WordPress admin
+2. Check the "Environment Status" table
+3. Look for red ✗ marks - they show exactly what's wrong
+
+---
+
+#### "Database Tables Missing" Error
+
+**Symptoms:**
+- Red error notice: "OAuth database tables were not created"
+- OAuth authorization fails
+
+**Solution:**
+1. Deactivate the plugin
+2. Reactivate the plugin
+3. Check **AI Connect → Settings** to verify "OAuth Tables: ✓ Created"
+
+If the problem persists:
+- Your database user may not have CREATE TABLE permissions
+- Contact your hosting provider or check your wp-config.php database settings
+
+---
+
+#### OAuth Authorization Fails
+
+**Symptoms:**
+- Clicking "Authorize" button does nothing
+- Redirect loop during OAuth flow
+- "invalid_client" or "invalid_request" errors
+
+**Solutions:**
+
+1. **Clear WordPress rewrite rules:**
+   - Go to **Settings → Permalinks**
+   - Click "Save Changes" (no need to change anything)
+   - This flushes and regenerates rewrite rules
+
+2. **Check OAuth tables:**
+   - Go to **AI Connect → Settings**
+   - Verify "OAuth Tables: ✓ Created"
+
+3. **Verify client exists:**
+   - The default clients (claude-ai, chatgpt, etc.) are auto-created during activation
+   - If they're missing, deactivate and reactivate the plugin
+
+---
+
+#### REST API Endpoints Return 404
+
+**Symptoms:**
+- `/wp-json/goldt-webmcp-bridge/v1/manifest` returns 404
+- Tools API calls fail with 404
+
+**Solutions:**
+
+1. **Flush permalinks:**
+   - Go to **Settings → Permalinks**  
+   - Click "Save Changes"
+
+2. **Check if plugin is fully activated:**
+   - Go to **Plugins** page
+   - Deactivate and reactivate "GoldT WebMCP Bridge"
+
+3. **Check WordPress REST API:**
+   ```bash
+   curl http://yoursite.com/wp-json/
+   ```
+   If this also returns 404, your WordPress REST API is disabled or blocked.
+   - Check for conflicting security plugins
+   - Check .htaccess rules
+   - Check server configuration
+
+---
+
+### Still Having Issues?
+
+**Before asking for help, please gather this information:**
+
+1. Go to **AI Connect → Settings** in WordPress admin
+2. Take a screenshot of the "Environment Status" table
+3. Check browser console for JavaScript errors (F12 → Console)
+4. Check WordPress debug log (if enabled)
+
+**Get support:**
+- [GitHub Issues](https://github.com/chgold/goldt-wp-webmcp-bridge/issues) - Bug reports and technical issues
+- [WordPress.org Support Forum](https://wordpress.org/support/plugin/goldt-webmcp-bridge/) - General questions
+
+---
+
 ## 💬 We Need Your Feedback!
 
 **Help us build what YOU need:**

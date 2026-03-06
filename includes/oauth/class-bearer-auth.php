@@ -110,18 +110,16 @@ class Bearer_Auth {
     
     private function is_goldtwmcp_request() {
         $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '';
-        return strpos($request_uri, '/wp-json/ai-connect/') !== false;
+        return strpos($request_uri, '/wp-json/goldt-webmcp-bridge/') !== false;
     }
     
     private function is_public_endpoint() {
         $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '';
         
-        // Public endpoints that don't require authentication
         $public_endpoints = [
-            '/wp-json/ai-connect/v1/oauth/token',
-            '/wp-json/ai-connect/v1/oauth/revoke',
-            '/wp-json/ai-connect/v1/manifest',
-            '/wp-json/ai-connect/v1/status',
+            '/wp-json/goldt-webmcp-bridge/v1/oauth/token',
+            '/wp-json/goldt-webmcp-bridge/v1/oauth/revoke',
+            '/wp-json/goldt-webmcp-bridge/v1/manifest',
         ];
         
         foreach ($public_endpoints as $endpoint) {

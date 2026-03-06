@@ -93,6 +93,31 @@ class Database {
     }
     
     /**
+     * Check if all required OAuth tables exist
+     * 
+     * @return bool True if all tables exist, false otherwise
+     */
+    public static function tables_exist() {
+        global $wpdb;
+        
+        $required_tables = [
+            $wpdb->prefix . 'goldtwmcp_oauth_clients',
+            $wpdb->prefix . 'goldtwmcp_oauth_codes',
+            $wpdb->prefix . 'goldtwmcp_oauth_tokens',
+        ];
+        
+        foreach ($required_tables as $table) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Checking table existence
+            $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+            if ($exists !== $table) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
      * Run database upgrades if needed
      */
     public static function maybe_upgrade() {

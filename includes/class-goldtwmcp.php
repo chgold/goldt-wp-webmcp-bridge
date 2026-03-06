@@ -179,9 +179,66 @@ class GoldtWebMCP_Plugin {
                             <td><?php echo extension_loaded('redis') ? '✓ Available' : '○ Not installed (optional)'; ?></td>
                         </tr>
                         <tr>
-                            <td><strong>Composer:</strong></td>
-				<td><?php echo file_exists(GOLDTWMCP_PATH . 'vendor') ? '✓ Installed' : '○ Run composer install'; ?></td>
+                            <td><strong>Composer Dependencies:</strong></td>
+                            <td><?php 
+                                if (file_exists(GOLDTWMCP_PATH . 'vendor/autoload.php')) {
+                                    echo '<span style="color: green;">✓ Installed</span>';
+                                } else {
+                                    echo '<span style="color: red;">✗ Missing</span> - ';
+                                    $activation_error = get_option('goldtwmcp_activation_error', '');
+                                    if ($activation_error) {
+                                        echo '<em>' . esc_html($activation_error) . '</em>';
+                                    } else {
+                                        echo '<em>Run composer install</em>';
+                                    }
+                                }
+                            ?></td>
                         </tr>
+                        <tr>
+                            <td><strong>exec() Function:</strong></td>
+                            <td><?php 
+                                $disabled_functions = explode(',', ini_get('disable_functions'));
+                                $disabled_functions = array_map('trim', $disabled_functions);
+                                if (in_array('exec', $disabled_functions)) {
+                                    echo '<span style="color: orange;">✗ Disabled</span>';
+                                } else {
+                                    echo '✓ Enabled';
+                                }
+                            ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Composer Command:</strong></td>
+                            <td><?php 
+                                $disabled_functions = explode(',', ini_get('disable_functions'));
+                                $disabled_functions = array_map('trim', $disabled_functions);
+                                if (!in_array('exec', $disabled_functions)) {
+                                    exec('which composer 2>/dev/null', $output, $return_var);
+                                    if ($return_var === 0) {
+                                        echo '✓ Available in PATH';
+                                    } else {
+                                        exec('which composer.phar 2>/dev/null', $output, $return_var);
+                                        if ($return_var === 0) {
+                                            echo '✓ composer.phar found';
+                                        } else {
+                                            echo '<span style="color: orange;">✗ Not found</span>';
+                                        }
+                                    }
+                                } else {
+                                    echo '<span style="color: #999;">N/A (exec disabled)</span>';
+                                }
+                            ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>OAuth Tables:</strong></td>
+                            <td><?php 
+                                if (\GoldtWebMCP\OAuth\Database::tables_exist()) {
+                                    echo '<span style="color: green;">✓ Created</span>';
+                                } else {
+                                    echo '<span style="color: red;">✗ Missing</span> - Deactivate & reactivate plugin';
+                                }
+                            ?></td>
+                        </tr>
+
                     </tbody>
                 </table>
             </div>
@@ -198,13 +255,6 @@ class GoldtWebMCP_Plugin {
     }
     
     public function register_routes() {
-        // Public endpoint - status check, no authentication required
-		register_rest_route('goldt-webmcp-bridge/v1', '/status', [
-            'methods' => 'GET',
-            'callback' => [$this, 'get_status'],
-            'permission_callback' => '__return_true' // Intentionally public for health checks
-        ]);
-        
         // Public endpoint - OAuth 2.0 discovery, must be publicly accessible
 		register_rest_route('goldt-webmcp-bridge/v1', '/manifest', [
             'methods' => 'GET',
@@ -226,15 +276,6 @@ class GoldtWebMCP_Plugin {
         $manifest = $this->manifest->generate();
         
         return rest_ensure_response($manifest);
-    }
-    
-    public function get_status() {
-        return rest_ensure_response([
-            'status' => 'ok',
-            'version' => $this->version,
-            'wordpress' => get_bloginfo('version'),
-            'php' => PHP_VERSION
-        ]);
     }
     
     public function settings_page() {

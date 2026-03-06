@@ -31,6 +31,7 @@ abstract class Module_Base {
             'description' => $config['description'],
             'input_schema' => $config['input_schema'],
             'callback' => $config['callback'] ?? [$this, 'execute_' . $name],
+            'required_scope' => $config['required_scope'] ?? 'read',
         ];
         
         if ($this->manifest) {

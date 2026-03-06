@@ -12,6 +12,7 @@ class Core_Module extends Module_Base {
     protected function register_tools() {
         $this->register_tool('searchPosts', [
             'description' => 'Search WordPress posts with filters',
+            'required_scope' => 'read',
             'input_schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -52,6 +53,7 @@ class Core_Module extends Module_Base {
         
         $this->register_tool('getPost', [
             'description' => 'Get a single WordPress post by ID or slug',
+            'required_scope' => 'read',
             'input_schema' => [
                 'type' => 'object',
                 'required' => ['identifier'],
@@ -66,6 +68,7 @@ class Core_Module extends Module_Base {
         
         $this->register_tool('searchPages', [
             'description' => 'Search WordPress pages',
+            'required_scope' => 'read',
             'input_schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -93,6 +96,7 @@ class Core_Module extends Module_Base {
         
         $this->register_tool('getPage', [
             'description' => 'Get a single WordPress page by ID or slug',
+            'required_scope' => 'read',
             'input_schema' => [
                 'type' => 'object',
                 'required' => ['identifier'],
@@ -107,6 +111,7 @@ class Core_Module extends Module_Base {
         
         $this->register_tool('getCurrentUser', [
             'description' => 'Get information about the current authenticated user',
+            'required_scope' => 'read',
             'input_schema' => [
                 'type' => 'object',
                 'properties' => [],

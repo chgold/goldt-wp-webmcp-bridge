@@ -1,0 +1,231 @@
+/* OAuth Authorization Screens Styles */
+
+/* Common styles for both screens */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    background: #f0f0f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* OOB Code Screen - Success Container */
+.success-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 500px;
+    width: 100%;
+    padding: 40px;
+    text-align: center;
+}
+
+.success-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 24px;
+    color: #00a32a;
+}
+
+/* Consent Screen - Consent Container */
+.consent-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 500px;
+    width: 100%;
+    padding: 40px;
+}
+
+.consent-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.consent-header h1 {
+    font-size: 24px;
+    color: #1d2327;
+    margin-bottom: 8px;
+}
+
+.consent-header p {
+    color: #646970;
+    font-size: 14px;
+}
+
+h1 {
+    font-size: 24px;
+    color: #1d2327;
+    margin-bottom: 12px;
+}
+
+.instruction {
+    color: #646970;
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+/* Code Container */
+.code-container {
+    background: #f6f7f7;
+    border: 2px solid #2271b1;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.code-label {
+    font-size: 12px;
+    color: #646970;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.code-value {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+    word-break: break-all;
+    user-select: all;
+}
+
+/* Client Info */
+.client-info {
+    background: #f6f7f7;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.client-name {
+    font-weight: 600;
+    font-size: 18px;
+    color: #1d2327;
+    margin-bottom: 12px;
+}
+
+/* Scopes Section */
+.scopes-section h2 {
+    font-size: 16px;
+    color: #1d2327;
+    margin-bottom: 16px;
+}
+
+.scope-list {
+    list-style: none;
+    margin-bottom: 24px;
+}
+
+.scope-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.scope-item:last-child {
+    border-bottom: none;
+}
+
+.scope-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    color: #2271b1;
+}
+
+.scope-label {
+    color: #1d2327;
+    font-size: 14px;
+}
+
+/* Buttons */
+.copy-btn {
+    background: #2271b1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: background 0.2s;
+}
+
+.copy-btn:hover {
+    background: #135e96;
+}
+
+.copy-success {
+    color: #00a32a;
+    font-size: 14px;
+    display: none;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-approve {
+    background: #2271b1;
+    color: white;
+}
+
+.btn-approve:hover {
+    background: #135e96;
+}
+
+.btn-deny {
+    background: #f0f0f1;
+    color: #1d2327;
+}
+
+.btn-deny:hover {
+    background: #dcdcde;
+}
+
+/* Warning Box */
+.warning {
+    background: #fcf9e8;
+    border-left: 4px solid #dba617;
+    padding: 12px 16px;
+    border-radius: 4px;
+}
+
+.consent-container .warning {
+    margin-top: 24px;
+}
+
+.success-container .warning {
+    text-align: left;
+}
+
+.warning p {
+    color: #646970;
+    font-size: 13px;
+    line-height: 1.5;
+}

@@ -21,3 +21,7 @@ Thumbs.db
 
 # CI/CD
 .github/
+
+# Vendor development files
+vendor/predis/predis/.codespellrc
+vendor/predis/predis/bin/

@@ -11,9 +11,11 @@ class Tools_Endpoint {
     
     private $rate_limiter;
     private $modules = [];
+    private $bearer_auth;
     
     public function __construct() {
         $this->rate_limiter = new Rate_Limiter();
+        $this->bearer_auth = new \GoldtWebMCP\OAuth\Bearer_Auth();
     }
     
     public function register_routes() {
@@ -50,6 +52,23 @@ class Tools_Endpoint {
         }
         
         $module = $this->modules[$module_name];
+        $tools = $module->get_tools();
+        
+        if (!isset($tools[$tool_method])) {
+            return new \WP_Error('tool_not_found', sprintf('Tool %s not found', $tool_method), ['status' => 404]);
+        }
+        
+        $tool = $tools[$tool_method];
+        $required_scope = $tool['required_scope'] ?? 'read';
+        
+        if (!$this->check_scope($required_scope)) {
+            return new \WP_Error(
+                'insufficient_scope',
+                sprintf('This tool requires the "%s" scope. Please re-authorize with the required permissions.', $required_scope),
+                ['status' => 403]
+            );
+        }
+        
         $result = $module->execute_tool($tool_method, $params);
         
         if (\is_wp_error($result)) {
@@ -118,5 +137,9 @@ class Tools_Endpoint {
         }
         
         return ['wordpress', $tool_name];
+    }
+    
+    private function check_scope($required_scope) {
+        return $this->bearer_auth->check_scope($required_scope);
     }
 }
