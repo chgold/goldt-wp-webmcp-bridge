@@ -1,5 +1,5 @@
 === GoldT WebMCP Bridge ===
-Contributors: chgold
+Contributors: chagold
 Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
