@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -338,6 +338,14 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 0.2.1 - 2026-03-06 =
+* **Security**: Added OAuth scope validation - users must explicitly grant permissions for each tool
+* **WordPress.org Compliance**: Fixed inline scripts/styles - moved to wp_enqueue_script/style
+* **WordPress.org Compliance**: Removed /status endpoint per security review
+* **WordPress.org Compliance**: Updated .distignore to exclude vendor development files
+* **Fixed**: Updated Bearer_Auth endpoint paths to current plugin slug
+* **Improved**: 3-layer security architecture (authentication, rate limiting, authorization)
+
 = 0.2.0 - 2026-02-23 =
 * **Security**: Migrated to OAuth 2.0 with PKCE for secure authentication
 * **Added**: 8 pre-registered AI clients (Claude, ChatGPT, Gemini, and more)
@@ -356,6 +364,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 0.2.1 =
+Critical security update: OAuth scope validation now enforced. Users must explicitly approve each permission level. WordPress.org compliance improvements.
 
 = 0.2.0 =
 Security update: OAuth 2.0 authentication now enabled. See documentation for setup guide.
