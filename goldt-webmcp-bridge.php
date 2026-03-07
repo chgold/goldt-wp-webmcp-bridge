@@ -5,7 +5,7 @@
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
  * Version: 0.2.1
  * Author: chagold
- * Author URI: https://github.com/chagold
+ * Author URI: https://github.com/chgold
  * License: GPL v3
  * Requires at least: 6.0
  * Requires PHP: 7.4
