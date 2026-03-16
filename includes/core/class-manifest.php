@@ -52,7 +52,7 @@ class Manifest {
             'api_version' => 'v1',
             'capabilities' => [
                 'tools' => true,
-                'resources' => true,
+                'resources' => false,
                 'prompts' => false,
             ],
         ];
