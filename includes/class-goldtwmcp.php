@@ -38,6 +38,7 @@ class GoldtWebMCP_Plugin {
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-revoke-endpoint.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-bearer-auth.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-admin-ui.php';
+		require_once GOLDTWMCP_PATH . 'includes/core/class-info-page.php';
     }
     
     private function init_components() {
@@ -107,6 +108,9 @@ class GoldtWebMCP_Plugin {
         
         $admin_ui = new \GoldtWebMCP\OAuth\Admin_UI();
         $admin_ui->init();
+
+        $info_page = new \GoldtWebMCP\Core\Info_Page();
+        $info_page->init();
     }
     
     public function add_rewrite_rules() {
