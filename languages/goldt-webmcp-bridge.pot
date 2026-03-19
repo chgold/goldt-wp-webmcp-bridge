@@ -1,4 +1,4 @@
-# Copyright (C) 2026 chgold
+# Copyright (C) 2026 chagold
 # This file is distributed under the GPL v3.
 msgid ""
 msgstr ""
@@ -9,9 +9,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-03-08T00:33:08+02:00\n"
+"POT-Creation-Date: 2026-03-19T20:31:52+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.10.0\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: goldt-webmcp-bridge\n"
 
 #. Plugin Name of the plugin
@@ -26,7 +26,7 @@ msgstr ""
 
 #. Author of the plugin
 #: goldt-webmcp-bridge.php
-msgid "chgold"
+msgid "chagold"
 msgstr ""
 
 #. Author URI of the plugin
@@ -56,6 +56,7 @@ msgstr ""
 
 #. translators: %s: GitHub Releases link
 #: goldt-webmcp-bridge.php:124
+#, php-format
 msgid "Download the complete plugin with vendor/ included from %s"
 msgstr ""
 
@@ -104,178 +105,211 @@ msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
 msgstr ""
 
 #: goldt-webmcp-bridge.php:176
-#: includes/class-goldtwmcp.php:128
-#: includes/class-goldtwmcp.php:129
+#: includes/class-goldtwmcp.php:134
+#: includes/class-goldtwmcp.php:135
 msgid "Settings"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:117
-#: includes/class-goldtwmcp.php:118
+#: includes/class-goldtwmcp.php:123
+#: includes/class-goldtwmcp.php:124
 msgid "AI Connect"
 msgstr ""
 
 #. translators: %s: version number
-#: includes/class-goldtwmcp.php:144
+#: includes/class-goldtwmcp.php:150
+#, php-format
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:148
+#: includes/class-goldtwmcp.php:154
 msgid "Environment Status"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:248
+#: includes/class-goldtwmcp.php:254
 msgid "Dependencies Missing"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:249
+#: includes/class-goldtwmcp.php:255
 msgid "Run the following command in the plugin directory:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:292
+#: includes/class-goldtwmcp.php:298
 msgid "User access revoked successfully."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:307
+#: includes/class-goldtwmcp.php:313
 msgid "User access restored successfully."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:319
+#: includes/class-goldtwmcp.php:325
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:333
+#: includes/class-goldtwmcp.php:342
 msgid "Settings saved!"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:346
+#: includes/class-goldtwmcp.php:356
 msgid "API Rate Limiting"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:349
+#: includes/class-goldtwmcp.php:359
 msgid "Rate Limit (per minute)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:352
+#: includes/class-goldtwmcp.php:362
 msgid "Maximum API requests per minute per user"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:356
+#: includes/class-goldtwmcp.php:366
 msgid "Rate Limit (per hour)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:359
+#: includes/class-goldtwmcp.php:369
 msgid "Maximum API requests per hour per user"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:364
-msgid "Data Management"
-msgstr ""
-
-#: includes/class-goldtwmcp.php:367
-msgid "Uninstall Cleanup"
-msgstr ""
-
-#: includes/class-goldtwmcp.php:372
-msgid "Delete all plugin data when uninstalling"
-msgstr ""
-
-#: includes/class-goldtwmcp.php:375
-msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
+#: includes/class-goldtwmcp.php:374
+msgid "Translation"
 msgstr ""
 
 #: includes/class-goldtwmcp.php:377
-msgid "Note:"
+msgid "Translation Provider"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:377
-msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
+#: includes/class-goldtwmcp.php:382
+msgid "AI Self-Translate"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:384
-msgid "Save Settings"
+#: includes/class-goldtwmcp.php:383
+msgid "AI agent translates using its own built-in language abilities (no external API, no limits)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:389
-msgid "Security"
+#: includes/class-goldtwmcp.php:387
+msgid "MyMemory API"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:391
-msgid "Rotate JWT Secret Key"
+#: includes/class-goldtwmcp.php:388
+msgid "Uses MyMemory free translation API (~5,000 chars/day limit)"
 msgstr ""
 
 #: includes/class-goldtwmcp.php:392
-msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
+msgid "Disabled"
 msgstr ""
 
 #: includes/class-goldtwmcp.php:393
-msgid "All users will need to authenticate again to get new tokens."
+msgid "No translation capability exposed to AI agents"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:396
-msgid "Warning:"
+#: includes/class-goldtwmcp.php:400
+msgid "Data Management"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:396
-msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
+#: includes/class-goldtwmcp.php:403
+msgid "Uninstall Cleanup"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:399
-msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
+#: includes/class-goldtwmcp.php:408
+msgid "Delete all plugin data when uninstalling"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:401
-msgid "Rotate JWT Secret"
+#: includes/class-goldtwmcp.php:411
+msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:406
-msgid "Manage User Access"
+#: includes/class-goldtwmcp.php:413
+msgid "Note:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:407
-msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
+#: includes/class-goldtwmcp.php:413
+msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:412
-msgid "Blocked Users"
+#: includes/class-goldtwmcp.php:420
+msgid "Save Settings"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:414
-msgid "User ID"
-msgstr ""
-
-#: includes/class-goldtwmcp.php:414
-msgid "Username"
-msgstr ""
-
-#: includes/class-goldtwmcp.php:414
-msgid "Email"
-msgstr ""
-
-#: includes/class-goldtwmcp.php:414
-msgid "Action"
+#: includes/class-goldtwmcp.php:425
+msgid "Security"
 msgstr ""
 
 #: includes/class-goldtwmcp.php:427
-msgid "Restore Access"
+msgid "Rotate JWT Secret Key"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:428
+msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
+msgstr ""
+
+#: includes/class-goldtwmcp.php:429
+msgid "All users will need to authenticate again to get new tokens."
+msgstr ""
+
+#: includes/class-goldtwmcp.php:432
+msgid "Warning:"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:432
+msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
 msgstr ""
 
 #: includes/class-goldtwmcp.php:435
+msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
+msgstr ""
+
+#: includes/class-goldtwmcp.php:437
+msgid "Rotate JWT Secret"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:442
+msgid "Manage User Access"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:443
+msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
+msgstr ""
+
+#: includes/class-goldtwmcp.php:448
+msgid "Blocked Users"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:450
+msgid "User ID"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:450
+msgid "Username"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:450
+msgid "Email"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:450
+msgid "Action"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:463
+msgid "Restore Access"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:471
 msgid "No users are currently blocked."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:441
+#: includes/class-goldtwmcp.php:477
 msgid "Block a User"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:445
+#: includes/class-goldtwmcp.php:481
 msgid "User ID:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:447
+#: includes/class-goldtwmcp.php:483
 msgid "Enter the WordPress user ID to block"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:449
+#: includes/class-goldtwmcp.php:485
 msgid "Block User"
 msgstr ""
 

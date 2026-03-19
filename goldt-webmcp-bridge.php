@@ -3,7 +3,7 @@
  * Plugin Name: GoldT WebMCP Bridge
  * Plugin URI: 
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
- * Version: 0.2.1
+ * Version: 0.3.0
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('GOLDTWMCP_VERSION', '0.2.1');
+define('GOLDTWMCP_VERSION', '0.3.0');
 define('GOLDTWMCP_PATH', plugin_dir_path(__FILE__));
 define('GOLDTWMCP_URL', plugin_dir_url(__FILE__));
 

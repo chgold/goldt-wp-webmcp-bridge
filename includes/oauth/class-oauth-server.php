@@ -253,18 +253,57 @@ class OAuth_Server {
     }
     
     /**
-     * Validate client
+     * Validate client and return canonical client_id, or false if not found.
+     *
+     * Tries exact match first, then a normalized match (strips common AI suffixes).
+     *
+     * @param string $client_id Client ID to validate.
+     * @return string|false Canonical client_id on success, false on failure.
      */
     public function validate_client($client_id) {
         global $wpdb;
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth client validation
         $client = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
+            "SELECT client_id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
             $client_id
         ));
         
-        return $client !== null;
+        if ($client !== null) {
+            return $client_id;
+        }
+
+        $normalized = $this->normalize_client_id($client_id);
+        if ($normalized !== $client_id) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth client fuzzy lookup
+            $client = $wpdb->get_row($wpdb->prepare(
+                "SELECT client_id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
+                $normalized
+            ));
+            if ($client !== null) {
+                return $normalized;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Normalize a client_id by stripping common AI-related suffixes.
+     *
+     * @param string $client_id Raw client_id from the request.
+     * @return string Normalized client_id.
+     */
+    private function normalize_client_id($client_id) {
+        $suffixes   = ['_client', '_ai', '_app', '_bot', '_agent'];
+        $normalized = strtolower(trim($client_id));
+        foreach ($suffixes as $suffix) {
+            if (substr($normalized, -strlen($suffix)) === $suffix) {
+                $normalized = substr($normalized, 0, -strlen($suffix));
+                break;
+            }
+        }
+        return $normalized;
     }
     
     /**

@@ -1,11 +1,11 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
 
-Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
+Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0 and optional translation
 
 **Secure authentication:** Uses OAuth 2.0 (the same security standard as Google, Facebook, and GitHub) - your passwords stay safe and private!
 
@@ -243,6 +243,32 @@ curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/revoke" \
 
 ---
 
+## ⚙️ Admin Settings
+
+Navigate to **WordPress Admin → GoldT WebMCP → Settings** to configure the plugin.
+
+### Translation Provider
+
+Controls how the plugin handles content translation requests.
+
+| Option | Description |
+|--------|-------------|
+| `ai_self` | AI agent translates on its own (default) |
+| `mymemory` | Plugin calls MyMemory API and returns translated text |
+| `disabled` | Translation tools are not exposed in the manifest |
+
+When set to `mymemory`, the `translation.translate` and `translation.getSupportedLanguages` tools appear in the manifest. When set to `ai_self` or `disabled`, those tools are hidden.
+
+### Rate Limiting
+
+Default limits (per user):
+- **50 requests per minute**
+- **1,000 requests per hour**
+
+Adjust both values in **GoldT WebMCP → Settings**.
+
+---
+
 ## 🛠️ Available Tools
 
 ### 1. wordpress.searchPosts
@@ -355,6 +381,69 @@ curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/wordpress
 
 ---
 
+## 🌐 Translation Module
+
+Available when **Translation Provider** is set to `mymemory` in Admin Settings. These tools are hidden from the manifest when the provider is `ai_self` or `disabled`.
+
+### 6. translation.translate
+
+Translate text using the MyMemory API.
+
+**Parameters:**
+- `text` (string, required) - Text to translate
+- `source_lang` (string, required) - Source language code (e.g. `en`, `he`, `fr`)
+- `target_lang` (string, required) - Target language code
+
+**Example:**
+```bash
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/translation.translate" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Hello, world!",
+    "source_lang": "en",
+    "target_lang": "he"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "translated_text": "שלום, עולם!",
+    "source_lang": "en",
+    "target_lang": "he"
+  }
+}
+```
+
+---
+
+### 7. translation.getSupportedLanguages
+
+Returns the list of language codes supported by the MyMemory API.
+
+**Example:**
+```bash
+curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/tools/translation.getSupportedLanguages" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "languages": ["en", "he", "fr", "de", "es", "it", "pt", "ru", "ar", "zh", "ja", "ko"]
+  }
+}
+```
+
+---
+
 ## 🔐 Admin Controls
 
 ### Security Features
@@ -389,30 +478,6 @@ Navigate to **WordPress Admin → GoldT WebMCP → Settings** to manage security
 
 ---
 
-## 📊 Rate Limiting
-
-Default limits (per user):
-- **50 requests per minute**
-- **1,000 requests per hour**
-
-**Configure in:** GoldT WebMCP → Settings
-
-**Rate limit response:**
-```json
-{
-  "code": "rate_limit_exceeded",
-  "message": "Rate limit exceeded: 50 requests per minute",
-  "data": {
-    "status": 429,
-    "retry_after": 45,
-    "limit": 50,
-    "current": 51
-  }
-}
-```
-
----
-
 ## 🔐 Security Best Practices
 
 ### For Site Administrators
@@ -438,7 +503,7 @@ Default limits (per user):
 ### Common OAuth Errors
 
 #### `"invalid_client"` - Invalid client_id
-**Solution:** Use one of the pre-registered clients: `claude-ai`, `chatgpt`, or `gemini`
+**Solution:** Use one of the pre-registered clients: `claude-ai`, `chatgpt`, `gemini`, etc. The `client_id` parameter is optional and defaults to `claude`. Fuzzy matching recognizes common variants (e.g. `claude_ai`, `gemini_client`).
 
 #### `"invalid_grant"` - Authorization code invalid
 **Solution:** 
@@ -511,6 +576,14 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.3.0 - 2026-03-19
+* **Added:** Translation Provider setting (AI Self-Translate, MyMemory API, or Disabled)
+* **Added:** TranslationModule with MyMemory API integration (translate, getSupportedLanguages)
+* **Added:** Dynamic manifest instructions to prevent AI agents from inventing capabilities
+* **Improved:** OAuth client_id is now optional (defaults to 'claude')
+* **Improved:** Fuzzy client_id matching (recognizes variants like gemini_client, claude_ai)
+* **Improved:** Specific OAuth error messages instead of generic errors
 
 ### Version 0.2.0 - 2026-02-23
 * **Security:** Migrated to OAuth 2.0 with PKCE for secure authentication

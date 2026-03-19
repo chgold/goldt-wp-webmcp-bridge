@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.2.1
+Stable tag: 0.3.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -21,7 +21,9 @@ Perfect for AI-powered customer support, automated content analysis, intelligent
 * **WebMCP Protocol Support** - Industry-standard AI integration
 * **Secure OAuth 2.0** - Same security standard as Google, Facebook, GitHub - your passwords stay safe
 * **8 Pre-registered AI Clients** - Claude, ChatGPT, Gemini, Grok, Perplexity, Copilot, Meta AI, DeepSeek
-* **5 WordPress Tools** - Search/get posts, pages, and user info
+* **7 Tools** - WordPress content tools plus optional translation via MyMemory API
+* **Translation Provider** - Choose AI self-translate, MyMemory API, or disabled
+* **Dynamic Manifest** - Instructions adapt to your settings so AI agents don't invent capabilities
 * **Rate Limiting** - Prevent abuse (50 req/min default)
 * **Security Controls** - Token management, block specific users
 * **Zero Configuration** - Works out of the box
@@ -58,6 +60,8 @@ All clients use OAuth 2.0 with PKCE and `redirect_uri: urn:ietf:wg:oauth:2.0:oob
 3. **wordpress.searchPages** - Search pages
 4. **wordpress.getPage** - Get single page by ID or slug
 5. **wordpress.getCurrentUser** - Get authenticated user info
+6. **translation.translate** - Translate text via MyMemory API (when Translation Provider = mymemory)
+7. **translation.getSupportedLanguages** - List supported language codes (when Translation Provider = mymemory)
 
 = 🔒 How Authentication Works =
 
@@ -87,6 +91,21 @@ Uses the same security standard trusted by Google, Facebook, and GitHub:
 * ❌ Cannot see drafts or private content
 
 **Security:** Authorization codes are one-time use (10 min expiry). Access tokens expire after 1 hour. Refresh tokens valid for 30 days. PKCE ensures tokens can't be stolen.
+
+= ⚙️ Admin Settings =
+
+Configure the plugin at **GoldT WebMCP → Settings**:
+
+**Translation Provider:**
+
+* **AI Self-Translate** (default) - The AI agent handles translation on its own; no translation tools appear in the manifest
+* **MyMemory API** - Plugin calls MyMemory and returns translated text; `translation.translate` and `translation.getSupportedLanguages` tools are added to the manifest
+* **Disabled** - Translation tools are hidden from the manifest entirely
+
+**Rate Limiting:**
+
+* Default: 50 requests per minute, 1,000 per hour (per user)
+* Adjust both values in **GoldT WebMCP → Settings**
 
 = 🔐 Admin Controls =
 
@@ -338,6 +357,14 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 0.3.0 =
+* Added: Translation Provider setting (AI Self-Translate, MyMemory API, or Disabled)
+* Added: TranslationModule with MyMemory API integration (translate, getSupportedLanguages)
+* Added: Dynamic manifest instructions to prevent AI agents from inventing capabilities
+* Improved: OAuth client_id is now optional (defaults to 'claude')
+* Improved: Fuzzy client_id matching (recognizes variants like gemini_client, claude_ai)
+* Improved: Specific OAuth error messages instead of generic errors
+
 = 0.2.1 - 2026-03-06 =
 * **Security**: Added OAuth scope validation - users must explicitly grant permissions for each tool
 * **WordPress.org Compliance**: Fixed inline scripts/styles - moved to wp_enqueue_script/style
@@ -364,6 +391,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 0.3.0 =
+New Translation Provider setting lets you choose between AI self-translate, MyMemory API, or disabled. OAuth client_id is now optional and supports fuzzy matching.
 
 = 0.2.1 =
 Critical security update: OAuth scope validation now enforced. Users must explicitly approve each permission level. WordPress.org compliance improvements.

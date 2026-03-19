@@ -25,6 +25,12 @@ class Authorize_Endpoint {
         
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth parameters come from external client, validated via PKCE
         $client_id = isset($_GET['client_id']) ? sanitize_text_field(wp_unslash($_GET['client_id'])) : '';
+
+        // 4A: Default to 'claude' when client_id is omitted
+        if (empty($client_id)) {
+            $client_id = 'claude';
+        }
+
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $redirect_uri = isset($_GET['redirect_uri']) ? esc_url_raw(wp_unslash($_GET['redirect_uri'])) : '';
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -43,18 +49,33 @@ class Authorize_Endpoint {
             return;
         }
         
-        if (!$this->oauth_server->validate_client($client_id)) {
+        // 4B: Validate client with fuzzy matching; get canonical client_id back
+        $canonical_client_id = $this->oauth_server->validate_client($client_id);
+        if (!$canonical_client_id) {
             $this->send_error('invalid_client', 'Invalid client_id');
             return;
         }
-        
+        $client_id = $canonical_client_id;
+
+        // 4C: Specific error for missing redirect_uri
+        if (empty($redirect_uri)) {
+            $this->send_error('invalid_request', 'Missing redirect_uri parameter');
+            return;
+        }
+
         if (!$this->oauth_server->validate_redirect_uri($client_id, $redirect_uri)) {
             $this->send_error('invalid_request', 'Invalid redirect_uri');
             return;
         }
         
-        if (empty($code_challenge) || $code_challenge_method !== 'S256') {
-            $this->send_error('invalid_request', 'PKCE required: code_challenge with S256 method');
+        // 4C: Specific error for missing code_challenge
+        if (empty($code_challenge)) {
+            $this->send_error('invalid_request', 'Missing code_challenge parameter (PKCE required)');
+            return;
+        }
+
+        if ($code_challenge_method !== 'S256') {
+            $this->send_error('invalid_request', 'PKCE required: code_challenge_method must be S256');
             return;
         }
         

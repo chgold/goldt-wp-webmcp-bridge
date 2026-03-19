@@ -14,7 +14,10 @@ define('DOING_GOLDTWMCP_TESTS', true);
 
 // Load WordPress if not already loaded
 if (!defined('ABSPATH')) {
-    require_once dirname(__DIR__, 4) . '/wp-load.php';
+    // WP_ROOT env var set by build.php (dev environment)
+    // Fallback: standard install path (plugin in wp-content/plugins/, 4 levels up)
+    $wp_load = (getenv('WP_ROOT') ?: dirname(__DIR__, 4)) . '/wp-load.php';
+    require_once $wp_load;
 }
 
 class GoldT_WebMCP_Test_Runner {

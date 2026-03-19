@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 
 class GoldtWebMCP_Plugin {
     
-    private $version = '0.2.0';
+    private $version = '0.3.0';
     
     private $manifest;
     private $tools_endpoint;
@@ -26,6 +26,7 @@ class GoldtWebMCP_Plugin {
 		require_once GOLDTWMCP_PATH . 'includes/core/class-rate-limiter.php';
 		require_once GOLDTWMCP_PATH . 'includes/modules/class-module-base.php';
 		require_once GOLDTWMCP_PATH . 'includes/modules/class-core-module.php';
+		require_once GOLDTWMCP_PATH . 'includes/modules/class-translation-module.php';
 		require_once GOLDTWMCP_PATH . 'includes/api/class-tools-endpoint.php';
 
 		// OAuth 2.0 components
@@ -49,6 +50,11 @@ class GoldtWebMCP_Plugin {
         $core_module = new \GoldtWebMCP\Modules\Core_Module($this->manifest);
         $this->modules['wordpress'] = $core_module;
         $this->tools_endpoint->register_module($core_module);
+
+        // Register Translation module (active only when mymemory provider is selected)
+        $translation_module = new \GoldtWebMCP\Modules\Translation_Module($this->manifest);
+        $this->modules['translation'] = $translation_module;
+        $this->tools_endpoint->register_module($translation_module);
         
         // Allow external plugins (Pro) to register additional modules
         // Pro plugin hooks here via: add_action('goldtwmcp_register_modules', ...)
@@ -325,10 +331,13 @@ class GoldtWebMCP_Plugin {
             $rate_limit_per_minute = absint($_POST['rate_limit_per_minute'] ?? 50);
             $rate_limit_per_hour = absint($_POST['rate_limit_per_hour'] ?? 1000);
             $delete_on_uninstall = isset($_POST['delete_on_uninstall']) ? 1 : 0;
+            $translation_provider_raw = sanitize_text_field(wp_unslash($_POST['translation_provider'] ?? 'ai_self'));
+            $translation_provider = in_array($translation_provider_raw, ['ai_self', 'mymemory', 'disabled'], true) ? $translation_provider_raw : 'ai_self';
             
             update_option('goldtwmcp_rate_limit_per_minute', $rate_limit_per_minute);
             update_option('goldtwmcp_rate_limit_per_hour', $rate_limit_per_hour);
             update_option('goldtwmcp_delete_on_uninstall', $delete_on_uninstall);
+            update_option('goldtwmcp_translation_provider', $translation_provider);
             
             echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved!', 'goldt-webmcp-bridge') . '</p></div>';
         }
@@ -336,6 +345,7 @@ class GoldtWebMCP_Plugin {
         $rate_limit_per_minute = get_option('goldtwmcp_rate_limit_per_minute', 50);
         $rate_limit_per_hour = get_option('goldtwmcp_rate_limit_per_hour', 1000);
         $delete_on_uninstall = get_option('goldtwmcp_delete_on_uninstall', 0);
+        $translation_provider = get_option('goldtwmcp_translation_provider', 'ai_self');
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -357,6 +367,32 @@ class GoldtWebMCP_Plugin {
                         <td>
                             <input type="number" name="rate_limit_per_hour" value="<?php echo esc_attr($rate_limit_per_hour); ?>" class="regular-text">
                             <p class="description"><?php esc_html_e('Maximum API requests per hour per user', 'goldt-webmcp-bridge'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2><?php esc_html_e('Translation', 'goldt-webmcp-bridge'); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th><?php esc_html_e('Translation Provider', 'goldt-webmcp-bridge'); ?></th>
+                        <td>
+                            <fieldset>
+                                <label style="display: block; margin-bottom: 8px;">
+                                    <input type="radio" name="translation_provider" value="ai_self" <?php checked($translation_provider, 'ai_self'); ?>>
+                                    <strong><?php esc_html_e('AI Self-Translate', 'goldt-webmcp-bridge'); ?></strong>
+                                    &mdash; <?php esc_html_e('AI agent translates using its own built-in language abilities (no external API, no limits)', 'goldt-webmcp-bridge'); ?>
+                                </label>
+                                <label style="display: block; margin-bottom: 8px;">
+                                    <input type="radio" name="translation_provider" value="mymemory" <?php checked($translation_provider, 'mymemory'); ?>>
+                                    <strong><?php esc_html_e('MyMemory API', 'goldt-webmcp-bridge'); ?></strong>
+                                    &mdash; <?php esc_html_e('Uses MyMemory free translation API (~5,000 chars/day limit)', 'goldt-webmcp-bridge'); ?>
+                                </label>
+                                <label style="display: block;">
+                                    <input type="radio" name="translation_provider" value="disabled" <?php checked($translation_provider, 'disabled'); ?>>
+                                    <strong><?php esc_html_e('Disabled', 'goldt-webmcp-bridge'); ?></strong>
+                                    &mdash; <?php esc_html_e('No translation capability exposed to AI agents', 'goldt-webmcp-bridge'); ?>
+                                </label>
+                            </fieldset>
                         </td>
                     </tr>
                 </table>

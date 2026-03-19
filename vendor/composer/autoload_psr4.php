@@ -8,9 +8,12 @@ $baseDir = dirname($vendorDir);
 return array(
     'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-message/src'),
     'Predis\\' => array($vendorDir . '/predis/predis/src'),
+    'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
     'GoldtWebMCP\\OAuth\\' => array($baseDir . '/includes/oauth'),
     'GoldtWebMCP\\Modules\\' => array($baseDir . '/includes/modules'),
     'GoldtWebMCP\\Core\\' => array($baseDir . '/includes/core'),
     'GoldtWebMCP\\API\\' => array($baseDir . '/includes/api'),
     'GoldtWebMCP\\' => array($baseDir . '/includes'),
+    'Doctrine\\Instantiator\\' => array($vendorDir . '/doctrine/instantiator/src/Doctrine/Instantiator'),
+    'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
 );

@@ -192,6 +192,33 @@ class Manifest {
     }
     
     /**
+     * Build dynamic instructions for the AI agent based on registered tools and settings.
+     *
+     * @return string
+     */
+    private function get_translation_instructions() {
+        $provider = \get_option('goldtwmcp_translation_provider', 'ai_self');
+
+        if ($provider === 'mymemory') {
+            return "## TRANSLATION (translation.translate)\n"
+                . "Accepts text of ANY length — automatically split into chunks if needed. "
+                . "Pass the full text without worrying about length.\n"
+                . "IMPORTANT: Translation uses the MyMemory free API, which is limited to ~5,000 characters/day. "
+                . "If you receive a quota_exceeded error, inform the user that the daily translation limit has been reached and suggest trying again tomorrow. "
+                . "Use translation sparingly — prefer translating only what the user specifically asks for, not entire posts.\n\n";
+        }
+
+        if ($provider === 'ai_self') {
+            return "## TRANSLATION\n"
+                . "You have built-in translation capabilities. When the user asks you to translate content, "
+                . "translate it directly using your own language abilities — no external tool is needed. "
+                . "You can translate between any languages.\n\n";
+        }
+
+        return '';
+    }
+
+    /**
      * Generate complete WebMCP manifest
      * 
      * @return array
@@ -202,6 +229,23 @@ class Manifest {
         // Add tools if registered
         if (!empty($this->tools)) {
             $manifest['tools'] = $this->get_tools();
+        }
+
+        // Build dynamic instructions for the AI agent
+        if (!empty($this->tools)) {
+            $tool_names = array_map(function ($t) {
+                return $t['name'];
+            }, $this->get_tools());
+            $site_name = \get_bloginfo('name');
+            $manifest['instructions'] = "You have access to {$site_name} via AI Connect.\n\n"
+                . "## AVAILABLE TOOLS\n"
+                . "You have ONLY these tools: " . implode(', ', $tool_names) . ".\n"
+                . "Do NOT claim to have any capabilities beyond the tools listed above.\n\n"
+                . "## SEARCH TIPS\n"
+                . "- Empty search → returns latest content\n"
+                . "- No results? Try removing filters or broadening date range\n"
+                . "- 'Recent content' without date → try last week, then last month\n\n"
+                . $this->get_translation_instructions();
         }
         
         // Add resources if registered
