@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-03-19T20:31:52+00:00\n"
+"POT-Creation-Date: 2026-03-23T17:41:28+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: goldt-webmcp-bridge\n"
@@ -105,375 +105,375 @@ msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
 msgstr ""
 
 #: goldt-webmcp-bridge.php:176
-#: includes/class-goldtwmcp.php:134
-#: includes/class-goldtwmcp.php:135
+#: includes/class-goldtwmcp.php:215
+#: includes/class-goldtwmcp.php:216
 msgid "Settings"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:123
-#: includes/class-goldtwmcp.php:124
+#: includes/class-goldtwmcp.php:204
+#: includes/class-goldtwmcp.php:205
 msgid "AI Connect"
 msgstr ""
 
 #. translators: %s: version number
-#: includes/class-goldtwmcp.php:150
+#: includes/class-goldtwmcp.php:237
 #, php-format
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:154
+#: includes/class-goldtwmcp.php:243
 msgid "Environment Status"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:254
+#: includes/class-goldtwmcp.php:355
 msgid "Dependencies Missing"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:255
+#: includes/class-goldtwmcp.php:356
 msgid "Run the following command in the plugin directory:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:298
+#: includes/class-goldtwmcp.php:422
 msgid "User access revoked successfully."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:313
+#: includes/class-goldtwmcp.php:437
 msgid "User access restored successfully."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:325
+#: includes/class-goldtwmcp.php:449
 msgid "JWT Secret rotated successfully! All existing tokens have been invalidated."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:342
+#: includes/class-goldtwmcp.php:466
 msgid "Settings saved!"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:356
+#: includes/class-goldtwmcp.php:480
 msgid "API Rate Limiting"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:359
+#: includes/class-goldtwmcp.php:483
 msgid "Rate Limit (per minute)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:362
+#: includes/class-goldtwmcp.php:486
 msgid "Maximum API requests per minute per user"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:366
+#: includes/class-goldtwmcp.php:490
 msgid "Rate Limit (per hour)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:369
+#: includes/class-goldtwmcp.php:493
 msgid "Maximum API requests per hour per user"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:374
+#: includes/class-goldtwmcp.php:498
 msgid "Translation"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:377
+#: includes/class-goldtwmcp.php:501
 msgid "Translation Provider"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:382
+#: includes/class-goldtwmcp.php:506
 msgid "AI Self-Translate"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:383
+#: includes/class-goldtwmcp.php:507
 msgid "AI agent translates using its own built-in language abilities (no external API, no limits)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:387
+#: includes/class-goldtwmcp.php:511
 msgid "MyMemory API"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:388
+#: includes/class-goldtwmcp.php:512
 msgid "Uses MyMemory free translation API (~5,000 chars/day limit)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:392
+#: includes/class-goldtwmcp.php:516
 msgid "Disabled"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:393
+#: includes/class-goldtwmcp.php:517
 msgid "No translation capability exposed to AI agents"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:400
+#: includes/class-goldtwmcp.php:524
 msgid "Data Management"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:403
+#: includes/class-goldtwmcp.php:527
 msgid "Uninstall Cleanup"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:408
+#: includes/class-goldtwmcp.php:532
 msgid "Delete all plugin data when uninstalling"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:411
+#: includes/class-goldtwmcp.php:535
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:413
+#: includes/class-goldtwmcp.php:537
 msgid "Note:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:413
+#: includes/class-goldtwmcp.php:537
 msgid "Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:420
+#: includes/class-goldtwmcp.php:544
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:425
+#: includes/class-goldtwmcp.php:549
 msgid "Security"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:427
+#: includes/class-goldtwmcp.php:551
 msgid "Rotate JWT Secret Key"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:428
+#: includes/class-goldtwmcp.php:552
 msgid "This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:429
+#: includes/class-goldtwmcp.php:553
 msgid "All users will need to authenticate again to get new tokens."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:432
+#: includes/class-goldtwmcp.php:556
 msgid "Warning:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:432
+#: includes/class-goldtwmcp.php:556
 msgid "This action cannot be undone. All AI agents currently connected will be disconnected."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:435
+#: includes/class-goldtwmcp.php:559
 msgid "Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:437
+#: includes/class-goldtwmcp.php:561
 msgid "Rotate JWT Secret"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:442
+#: includes/class-goldtwmcp.php:566
 msgid "Manage User Access"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:443
+#: includes/class-goldtwmcp.php:567
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:448
+#: includes/class-goldtwmcp.php:572
 msgid "Blocked Users"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:450
+#: includes/class-goldtwmcp.php:574
 msgid "User ID"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:450
+#: includes/class-goldtwmcp.php:574
 msgid "Username"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:450
+#: includes/class-goldtwmcp.php:574
 msgid "Email"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:450
+#: includes/class-goldtwmcp.php:574
 msgid "Action"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:463
+#: includes/class-goldtwmcp.php:587
 msgid "Restore Access"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:471
+#: includes/class-goldtwmcp.php:595
 msgid "No users are currently blocked."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:477
+#: includes/class-goldtwmcp.php:601
 msgid "Block a User"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:481
+#: includes/class-goldtwmcp.php:605
 msgid "User ID:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:483
+#: includes/class-goldtwmcp.php:607
 msgid "Enter the WordPress user ID to block"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:485
+#: includes/class-goldtwmcp.php:609
 msgid "Block User"
 msgstr ""
 
-#: includes/oauth/class-admin-ui.php:17
-#: includes/oauth/class-admin-ui.php:18
+#: includes/oauth/class-admin-ui.php:38
+#: includes/oauth/class-admin-ui.php:39
 msgid "OAuth Tokens"
 msgstr ""
 
-#: includes/oauth/class-admin-ui.php:57
+#: includes/oauth/class-admin-ui.php:91
 msgid "Token revoked successfully."
 msgstr ""
 
-#: includes/oauth/class-scopes.php:13
+#: includes/oauth/class-scopes.php:29
 msgid "Read content"
 msgstr ""
 
-#: includes/oauth/class-scopes.php:14
+#: includes/oauth/class-scopes.php:30
 msgid "Read posts, pages, and other content"
 msgstr ""
 
-#: includes/oauth/class-scopes.php:17
+#: includes/oauth/class-scopes.php:33
 msgid "Write content"
 msgstr ""
 
-#: includes/oauth/class-scopes.php:18
+#: includes/oauth/class-scopes.php:34
 msgid "Create and update posts and pages"
 msgstr ""
 
-#: includes/oauth/class-scopes.php:21
+#: includes/oauth/class-scopes.php:37
 msgid "Delete content"
 msgstr ""
 
-#: includes/oauth/class-scopes.php:22
+#: includes/oauth/class-scopes.php:38
 msgid "Delete posts and pages"
 msgstr ""
 
-#: includes/oauth/class-scopes.php:25
-#: includes/oauth/views/consent-screen.php:74
+#: includes/oauth/class-scopes.php:41
+#: includes/oauth/views/consent-screen.php:86
 msgid "Manage users"
 msgstr ""
 
-#: includes/oauth/class-scopes.php:26
+#: includes/oauth/class-scopes.php:42
 msgid "View and manage user accounts"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:7
+#: includes/oauth/views/admin-tokens.php:13
 msgid "OAuth Access Tokens"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:8
+#: includes/oauth/views/admin-tokens.php:14
 msgid "Manage OAuth access tokens that have been granted to AI applications."
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:13
+#: includes/oauth/views/admin-tokens.php:19
 msgid "Client"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:14
+#: includes/oauth/views/admin-tokens.php:20
 msgid "User"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:15
+#: includes/oauth/views/admin-tokens.php:21
 msgid "Scopes"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:16
+#: includes/oauth/views/admin-tokens.php:22
 msgid "Created"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:17
+#: includes/oauth/views/admin-tokens.php:23
 msgid "Access Token Expires"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:18
+#: includes/oauth/views/admin-tokens.php:24
 msgid "Refresh Token Expires"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:19
+#: includes/oauth/views/admin-tokens.php:25
 msgid "Actions"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:26
+#: includes/oauth/views/admin-tokens.php:32
 msgid "No active tokens found."
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:46
-#: includes/oauth/views/admin-tokens.php:57
+#: includes/oauth/views/admin-tokens.php:52
+#: includes/oauth/views/admin-tokens.php:63
 msgid "Expired"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:62
+#: includes/oauth/views/admin-tokens.php:68
 msgid "N/A"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:71
+#: includes/oauth/views/admin-tokens.php:77
 msgid "Are you sure you want to revoke this token?"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:72
+#: includes/oauth/views/admin-tokens.php:78
 msgid "Revoke"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:11
 #: includes/oauth/views/consent-screen.php:17
+#: includes/oauth/views/consent-screen.php:23
 msgid "Authorization Request"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:24
+#: includes/oauth/views/consent-screen.php:30
 msgid "is requesting access to your account"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:29
+#: includes/oauth/views/consent-screen.php:35
 msgid "This will allow the application to:"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:54
+#: includes/oauth/views/consent-screen.php:60
 msgid "Deny"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:57
+#: includes/oauth/views/consent-screen.php:63
 msgid "Approve"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:63
+#: includes/oauth/views/consent-screen.php:69
 msgid "Only approve if you trust this application. It will have access to your account data based on the permissions above."
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:71
+#: includes/oauth/views/consent-screen.php:83
 msgid "Read your posts and content"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:72
+#: includes/oauth/views/consent-screen.php:84
 msgid "Create and modify posts"
 msgstr ""
 
-#: includes/oauth/views/consent-screen.php:73
+#: includes/oauth/views/consent-screen.php:85
 msgid "Delete posts"
 msgstr ""
 
-#: includes/oauth/views/oob-code.php:11
-#: includes/oauth/views/oob-code.php:20
+#: includes/oauth/views/oob-code.php:17
+#: includes/oauth/views/oob-code.php:26
 msgid "Authorization Successful"
 msgstr ""
 
-#: includes/oauth/views/oob-code.php:22
+#: includes/oauth/views/oob-code.php:28
 msgid "Copy this authorization code and paste it back to the AI application:"
 msgstr ""
 
-#: includes/oauth/views/oob-code.php:26
+#: includes/oauth/views/oob-code.php:32
 msgid "Authorization Code"
 msgstr ""
 
-#: includes/oauth/views/oob-code.php:31
+#: includes/oauth/views/oob-code.php:37
 msgid "Copy Code"
 msgstr ""
 
-#: includes/oauth/views/oob-code.php:34
+#: includes/oauth/views/oob-code.php:40
 msgid "Code copied to clipboard!"
 msgstr ""
 
-#: includes/oauth/views/oob-code.php:38
+#: includes/oauth/views/oob-code.php:44
 msgid "Important:"
 msgstr ""
 
-#: includes/oauth/views/oob-code.php:38
+#: includes/oauth/views/oob-code.php:44
 msgid "This code expires in 10 minutes and can only be used once."
 msgstr ""
