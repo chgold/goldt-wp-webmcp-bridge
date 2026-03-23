@@ -354,7 +354,7 @@ class Info_Page {
     </div>
     <div class="aic-header-sub"><?php echo esc_html($site_name); ?> &mdash; WebMCP Protocol Bridge</div>
     <?php if ($is_logged_in): ?>
-        <div class="aic-user-badge">Logged in as <?php echo $display_name; ?></div>
+        <div class="aic-user-badge">Logged in as <?php echo esc_html( $display_name ); ?></div>
     <?php else: ?>
         <div class="aic-login-notice">Login required to use AI agent connections</div>
     <?php endif; ?>
