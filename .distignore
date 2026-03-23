@@ -2,12 +2,16 @@
 .git
 .gitignore
 .distignore
+phpcs.xml
+phpunit.xml
+.editorconfig
 
 # Tests
 tests/
 
 # Documentation
 README.md
+docs/
 
 # IDE
 .vscode/
@@ -22,6 +26,26 @@ Thumbs.db
 # CI/CD
 .github/
 
+# Composer dev dependencies (phpunit and its dependencies)
+vendor/phpunit/
+vendor/nikic/
+vendor/sebastian/
+vendor/phar-io/
+vendor/doctrine/
+vendor/myclabs/
+vendor/bin/phpunit
+vendor/bin/php-parse
+
 # Vendor development files
 vendor/predis/predis/.codespellrc
 vendor/predis/predis/bin/
+vendor/predis/predis/tests/
+vendor/predis/predis/CHANGELOG.md
+vendor/predis/predis/CONTRIBUTING.md
+
+# Firebase dev files
+vendor/firebase/php-jwt/tests/
+vendor/firebase/php-jwt/CHANGELOG.md
+
+# Composer files not needed in production
+composer.lock
