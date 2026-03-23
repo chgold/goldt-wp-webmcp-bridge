@@ -87,8 +87,8 @@ wp_cache_flush();
 flush_rewrite_rules();
 
 if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-	error_log(
-		sprintf( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+	error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		sprintf(
 			'GoldT WebMCP Bridge: Uninstalled. Full cleanup: %s',
 			$goldtwmcp_delete_all ? 'YES' : 'NO (data preserved)'
 		)

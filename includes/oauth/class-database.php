@@ -152,13 +152,14 @@ class Database {
 		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$wpdb->prefix}goldtwmcp_oauth_tokens LIKE 'refresh_token'" );
 
 		if ( empty( $columns ) ) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Adding refresh token support
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 			$wpdb->query(
-				"ALTER TABLE {$wpdb->prefix}goldtwmcp_oauth_tokens 
-                ADD COLUMN refresh_token VARCHAR(255) DEFAULT NULL AFTER token,
-                ADD COLUMN refresh_token_expires_at DATETIME DEFAULT NULL AFTER expires_at,
-                ADD UNIQUE KEY refresh_token (refresh_token)"
+				"ALTER TABLE {$wpdb->prefix}goldtwmcp_oauth_tokens
+				ADD COLUMN refresh_token VARCHAR(255) DEFAULT NULL AFTER token,
+				ADD COLUMN refresh_token_expires_at DATETIME DEFAULT NULL AFTER expires_at,
+				ADD UNIQUE KEY refresh_token (refresh_token)"
 			);
+			// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 		}
 
 		self::set_version( '1.1.0' );
