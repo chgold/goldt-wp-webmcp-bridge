@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         name="GoldT WebMCP Bridge"
+         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
+
+    <description>Coding standards for GoldT WebMCP Bridge WordPress plugin.</description>
+
+    <!-- Include WordPress coding standards -->
+    <rule ref="WordPress"/>
+
+    <!--
+        Intentional: $module_name = 'wordpress' uses lowercase as the WebMCP protocol tool
+        name prefix. Capitalising to 'WordPress' would break tool names exposed in the
+        manifest (e.g. wordpress.searchPosts, wordpress.getPost). This is a protocol
+        identifier, not a brand name reference.
+    -->
+    <rule ref="WordPress.WP.CapitalPDangit.MisspelledInText">
+        <exclude-pattern>includes/modules/class-core-module.php</exclude-pattern>
+    </rule>
+
+    <!--
+        Intentional: Parameters in show_consent_screen() and show_oob_code() are passed
+        to view files via PHP include scope. Static analysis cannot detect this usage
+        because the view files reference the variables directly from the calling scope
+        rather than receiving them as explicit arguments.
+    -->
+    <rule ref="Generic.CodeAnalysis.UnusedFunctionParameter">
+        <exclude-pattern>includes/oauth/class-authorize-endpoint.php</exclude-pattern>
+    </rule>
+
+</ruleset>

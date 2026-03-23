@@ -35,11 +35,6 @@ register_activation_hook( __FILE__, 'goldtwmcp_activate' );
  * @return void
  */
 function goldtwmcp_activate() {
-	// Install composer dependencies if missing.
-	if ( ! file_exists( GOLDTWMCP_PATH . 'vendor/autoload.php' ) ) {
-		goldtwmcp_install_dependencies();
-	}
-
 	// Create OAuth database tables.
 	require_once GOLDTWMCP_PATH . 'includes/oauth/class-database.php';
 	\GoldtWebMCP\OAuth\Database::create_tables();
@@ -49,66 +44,6 @@ function goldtwmcp_activate() {
 	flush_rewrite_rules();
 }
 
-/**
- * Install composer dependencies.
- *
- * @return bool
- */
-function goldtwmcp_install_dependencies() {
-	$composer_json = GOLDTWMCP_PATH . 'composer.json';
-	$error_log     = array();
-
-	if ( ! file_exists( $composer_json ) ) {
-		$error_log[] = 'composer.json not found';
-		update_option( 'goldtwmcp_activation_error', implode( '; ', $error_log ) );
-		return false;
-	}
-
-	// Check if exec() is disabled.
-	$disabled_functions = explode( ',', ini_get( 'disable_functions' ) );
-	$disabled_functions = array_map( 'trim', $disabled_functions );
-	if ( in_array( 'exec', $disabled_functions, true ) ) {
-		$error_log[] = 'exec() function is disabled by server configuration';
-		update_option( 'goldtwmcp_activation_error', implode( '; ', $error_log ) );
-		return false;
-	}
-
-	// Check if composer is available.
-	$composer_cmd = 'composer';
-	$output       = array();
-	// phpcs:ignore WordPress.PHP.DiscouragedFunctions.system_calls_exec
-	exec( 'which composer 2>/dev/null', $output, $return_var );
-
-	if ( 0 !== $return_var ) {
-		// Try composer.phar.
-		// phpcs:ignore WordPress.PHP.DiscouragedFunctions.system_calls_exec
-		exec( 'which composer.phar 2>/dev/null', $output, $return_var );
-		if ( 0 === $return_var ) {
-			$composer_cmd = 'composer.phar';
-		} else {
-			$error_log[] = 'composer not found in PATH';
-			update_option( 'goldtwmcp_activation_error', implode( '; ', $error_log ) );
-			return false;
-		}
-	}
-
-	// Run composer install.
-	$old_dir = getcwd();
-	chdir( GOLDTWMCP_PATH );
-	$output = array();
-	// phpcs:ignore WordPress.PHP.DiscouragedFunctions.system_calls_exec
-	exec( $composer_cmd . ' install --no-dev --optimize-autoloader 2>&1', $output, $return_var );
-	chdir( $old_dir );
-
-	if ( 0 !== $return_var ) {
-		$error_log[] = 'composer install failed: ' . implode( ' ', array_slice( $output, -3 ) );
-		update_option( 'goldtwmcp_activation_error', implode( '; ', $error_log ) );
-		return false;
-	}
-
-	delete_option( 'goldtwmcp_activation_error' );
-	return true;
-}
 
 register_deactivation_hook( __FILE__, 'goldtwmcp_deactivate' );
 /**
