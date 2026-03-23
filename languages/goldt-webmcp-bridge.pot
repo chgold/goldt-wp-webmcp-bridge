@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-03-23T17:41:28+00:00\n"
+"POT-Creation-Date: 2026-03-23T19:26:40+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: goldt-webmcp-bridge\n"
@@ -34,77 +34,77 @@ msgstr ""
 msgid "https://github.com/chgold"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:111
+#: goldt-webmcp-bridge.php:139
 msgid "GoldT WebMCP Bridge: Missing Dependencies"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:112
+#: goldt-webmcp-bridge.php:140
 msgid "The plugin cannot run because vendor/ directory is missing."
 msgstr ""
 
-#: goldt-webmcp-bridge.php:115
+#: goldt-webmcp-bridge.php:143
 msgid "Error during activation:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:118
+#: goldt-webmcp-bridge.php:146
 msgid "How to fix this:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:120
+#: goldt-webmcp-bridge.php:148
 msgid "Option 1 (Recommended):"
 msgstr ""
 
 #. translators: %s: GitHub Releases link
-#: goldt-webmcp-bridge.php:124
+#: goldt-webmcp-bridge.php:152
 #, php-format
 msgid "Download the complete plugin with vendor/ included from %s"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:125
+#: goldt-webmcp-bridge.php:153
 msgid "GitHub Releases"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:128
+#: goldt-webmcp-bridge.php:156
 msgid "Option 2 (Advanced):"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:129
+#: goldt-webmcp-bridge.php:157
 msgid "Run this command in the plugin directory:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:134
+#: goldt-webmcp-bridge.php:162
 msgid "After fixing, deactivate and reactivate the plugin."
 msgstr ""
 
-#: goldt-webmcp-bridge.php:148
+#: goldt-webmcp-bridge.php:179
 msgid "GoldT WebMCP Bridge: Database Tables Missing"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:149
+#: goldt-webmcp-bridge.php:180
 msgid "The OAuth database tables were not created during activation."
 msgstr ""
 
-#: goldt-webmcp-bridge.php:150
+#: goldt-webmcp-bridge.php:181
 msgid "To fix this:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:152
+#: goldt-webmcp-bridge.php:183
 msgid "Deactivate the plugin"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:153
+#: goldt-webmcp-bridge.php:184
 msgid "Reactivate the plugin"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:154
+#: goldt-webmcp-bridge.php:185
 msgid "If the problem persists, check that your database user has CREATE TABLE permissions"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:164
+#: goldt-webmcp-bridge.php:198
 msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
 msgstr ""
 
-#: goldt-webmcp-bridge.php:176
+#: goldt-webmcp-bridge.php:217
 #: includes/class-goldtwmcp.php:215
 #: includes/class-goldtwmcp.php:216
 msgid "Settings"
