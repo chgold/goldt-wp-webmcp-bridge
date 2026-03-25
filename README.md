@@ -503,7 +503,7 @@ Navigate to **WordPress Admin → GoldT WebMCP → Settings** to manage security
 ### Common OAuth Errors
 
 #### `"invalid_client"` - Invalid client_id
-**Solution:** Use one of the pre-registered clients: `claude-ai`, `chatgpt`, `gemini`, etc. The `client_id` parameter is optional and defaults to `claude`. Fuzzy matching recognizes common variants (e.g. `claude_ai`, `gemini_client`).
+**Solution:** The `client_id` parameter is optional — omitting it defaults to `claude`, which automatically resolves to `claude-ai`. Fuzzy matching recognizes common variants with underscores or dashes (e.g. `claude`, `claude_ai`, `claude-ai`, `gemini_client`, `gemini-client` all work).
 
 #### `"invalid_grant"` - Authorization code invalid
 **Solution:** 
@@ -582,7 +582,7 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 * **Added:** TranslationModule with MyMemory API integration (translate, getSupportedLanguages)
 * **Added:** Dynamic manifest instructions to prevent AI agents from inventing capabilities
 * **Improved:** OAuth client_id is now optional (defaults to 'claude')
-* **Improved:** Fuzzy client_id matching (recognizes variants like gemini_client, claude_ai)
+* **Improved:** Fuzzy client_id matching — recognizes variants with underscores and dashes (e.g. `claude`, `claude_ai`, `claude-ai`, `gemini_client`, `gemini-client`)
 * **Improved:** Specific OAuth error messages instead of generic errors
 
 ### Version 0.2.0 - 2026-02-23

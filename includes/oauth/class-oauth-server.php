@@ -340,6 +340,7 @@ class OAuth_Server {
 			return $client_id;
 		}
 
+		// Try normalized (strip suffixes like -ai, _client, etc.)
 		$normalized = $this->normalize_client_id( $client_id );
 		if ( $normalized !== $client_id ) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth client fuzzy lookup
@@ -354,6 +355,25 @@ class OAuth_Server {
 			}
 		}
 
+		// Try adding common suffixes (e.g. 'claude' → 'claude-ai')
+		$base       = $this->normalize_client_id( $client_id );
+		$try_ids    = array( $base . '-ai', $base . '_ai', $base . '-app', $base . '_app' );
+		foreach ( $try_ids as $try_id ) {
+			if ( $try_id === $client_id ) {
+				continue;
+			}
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth client fuzzy suffix lookup
+			$client = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT client_id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
+					$try_id
+				)
+			);
+			if ( null !== $client ) {
+				return $try_id;
+			}
+		}
+
 		return false;
 	}
 
@@ -364,7 +384,7 @@ class OAuth_Server {
 	 * @return string Normalized client_id.
 	 */
 	private function normalize_client_id( $client_id ) {
-		$suffixes   = array( '_client', '_ai', '_app', '_bot', '_agent' );
+		$suffixes   = array( '_client', '_ai', '_app', '_bot', '_agent', '-client', '-ai', '-app', '-bot', '-agent' );
 		$normalized = strtolower( trim( $client_id ) );
 		foreach ( $suffixes as $suffix ) {
 			if ( substr( $normalized, -strlen( $suffix ) ) === $suffix ) {

@@ -1,0 +1,27 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+block_comment_start = /*
+block_comment = *
+block_comment_end = */
+
+[*.php]
+max_line_length = 150
+
+[*.{md,yml,yaml,neon,sh}]
+indent_size = 2
+
+[VERSION]
+insert_final_newline = false
+
+[tests/**.php]
+max_line_length = unset
+
+[{src/ClientInterface.php,src/ClientContextInterface.php}]
+max_line_length = unset

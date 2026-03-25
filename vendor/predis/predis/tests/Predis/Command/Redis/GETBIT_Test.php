@@ -1,0 +1,154 @@
+<?php
+
+/*
+ * This file is part of the Predis package.
+ *
+ * (c) 2009-2020 Daniele Alessandri
+ * (c) 2021-2025 Till Krüss
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Predis\Command\Redis;
+
+use Predis\Command\PrefixableCommand;
+
+/**
+ * @group commands
+ * @group realm-string
+ */
+class GETBIT_Test extends PredisCommandTestCase
+{
+    /**
+     * {@inheritdoc}
+     */
+    protected function getExpectedCommand(): string
+    {
+        return 'Predis\Command\Redis\GETBIT';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getExpectedId(): string
+    {
+        return 'GETBIT';
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testFilterArguments(): void
+    {
+        $arguments = ['key', 100];
+        $expected = ['key', 100];
+
+        $command = $this->getCommand();
+        $command->setArguments($arguments);
+
+        $this->assertSame($expected, $command->getArguments());
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testParseResponse(): void
+    {
+        $command = $this->getCommand();
+        $this->assertSame(0, $command->parseResponse(0));
+        $this->assertSame(1, $command->parseResponse(1));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testPrefixKeys(): void
+    {
+        /** @var PrefixableCommand $command */
+        $command = $this->getCommand();
+        $actualArguments = ['arg1', 'arg2', 'arg3', 'arg4'];
+        $prefix = 'prefix:';
+        $expectedArguments = ['prefix:arg1', 'arg2', 'arg3', 'arg4'];
+
+        $command->setArguments($actualArguments);
+        $command->prefixKeys($prefix);
+
+        $this->assertSame($expectedArguments, $command->getArguments());
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.2.0
+     */
+    public function testCanGetBitsFromString(): void
+    {
+        $redis = $this->getClient();
+
+        $redis->set('key:binary', "\x80\x00\00\x01");
+
+        $this->assertSame(1, $redis->getbit('key:binary', 0));
+        $this->assertSame(0, $redis->getbit('key:binary', 15));
+        $this->assertSame(1, $redis->getbit('key:binary', 31));
+        $this->assertSame(0, $redis->getbit('key:binary', 63));
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 6.0.0
+     */
+    public function testCanGetBitsFromStringResp3(): void
+    {
+        $redis = $this->getResp3Client();
+
+        $redis->set('key:binary', "\x80\x00\00\x01");
+
+        $this->assertSame(1, $redis->getbit('key:binary', 0));
+        $this->assertSame(0, $redis->getbit('key:binary', 15));
+        $this->assertSame(1, $redis->getbit('key:binary', 31));
+        $this->assertSame(0, $redis->getbit('key:binary', 63));
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.2.0
+     */
+    public function testThrowsExceptionOnNegativeOffset(): void
+    {
+        $this->expectExceptionMessage('bit offset is not an integer or out of range');
+
+        $redis = $this->getClient();
+
+        $redis->set('key:binary', "\x80\x00\00\x01");
+        $redis->getbit('key:binary', -1);
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.2.0
+     */
+    public function testThrowsExceptionOnInvalidOffset(): void
+    {
+        $this->expectExceptionMessage('bit offset is not an integer or out of range');
+
+        $redis = $this->getClient();
+
+        $redis->set('key:binary', "\x80\x00\00\x01");
+        $redis->getbit('key:binary', 'invalid');
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.2.0
+     */
+    public function testThrowsExceptionOnWrongType(): void
+    {
+        $this->expectException('Predis\Response\ServerException');
+        $this->expectExceptionMessage('Operation against a key holding the wrong kind of value');
+
+        $redis = $this->getClient();
+
+        $redis->lpush('metavars', 'foo');
+        $redis->getbit('metavars', '1');
+    }
+}

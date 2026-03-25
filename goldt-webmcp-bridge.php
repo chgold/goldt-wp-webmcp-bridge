@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: GoldT WebMCP Bridge
- * Plugin URI:
+ * Plugin URI: https://goldt-webmcp-bridge.gold-t.co.il/
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
  * Version: 0.3.0
  * Author: chagold
@@ -41,6 +41,9 @@ function goldtwmcp_activate() {
 
 	add_option( 'goldtwmcp_version', GOLDTWMCP_VERSION );
 	add_option( 'goldtwmcp_installed', time() );
+
+	// Register rewrite rule BEFORE flushing so /ai-connect/ works immediately after activation.
+	add_rewrite_rule( '^ai-connect/?$', 'index.php?goldtwmcp_info_page=1', 'top' );
 	flush_rewrite_rules();
 }
 

@@ -1,0 +1,155 @@
+<?php
+
+/*
+ * This file is part of the Predis package.
+ *
+ * (c) 2009-2020 Daniele Alessandri
+ * (c) 2021-2025 Till Krüss
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Predis\Command\Redis;
+
+use Predis\Command\PrefixableCommand;
+
+/**
+ * @group commands
+ * @group realm-hash
+ */
+class HINCRBYFLOAT_Test extends PredisCommandTestCase
+{
+    /**
+     * {@inheritdoc}
+     */
+    protected function getExpectedCommand(): string
+    {
+        return 'Predis\Command\Redis\HINCRBYFLOAT';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getExpectedId(): string
+    {
+        return 'HINCRBYFLOAT';
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testFilterArguments(): void
+    {
+        $arguments = ['key', 'field', 10.5];
+        $expected = ['key', 'field', 10.5];
+
+        $command = $this->getCommand();
+        $command->setArguments($arguments);
+
+        $this->assertSame($expected, $command->getArguments());
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testParseResponse(): void
+    {
+        $this->assertSame(10.5, $this->getCommand()->parseResponse(10.5));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testPrefixKeys(): void
+    {
+        /** @var PrefixableCommand $command */
+        $command = $this->getCommand();
+        $actualArguments = ['arg1', 'arg2', 'arg3', 'arg4'];
+        $prefix = 'prefix:';
+        $expectedArguments = ['prefix:arg1', 'arg2', 'arg3', 'arg4'];
+
+        $command->setArguments($actualArguments);
+        $command->prefixKeys($prefix);
+
+        $this->assertSame($expectedArguments, $command->getArguments());
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.6.0
+     */
+    public function testIncrementsValueOfFieldByFloat(): void
+    {
+        $redis = $this->getClient();
+
+        $this->assertSame('10.5', $redis->hincrbyfloat('metavars', 'foo', 10.5));
+
+        $redis->hincrbyfloat('metavars', 'hoge', 10.001);
+        $this->assertSame('11', $redis->hincrbyfloat('metavars', 'hoge', 0.999));
+
+        $this->assertSame(['foo' => '10.5', 'hoge' => '11'], $redis->hgetall('metavars'));
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 6.0.0
+     */
+    public function testIncrementsValueOfFieldByFloatResp3(): void
+    {
+        $redis = $this->getResp3Client();
+
+        $this->assertSame('10.5', $redis->hincrbyfloat('metavars', 'foo', 10.5));
+
+        $redis->hincrbyfloat('metavars', 'hoge', 10.001);
+        $this->assertSame('11', $redis->hincrbyfloat('metavars', 'hoge', 0.999));
+
+        $this->assertSame(['foo' => '10.5', 'hoge' => '11'], $redis->hgetall('metavars'));
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.6.0
+     */
+    public function testDecrementsValueOfFieldByFloat(): void
+    {
+        $redis = $this->getClient();
+
+        $this->assertSame('-10.5', $redis->hincrbyfloat('metavars', 'foo', -10.5));
+
+        $redis->hincrbyfloat('metavars', 'hoge', -10.001);
+        $this->assertSame('-11', $redis->hincrbyfloat('metavars', 'hoge', -0.999));
+
+        $this->assertSame(['foo' => '-10.5', 'hoge' => '-11'], $redis->hgetall('metavars'));
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.6.0
+     */
+    public function testThrowsExceptionOnStringField(): void
+    {
+        $this->expectException('Predis\Response\ServerException');
+        $this->expectExceptionMessageMatches('/ERR hash value is not a( valid)? float/');
+
+        $redis = $this->getClient();
+
+        $redis->hset('metavars', 'foo', 'bar');
+        $redis->hincrbyfloat('metavars', 'foo', 10.0);
+    }
+
+    /**
+     * @group connected
+     * @requiresRedisVersion >= 2.6.0
+     */
+    public function testThrowsExceptionOnWrongType(): void
+    {
+        $this->expectException('Predis\Response\ServerException');
+        $this->expectExceptionMessage('Operation against a key holding the wrong kind of value');
+
+        $redis = $this->getClient();
+
+        $redis->set('foo', 'bar');
+        $redis->hincrbyfloat('foo', 'bar', 10.5);
+    }
+}
