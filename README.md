@@ -44,6 +44,33 @@ The AI agent will handle the rest - OAuth authorization, API connection, and too
 
 ---
 
+## Claude Desktop / Cursor / OpenCode — MCP Setup
+
+**Step 1** — Install [webmcp-client](https://www.npmjs.com/package/webmcp-client):
+```bash
+npm install -g webmcp-client
+```
+
+**Step 2** — Add to `claude_desktop_config.json` (set once, never change):
+```json
+{
+  "mcpServers": {
+    "webmcp": {
+      "command": "webmcp-client",
+      "env": {
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+      }
+    }
+  }
+}
+```
+
+> **Note for NetFree / corporate SSL proxy users:** The `NODE_TLS_REJECT_UNAUTHORIZED: "0"` setting bypasses SSL certificate verification. Required for networks that intercept HTTPS traffic.
+
+**Step 3** — Use the WordPress admin page to generate a token and connect your site.
+
+---
+
 ## 🔐 OAuth 2.0 Authentication Guide
 
 ### How It Works
