@@ -23,7 +23,7 @@ class Core_Module extends Module_Base {
 	 *
 	 * @var string
 	 */
-	protected $module_name = 'WordPress';
+	protected $module_name = 'wordpress';
 
 	/**
 	 * Register all core WordPress tools.

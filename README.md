@@ -800,6 +800,25 @@ Thank you for your understanding!
 
 ---
 
+## 🌐 External Services
+
+This plugin optionally uses the **MyMemory Translation API** when the Translation Provider setting is set to "MyMemory API".
+
+### MyMemory API
+
+| | |
+|---|---|
+| **What it is** | A free machine translation service |
+| **When used** | Only when an AI agent calls `translation.translate` AND the plugin settings have "MyMemory API" selected |
+| **Data sent** | Text to be translated + source/target language codes |
+| **Default** | **Disabled** — default provider is "AI Self-Translate" (no external requests) |
+| **Terms of Service** | https://mymemory.translated.net/ |
+| **Privacy Policy** | https://mymemory.translated.net/ |
+
+If "MyMemory API" is not selected, no data is sent to any external service.
+
+---
+
 ## 📄 License
 
 GPL-3.0-or-later
