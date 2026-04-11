@@ -403,6 +403,21 @@ Security update: OAuth 2.0 authentication now enabled. See documentation for set
 
 
 
+== External Services ==
+
+This plugin optionally uses the **MyMemory Translation API** when the "Translation Provider" setting is set to "MyMemory API" in the plugin settings.
+
+= MyMemory API =
+
+* **What it is:** A free machine translation service
+* **When it is used:** Only when an AI agent calls the `translation.translate` tool AND the plugin settings have "MyMemory API" selected as the translation provider
+* **What data is sent:** The text to be translated and the target/source language codes
+* **Default:** Disabled by default. The default provider is "AI Self-Translate" (no external requests)
+* **Terms of Service:** https://mymemory.translated.net/
+* **Privacy Policy:** https://mymemory.translated.net/
+
+If "MyMemory API" is not selected, no data is sent to any external service.
+
 == Privacy Policy ==
 
 GoldT WebMCP Bridge does not collect, store, or transmit any personal data to external services. All API requests are handled locally on your WordPress installation.
@@ -414,7 +429,7 @@ GoldT WebMCP Bridge does not collect, store, or transmit any personal data to ex
 * Rate limiting counters
 * User blacklist (WordPress user IDs only)
 
-No data leaves your WordPress installation.
+No data leaves your WordPress installation. This applies when using the default settings. If you enable the MyMemory API translation provider, text content will be sent to mymemory.translated.net. See "External Services" section for details.
 
 == Requirements ==
 

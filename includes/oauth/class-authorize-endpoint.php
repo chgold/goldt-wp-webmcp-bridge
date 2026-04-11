@@ -223,7 +223,7 @@ class Authorize_Endpoint {
 	 * @param array  $scopes Parsed scopes array.
 	 * @return void
 	 */
-	private function show_consent_screen( $client_id, $redirect_uri, $response_type, $scope, $state, $code_challenge, $code_challenge_method, $scopes ) {
+	private function show_consent_screen( $client_id, $redirect_uri, $response_type, $scope, $state, $code_challenge, $code_challenge_method, $scopes ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- Parameters used by included view file.
 		if ( ! is_user_logged_in() ) {
 			$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 			wp_safe_redirect( wp_login_url( $request_uri ) );
@@ -251,7 +251,7 @@ class Authorize_Endpoint {
 	 * @param string $code Authorization code to display.
 	 * @return void
 	 */
-	private function show_oob_code( $code ) {
+	private function show_oob_code( $code ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Parameter used by included view file.
 		$this->enqueue_oauth_assets();
 		include GOLDTWMCP_PATH . 'includes/oauth/views/oob-code.php';
 		exit;

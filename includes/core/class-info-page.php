@@ -28,6 +28,31 @@ class Info_Page {
 		add_filter( 'query_vars', array( $this, 'register_query_var' ) );
 		add_action( 'template_redirect', array( $this, 'maybe_render' ) );
 		add_action( 'admin_bar_menu', array( $this, 'add_admin_bar_link' ), 100 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+	}
+
+	/**
+	 * Enqueue info page CSS and JavaScript assets.
+	 *
+	 * @return void
+	 */
+	public function enqueue_assets() {
+		if ( ! get_query_var( 'goldtwmcp_info_page' ) ) {
+			return;
+		}
+		wp_enqueue_style(
+			'goldtwmcp-info-page',
+			GOLDTWMCP_URL . 'assets/css/info-page.css',
+			array(),
+			GOLDTWMCP_VERSION
+		);
+		wp_enqueue_script(
+			'goldtwmcp-info-page',
+			GOLDTWMCP_URL . 'assets/js/info-page.js',
+			array(),
+			GOLDTWMCP_VERSION,
+			true
+		);
 	}
 
 	/**
@@ -147,272 +172,7 @@ class Info_Page {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>AI Connect &mdash; <?php echo esc_html( $site_name ); ?></title>
-	<style>
-		*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-		body {
-			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-			background: #f0f2f5;
-			color: #1a1a2e;
-			min-height: 100vh;
-		}
-
-		.aic-header {
-			background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-			color: #fff;
-			padding: 32px 24px 28px;
-			text-align: center;
-		}
-
-		.aic-header-logo {
-			display: inline-flex;
-			align-items: center;
-			gap: 12px;
-			margin-bottom: 8px;
-		}
-
-		.aic-header-icon {
-			width: 40px;
-			height: 40px;
-			background: #e94560;
-			border-radius: 10px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 20px;
-		}
-
-		.aic-header h1 {
-			font-size: 28px;
-			font-weight: 700;
-			letter-spacing: -0.5px;
-		}
-
-		.aic-header-sub {
-			font-size: 15px;
-			opacity: 0.75;
-			margin-top: 4px;
-		}
-
-		.aic-user-badge {
-			display: inline-block;
-			margin-top: 14px;
-			background: rgba(255,255,255,0.12);
-			border: 1px solid rgba(255,255,255,0.2);
-			border-radius: 20px;
-			padding: 5px 16px;
-			font-size: 13px;
-			color: #e0e0e0;
-		}
-
-		.aic-login-notice {
-			display: inline-block;
-			margin-top: 14px;
-			background: rgba(233,69,96,0.2);
-			border: 1px solid rgba(233,69,96,0.4);
-			border-radius: 20px;
-			padding: 5px 16px;
-			font-size: 13px;
-			color: #ffb3be;
-		}
-
-		.aic-container {
-			max-width: 860px;
-			margin: 32px auto;
-			padding: 0 16px 48px;
-		}
-
-		.aic-card {
-			background: #fff;
-			border-radius: 12px;
-			box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-			padding: 28px 32px;
-			margin-bottom: 24px;
-		}
-
-		.aic-card-title {
-			font-size: 18px;
-			font-weight: 700;
-			color: #0f3460;
-			margin-bottom: 18px;
-			padding-bottom: 12px;
-			border-bottom: 2px solid #f0f2f5;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.aic-label {
-			font-size: 12px;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.6px;
-			color: #6b7280;
-			margin-bottom: 6px;
-		}
-
-		.aic-url-row {
-			display: flex;
-			align-items: stretch;
-			gap: 0;
-			margin-bottom: 18px;
-			border-radius: 8px;
-			overflow: hidden;
-			border: 1px solid #e2e8f0;
-		}
-
-		.aic-url-input {
-			flex: 1;
-			font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-			font-size: 13px;
-			padding: 10px 14px;
-			border: none;
-			background: #f8fafc;
-			color: #1e293b;
-			outline: none;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		.aic-copy-btn {
-			padding: 10px 18px;
-			background: #0f3460;
-			color: #fff;
-			border: none;
-			cursor: pointer;
-			font-size: 13px;
-			font-weight: 600;
-			transition: background 0.15s ease;
-			white-space: nowrap;
-		}
-
-		.aic-copy-btn:hover { background: #16213e; }
-		.aic-copy-btn.copied { background: #16a34a; }
-
-		.aic-prompt-wrap {
-			position: relative;
-		}
-
-		.aic-prompt-textarea {
-			width: 100%;
-			font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-			font-size: 13px;
-			line-height: 1.6;
-			padding: 14px;
-			border: 1px solid #e2e8f0;
-			border-radius: 8px;
-			background: #f8fafc;
-			color: #1e293b;
-			resize: none;
-			outline: none;
-			height: 100px;
-		}
-
-		.aic-prompt-copy-btn {
-			position: absolute;
-			top: 10px;
-			right: 10px;
-			padding: 6px 14px;
-			background: #0f3460;
-			color: #fff;
-			border: none;
-			border-radius: 6px;
-			cursor: pointer;
-			font-size: 12px;
-			font-weight: 600;
-			transition: background 0.15s ease;
-		}
-
-		.aic-prompt-copy-btn:hover { background: #16213e; }
-		.aic-prompt-copy-btn.copied { background: #16a34a; }
-
-		.aic-platforms-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-			gap: 10px;
-		}
-
-		.aic-platform-chip {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			padding: 10px 14px;
-			border: 1px solid #e2e8f0;
-			border-radius: 8px;
-			background: #f8fafc;
-			font-size: 13px;
-			font-weight: 500;
-			color: #374151;
-		}
-
-		.aic-platform-dot {
-			width: 8px;
-			height: 8px;
-			border-radius: 50%;
-			background: #22c55e;
-			flex-shrink: 0;
-		}
-
-		.aic-steps {
-			counter-reset: aic-step;
-			list-style: none;
-			display: flex;
-			flex-direction: column;
-			gap: 14px;
-		}
-
-		.aic-step {
-			display: flex;
-			gap: 16px;
-			align-items: flex-start;
-		}
-
-		.aic-step-num {
-			counter-increment: aic-step;
-			width: 30px;
-			height: 30px;
-			border-radius: 50%;
-			background: #0f3460;
-			color: #fff;
-			font-size: 14px;
-			font-weight: 700;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-shrink: 0;
-		}
-
-		.aic-step-content {
-			padding-top: 4px;
-		}
-
-		.aic-step-content strong {
-			display: block;
-			font-size: 14px;
-			color: #1a1a2e;
-			margin-bottom: 2px;
-		}
-
-		.aic-step-content span {
-			font-size: 13px;
-			color: #6b7280;
-		}
-
-		.aic-footer {
-			text-align: center;
-			font-size: 12px;
-			color: #9ca3af;
-			margin-top: 12px;
-		}
-
-		.aic-footer a {
-			color: #6b7280;
-			text-decoration: none;
-		}
-
-		.aic-footer a:hover { text-decoration: underline; }
-	</style>
+		<?php wp_head(); ?>
 </head>
 <body>
 
@@ -523,41 +283,7 @@ class Info_Page {
 	Powered by <a href="https://ai-connect.gold-t.co.il/" target="_blank" rel="noopener noreferrer">AI Connect</a> &mdash; WebMCP Protocol Bridge
 </div>
 
-<script>
-function aicCopy(inputId, btn) {
-	var el = document.getElementById(inputId);
-	if (!el) return;
-	var text = el.tagName === 'TEXTAREA' ? el.value : el.value;
-	if (navigator.clipboard && navigator.clipboard.writeText) {
-		navigator.clipboard.writeText(text).then(function() {
-			aicFlashCopied(btn);
-		}).catch(function() {
-			aicFallbackCopy(el, btn);
-		});
-	} else {
-		aicFallbackCopy(el, btn);
-	}
-}
-
-function aicFallbackCopy(el, btn) {
-	el.select();
-	el.setSelectionRange(0, 99999);
-	try {
-		document.execCommand('copy');
-		aicFlashCopied(btn);
-	} catch (e) {}
-}
-
-function aicFlashCopied(btn) {
-	var orig = btn.textContent;
-	btn.textContent = 'Copied!';
-	btn.classList.add('copied');
-	setTimeout(function() {
-		btn.textContent = orig;
-		btn.classList.remove('copied');
-	}, 2000);
-}
-</script>
+		<?php wp_footer(); ?>
 
 </body>
 </html>
