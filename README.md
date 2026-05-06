@@ -1,6 +1,6 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.3.3-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -603,6 +603,16 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.3.3 - 2026-05-06
+* **Fixed:** Removed "Powered by AI Connect" credit link from public-facing info page (WordPress.org compliance)
+
+### Version 0.3.2 - 2026-04-12
+* **Fixed:** "Revoke All Tokens" button now actually revokes all active tokens in the database (previously saved a JWT secret that was never used)
+* **Fixed:** Tool names now use lowercase module prefix (`wordpress.searchPosts`) per WebMCP protocol spec
+* **Improved:** CSS and JavaScript extracted to `assets/` files using `wp_enqueue_style`/`wp_enqueue_script` (WordPress.org compliance)
+* **Improved:** Admin settings page cleaned up — removed irrelevant WooCommerce, exec(), and Composer status rows
+* **Added:** External Services disclosure for MyMemory API in readme.txt (WordPress.org compliance)
 
 ### Version 0.3.0 - 2026-03-19
 * **Added:** Translation Provider setting (AI Self-Translate, MyMemory API, or Disabled)

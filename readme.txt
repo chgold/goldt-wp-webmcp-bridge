@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.3.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,16 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 0.3.3 - 2026-05-06 =
+* Fixed: Removed "Powered by AI Connect" credit link from public-facing info page (WordPress.org compliance)
+
+= 0.3.2 - 2026-04-12 =
+* Fixed: "Revoke All Tokens" button now actually revokes all active tokens in the database
+* Fixed: Tool names now use lowercase module prefix (wordpress.searchPosts) per WebMCP protocol spec
+* Improved: CSS/JS extracted to assets/ using wp_enqueue_style/wp_enqueue_script (WordPress.org compliance)
+* Improved: Admin settings page cleaned up - removed irrelevant status rows
+* Added: External Services disclosure for MyMemory API (WordPress.org compliance)
+
 = 0.3.0 =
 * Added: Translation Provider setting (AI Self-Translate, MyMemory API, or Disabled)
 * Added: TranslationModule with MyMemory API integration (translate, getSupportedLanguages)
@@ -392,6 +402,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Upgrade Notice ==
 
+= 0.3.2 =
+Security fix: "Revoke All Tokens" button now works correctly. WordPress.org compliance improvements. Upgrade recommended.
+
 = 0.3.0 =
 New Translation Provider setting lets you choose between AI self-translate, MyMemory API, or disabled. OAuth client_id is now optional and supports fuzzy matching.
 
@@ -413,8 +426,8 @@ This plugin optionally uses the **MyMemory Translation API** when the "Translati
 * **When it is used:** Only when an AI agent calls the `translation.translate` tool AND the plugin settings have "MyMemory API" selected as the translation provider
 * **What data is sent:** The text to be translated and the target/source language codes
 * **Default:** Disabled by default. The default provider is "AI Self-Translate" (no external requests)
-* **Terms of Service:** https://mymemory.translated.net/
-* **Privacy Policy:** https://mymemory.translated.net/
+* **Terms of Service:** https://mymemory.translated.net/doc/usagelimits.php
+* **Privacy Policy:** https://mymemory.translated.net/doc/privacy.php
 
 If "MyMemory API" is not selected, no data is sent to any external service.
 

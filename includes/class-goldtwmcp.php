@@ -21,7 +21,7 @@ class GoldtWebMCP_Plugin {
 	 *
 	 * @var string
 	 */
-	private $version = '0.3.0';
+	private $version = '0.3.3';
 
 	/**
 	 * Manifest instance.
@@ -260,19 +260,7 @@ class GoldtWebMCP_Plugin {
 							?>
 							</td>
 						</tr>
-						<tr>
-							<td><strong>WooCommerce:</strong></td>
-							<td>
-							<?php
-							if ( class_exists( 'WooCommerce' ) ) {
-								$wc_version = defined( 'WC_VERSION' ) ? WC_VERSION : 'Unknown';
-								echo '✓ Active (v' . esc_html( $wc_version ) . ')';
-							} else {
-								echo '✗ Not installed';
-							}
-							?>
-							</td>
-						</tr>
+
 						<tr>
 							<td><strong>Redis:</strong></td>
 							<td><?php echo extension_loaded( 'redis' ) ? '✓ Available' : '○ Not installed (optional)'; ?></td>
@@ -295,44 +283,7 @@ class GoldtWebMCP_Plugin {
 							?>
 							</td>
 						</tr>
-						<tr>
-							<td><strong>exec() Function:</strong></td>
-							<td>
-							<?php
-								$disabled_functions = explode( ',', ini_get( 'disable_functions' ) );
-								$disabled_functions = array_map( 'trim', $disabled_functions );
-							if ( in_array( 'exec', $disabled_functions, true ) ) {
-								echo '<span style="color: orange;">✗ Disabled</span>';
-							} else {
-								echo '✓ Enabled';
-							}
-							?>
-							</td>
-						</tr>
-						<tr>
-							<td><strong>Composer Command:</strong></td>
-							<td>
-							<?php
-								$disabled_functions = explode( ',', ini_get( 'disable_functions' ) );
-								$disabled_functions = array_map( 'trim', $disabled_functions );
-							if ( ! in_array( 'exec', $disabled_functions, true ) ) {
-								exec( 'which composer 2>/dev/null', $output, $return_var ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec
-								if ( 0 === $return_var ) {
-									echo '✓ Available in PATH';
-								} else {
-									exec( 'which composer.phar 2>/dev/null', $output, $return_var ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec
-									if ( 0 === $return_var ) {
-										echo '✓ composer.phar found';
-									} else {
-										echo '<span style="color: orange;">✗ Not found</span>';
-									}
-								}
-							} else {
-								echo '<span style="color: #999;">N/A (exec disabled)</span>';
-							}
-							?>
-							</td>
-						</tr>
+
 						<tr>
 							<td><strong>OAuth Tables:</strong></td>
 							<td>
@@ -439,14 +390,20 @@ class GoldtWebMCP_Plugin {
 			}
 		}
 
-		// Handle JWT Secret rotation.
-		if ( isset( $_POST['goldtwmcp_rotate_jwt_secret'] ) ) {
-			check_admin_referer( 'goldtwmcp_rotate_jwt_secret' );
+		// Handle Revoke All Tokens.
+		if ( isset( $_POST['goldtwmcp_revoke_all_tokens'] ) ) {
+			check_admin_referer( 'goldtwmcp_revoke_all_tokens' );
 
-			$new_secret = wp_generate_password( 64, true, true );
-			update_option( 'goldtwmcp_jwt_secret', $new_secret );
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk token revocation via admin action
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$wpdb->prefix}goldtwmcp_oauth_tokens SET revoked_at = %s WHERE revoked_at IS NULL",
+					gmdate( 'Y-m-d H:i:s' )
+				)
+			);
 
-			echo '<div class="notice notice-success"><p>' . esc_html__( 'JWT Secret rotated successfully! All existing tokens have been invalidated.', 'goldt-webmcp-bridge' ) . '</p></div>';
+			echo '<div class="notice notice-success"><p>' . esc_html__( 'All active tokens have been revoked. Connected AI agents will need to re-authorize.', 'goldt-webmcp-bridge' ) . '</p></div>';
 		}
 
 		if ( isset( $_POST['goldtwmcp_save_settings'] ) ) {
@@ -534,7 +491,7 @@ class GoldtWebMCP_Plugin {
 								<p class="description">
 									<?php esc_html_e( 'When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation.', 'goldt-webmcp-bridge' ); ?>
 									<br>
-									<strong><?php esc_html_e( 'Note:', 'goldt-webmcp-bridge' ); ?></strong> <?php esc_html_e( 'Sensitive security data (JWT secrets, refresh tokens) will always be deleted regardless of this setting.', 'goldt-webmcp-bridge' ); ?>
+									<strong><?php esc_html_e( 'Note:', 'goldt-webmcp-bridge' ); ?></strong> <?php esc_html_e( 'Sensitive security data (OAuth tokens, refresh tokens) will always be deleted regardless of this setting.', 'goldt-webmcp-bridge' ); ?>
 								</p>
 							</fieldset>
 						</td>
@@ -548,17 +505,17 @@ class GoldtWebMCP_Plugin {
 			
 			<h2><?php esc_html_e( 'Security', 'goldt-webmcp-bridge' ); ?></h2>
 			<div class="card" style="max-width: 800px;">
-				<h3><?php esc_html_e( 'Rotate JWT Secret Key', 'goldt-webmcp-bridge' ); ?></h3>
-				<p><?php esc_html_e( 'This will generate a new JWT secret key and <strong>immediately invalidate all existing access tokens</strong>.', 'goldt-webmcp-bridge' ); ?></p>
-				<p><?php esc_html_e( 'All users will need to authenticate again to get new tokens.', 'goldt-webmcp-bridge' ); ?></p>
-				
+				<h3><?php esc_html_e( 'Revoke All Active Tokens', 'goldt-webmcp-bridge' ); ?></h3>
+				<p><?php esc_html_e( 'This will immediately revoke all active access tokens and refresh tokens.', 'goldt-webmcp-bridge' ); ?></p>
+				<p><?php esc_html_e( 'All AI agents currently connected will be disconnected. Users will need to authorize again to get new tokens.', 'goldt-webmcp-bridge' ); ?></p>
+
 				<div class="notice notice-warning inline">
-					<p><strong>⚠️ <?php esc_html_e( 'Warning:', 'goldt-webmcp-bridge' ); ?></strong> <?php esc_html_e( 'This action cannot be undone. All AI agents currently connected will be disconnected.', 'goldt-webmcp-bridge' ); ?></p>
+					<p><strong>⚠️ <?php esc_html_e( 'Warning:', 'goldt-webmcp-bridge' ); ?></strong> <?php esc_html_e( 'This action cannot be undone.', 'goldt-webmcp-bridge' ); ?></p>
 				</div>
-				
-				<form method="post" onsubmit="return confirm('<?php echo esc_js( esc_html__( 'Are you sure you want to rotate the JWT secret? This will disconnect all connected AI agents and users will need to re-authenticate.', 'goldt-webmcp-bridge' ) ); ?>');">
-					<?php wp_nonce_field( 'goldtwmcp_rotate_jwt_secret' ); ?>
-					<?php submit_button( esc_html__( 'Rotate JWT Secret', 'goldt-webmcp-bridge' ), 'delete', 'goldtwmcp_rotate_jwt_secret', false ); ?>
+
+				<form method="post" onsubmit="return confirm('<?php echo esc_js( esc_html__( 'Are you sure you want to revoke all active tokens? All connected AI agents will be disconnected.', 'goldt-webmcp-bridge' ) ); ?>');">
+					<?php wp_nonce_field( 'goldtwmcp_revoke_all_tokens' ); ?>
+					<?php submit_button( esc_html__( 'Revoke All Tokens', 'goldt-webmcp-bridge' ), 'delete', 'goldtwmcp_revoke_all_tokens', false ); ?>
 				</form>
 			</div>
 			

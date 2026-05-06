@@ -279,10 +279,6 @@ class Info_Page {
 
 </div>
 
-<div class="aic-footer">
-	Powered by <a href="https://ai-connect.gold-t.co.il/" target="_blank" rel="noopener noreferrer">AI Connect</a> &mdash; WebMCP Protocol Bridge
-</div>
-
 		<?php wp_footer(); ?>
 
 </body>
