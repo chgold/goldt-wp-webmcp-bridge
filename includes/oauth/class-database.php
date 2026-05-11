@@ -93,12 +93,32 @@ class Database {
             KEY expires_at (expires_at)
         ) $charset_collate;";
 
+		$sql_token_registry = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}aiconnect_token_registry (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            token_prefix VARCHAR(16) NOT NULL,
+            user_id BIGINT(20) UNSIGNED NOT NULL,
+            client_id VARCHAR(80) NOT NULL,
+            scope VARCHAR(255) NOT NULL,
+            issued_at BIGINT(20) UNSIGNED NOT NULL,
+            expires_at BIGINT(20) UNSIGNED NOT NULL,
+            last_used_at BIGINT(20) UNSIGNED DEFAULT NULL,
+            revoked_at BIGINT(20) UNSIGNED DEFAULT NULL,
+            revoked_by BIGINT(20) UNSIGNED DEFAULT NULL,
+            source ENUM('generator','oauth','refresh') NOT NULL DEFAULT 'oauth',
+            ip_address VARCHAR(45) DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY token_prefix (token_prefix),
+            KEY user_id (user_id),
+            KEY revoked_at (revoked_at)
+        ) $charset_collate;";
+
 		dbDelta( $sql_clients );
 		dbDelta( $sql_codes );
 		dbDelta( $sql_tokens );
+		dbDelta( $sql_token_registry );
 
 		self::insert_default_clients();
-		self::set_version( '1.2.0' );
+		self::set_version( '1.3.0' );
 	}
 
 	/**
@@ -113,6 +133,7 @@ class Database {
 			$wpdb->prefix . 'goldtwmcp_oauth_clients',
 			$wpdb->prefix . 'goldtwmcp_oauth_codes',
 			$wpdb->prefix . 'goldtwmcp_oauth_tokens',
+			$wpdb->prefix . 'aiconnect_token_registry',
 		);
 
 		foreach ( $required_tables as $table ) {
@@ -138,6 +159,99 @@ class Database {
 
 		if ( version_compare( $current_version, '1.2.0', '<' ) ) {
 			self::upgrade_to_1_2_0();
+		}
+
+		if ( version_compare( $current_version, '1.3.0', '<' ) ) {
+			self::upgrade_to_1_3_0();
+		}
+	}
+
+	/**
+	 * Upgrade to version 1.3.0 - Add token registry sidecar table.
+	 *
+	 * Idempotent: uses dbDelta + IF NOT EXISTS so it is safe to run when an
+	 * earlier partial install already created the table.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_1_3_0() {
+		global $wpdb;
+		$charset_collate = $wpdb->get_charset_collate();
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		$sql_token_registry = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}aiconnect_token_registry (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            token_prefix VARCHAR(16) NOT NULL,
+            user_id BIGINT(20) UNSIGNED NOT NULL,
+            client_id VARCHAR(80) NOT NULL,
+            scope VARCHAR(255) NOT NULL,
+            issued_at BIGINT(20) UNSIGNED NOT NULL,
+            expires_at BIGINT(20) UNSIGNED NOT NULL,
+            last_used_at BIGINT(20) UNSIGNED DEFAULT NULL,
+            revoked_at BIGINT(20) UNSIGNED DEFAULT NULL,
+            revoked_by BIGINT(20) UNSIGNED DEFAULT NULL,
+            source ENUM('generator','oauth','refresh') NOT NULL DEFAULT 'oauth',
+            ip_address VARCHAR(45) DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY token_prefix (token_prefix),
+            KEY user_id (user_id),
+            KEY revoked_at (revoked_at)
+        ) $charset_collate;";
+
+		dbDelta( $sql_token_registry );
+
+		self::ensure_token_registry_columns();
+
+		self::set_version( '1.3.0' );
+	}
+
+	/**
+	 * ALTER missing columns into the token registry table.
+	 *
+	 * Defensive: handles the case where a prior partial install created the
+	 * table with a subset of the columns. dbDelta should normally cover this
+	 * but the ENUM column in particular can be missed across MySQL/MariaDB
+	 * variants, so we double-check explicitly.
+	 *
+	 * @return void
+	 */
+	private static function ensure_token_registry_columns() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'aiconnect_token_registry';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; schema introspection.
+		$columns = $wpdb->get_results( "SHOW COLUMNS FROM `{$table}`", ARRAY_A );
+		if ( ! is_array( $columns ) ) {
+			return;
+		}
+
+		$names = array();
+		foreach ( $columns as $col ) {
+			if ( isset( $col['Field'] ) ) {
+				$names[ $col['Field'] ] = true;
+			}
+		}
+
+		$additions = array(
+			'token_prefix' => "ADD COLUMN token_prefix VARCHAR(16) NOT NULL AFTER id",
+			'user_id'      => "ADD COLUMN user_id BIGINT(20) UNSIGNED NOT NULL AFTER token_prefix",
+			'client_id'    => "ADD COLUMN client_id VARCHAR(80) NOT NULL AFTER user_id",
+			'scope'        => "ADD COLUMN scope VARCHAR(255) NOT NULL AFTER client_id",
+			'issued_at'    => "ADD COLUMN issued_at BIGINT(20) UNSIGNED NOT NULL AFTER scope",
+			'expires_at'   => "ADD COLUMN expires_at BIGINT(20) UNSIGNED NOT NULL AFTER issued_at",
+			'last_used_at' => "ADD COLUMN last_used_at BIGINT(20) UNSIGNED DEFAULT NULL AFTER expires_at",
+			'revoked_at'   => "ADD COLUMN revoked_at BIGINT(20) UNSIGNED DEFAULT NULL AFTER last_used_at",
+			'revoked_by'   => "ADD COLUMN revoked_by BIGINT(20) UNSIGNED DEFAULT NULL AFTER revoked_at",
+			'source'       => "ADD COLUMN source ENUM('generator','oauth','refresh') NOT NULL DEFAULT 'oauth' AFTER revoked_by",
+			'ip_address'   => "ADD COLUMN ip_address VARCHAR(45) DEFAULT NULL AFTER source",
+		);
+
+		foreach ( $additions as $column => $sql_fragment ) {
+			if ( ! isset( $names[ $column ] ) ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Schema repair; fragment is a constant whitelist value.
+				$wpdb->query( "ALTER TABLE `{$table}` {$sql_fragment}" );
+			}
 		}
 	}
 
@@ -320,6 +434,8 @@ class Database {
 	public static function drop_tables() {
 		global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- OAuth cleanup on uninstall
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}aiconnect_token_registry" );
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- OAuth cleanup on uninstall
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_oauth_tokens" );
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- OAuth cleanup on uninstall
