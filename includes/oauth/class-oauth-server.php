@@ -147,15 +147,19 @@ class OAuth_Server {
 	 * @param string $client_id Client identifier.
 	 * @param int    $user_id WordPress user ID.
 	 * @param array  $scopes Granted scopes.
+	 * @param string $source Issue source for the token registry (oauth|refresh|generator).
 	 * @return array|\WP_Error Token data or error.
 	 */
-	public function create_access_token( $client_id, $user_id, $scopes ) {
+	public function create_access_token( $client_id, $user_id, $scopes, $source = 'oauth' ) {
 		global $wpdb;
 
-		$token                    = 'wpc_' . $this->generate_token( 64 );
-		$refresh_token            = 'wpr_' . $this->generate_token( 64 );
-		$expires_at               = gmdate( 'Y-m-d H:i:s', time() + $this->default_token_lifetime );
-		$refresh_token_expires_at = gmdate( 'Y-m-d H:i:s', time() + $this->default_refresh_token_lifetime );
+		$now                            = time();
+		$token                          = 'wpc_' . $this->generate_token( 64 );
+		$refresh_token                  = 'wpr_' . $this->generate_token( 64 );
+		$expires_at_ts                  = $now + $this->default_token_lifetime;
+		$refresh_token_expires_at_ts    = $now + $this->default_refresh_token_lifetime;
+		$expires_at                     = gmdate( 'Y-m-d H:i:s', $expires_at_ts );
+		$refresh_token_expires_at_mysql = gmdate( 'Y-m-d H:i:s', $refresh_token_expires_at_ts );
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth access token creation
 		$inserted = $wpdb->insert(
@@ -167,7 +171,7 @@ class OAuth_Server {
 				'user_id'                  => $user_id,
 				'scopes'                   => wp_json_encode( $scopes ),
 				'expires_at'               => $expires_at,
-				'refresh_token_expires_at' => $refresh_token_expires_at,
+				'refresh_token_expires_at' => $refresh_token_expires_at_mysql,
 			),
 			array( '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
 		);
@@ -175,6 +179,16 @@ class OAuth_Server {
 		if ( ! $inserted ) {
 			return new \WP_Error( 'db_error', 'Failed to create access token' );
 		}
+
+		Token_Registry::register(
+			$token,
+			(int) $user_id,
+			(string) $client_id,
+			is_array( $scopes ) ? $scopes : array(),
+			$now,
+			$expires_at_ts,
+			$source
+		);
 
 		return array(
 			'access_token'             => $token,
@@ -213,6 +227,10 @@ class OAuth_Server {
 
 		if ( strtotime( $token_data->expires_at . ' UTC' ) < time() ) {
 			return new \WP_Error( 'invalid_token', 'Token expired' );
+		}
+
+		if ( Token_Registry::is_revoked( $token ) ) {
+			return new \WP_Error( 'invalid_token', 'Token has been revoked' );
 		}
 
 		return array(
@@ -266,11 +284,14 @@ class OAuth_Server {
 			array( '%d' )
 		);
 
-		// Create new access token and refresh token.
+		Token_Registry::revoke( $token_data->token );
+
+		// Create new access token and refresh token, marked as a refresh.
 		$new_token = $this->create_access_token(
 			$token_data->client_id,
 			$token_data->user_id,
-			json_decode( $token_data->scopes, true )
+			json_decode( $token_data->scopes, true ),
+			'refresh'
 		);
 
 		return $new_token;
@@ -293,6 +314,8 @@ class OAuth_Server {
 			array( '%s' ),
 			array( '%s' )
 		);
+
+		Token_Registry::revoke( $token, get_current_user_id() ?: null );
 
 		return false !== $updated;
 	}

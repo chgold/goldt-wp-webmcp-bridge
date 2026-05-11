@@ -65,6 +65,8 @@ class Bearer_Auth {
 			return $user_id;
 		}
 
+		Token_Registry::touch( $token );
+
 		return $token_data['user_id'];
 	}
 
@@ -107,6 +109,8 @@ class Bearer_Auth {
 				array( 'status' => 401 )
 			);
 		}
+
+		Token_Registry::touch( $token );
 
 		return true;
 	}
