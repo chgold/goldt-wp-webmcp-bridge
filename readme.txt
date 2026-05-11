@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.3.3
+Stable tag: 0.4.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,14 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. API Response - Example JSON response from API call
 
 == Changelog ==
+
+= 0.4.0 - 2026-05-11 =
+* Added: Token Registry — sidecar table (`{prefix}aiconnect_token_registry`) records every issued/refreshed token (only the 16-char prefix is stored, not the full secret), tracking issued_at / expires_at / last_used_at / revoked_at / revoked_by / source / ip_address.
+* Added: Admin REST endpoints `GET /wp-json/goldt-mcp/v1/admin/tokens` and `DELETE /wp-json/goldt-mcp/v1/admin/tokens/{id}` (manage_options only).
+* Added: WP-Admin sub-page "AI Connect → Token Registry" to view and revoke active tokens with active / revoked / all filters.
+* Improved: Bearer-auth lookups now update `last_used_at` and reject tokens revoked in the registry (defense in depth).
+* Improved: Token revocation is now a soft-delete (revoked_at + revoked_by) instead of a hard delete; refresh-token rotation also flows through the registry.
+* Schema: Database upgrade routine 1.3.0 — creates the new table on activation and on upgrade, with column-by-column ALTER fallback for partial pre-existing installs.
 
 = 0.3.3 - 2026-05-06 =
 * Fixed: Removed "Powered by AI Connect" credit link from public-facing info page (WordPress.org compliance)

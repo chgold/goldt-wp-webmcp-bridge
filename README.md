@@ -1,6 +1,6 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.3.3-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.0-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -603,6 +603,15 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.4.0 - 2026-05-11
+* **Added:** Token Registry sidecar table (`{prefix}aiconnect_token_registry`) — records every issued/refreshed token using only the 16-char prefix (full secrets are never persisted in the registry). Tracks issued_at, expires_at, last_used_at, revoked_at, revoked_by, source (generator|oauth|refresh) and ip_address.
+* **Added:** Admin REST endpoints — `GET /wp-json/goldt-mcp/v1/admin/tokens` (list with `status` / `user_id` / `limit` / `offset` filters) and `DELETE /wp-json/goldt-mcp/v1/admin/tokens/{id}` (soft-delete). Both require `manage_options`.
+* **Added:** WP-Admin sub-page "AI Connect → Token Registry" with active/revoked/all filters and per-row revoke buttons (nonce-protected).
+* **Improved:** Every successful bearer-auth lookup now updates `last_used_at` so admins can see when each token was last active.
+* **Improved:** Token revocation became a true soft-delete — `revoked_at` + `revoked_by` are set instead of hard-deleting rows. Refresh-token rotation, the standalone `/oauth/revoke` endpoint, and admin revokes all flow through the same registry update.
+* **Improved:** `validate_token()` now also rejects tokens that were revoked in the registry (defense in depth — covers cases where the registry diverges from the legacy `oauth_tokens` table).
+* **Schema:** Database upgrade `1.3.0` — `dbDelta` creates the new table on plugin activation. Idempotent upgrade path handles partial pre-existing installs by ALTER-adding any missing columns.
 
 ### Version 0.3.3 - 2026-05-06
 * **Fixed:** Removed "Powered by AI Connect" credit link from public-facing info page (WordPress.org compliance)
