@@ -21,7 +21,7 @@ class GoldtWebMCP_Plugin {
 	 *
 	 * @var string
 	 */
-	private $version = '0.3.3';
+	private $version = '0.4.0';
 
 	/**
 	 * Manifest instance.
@@ -72,6 +72,7 @@ class GoldtWebMCP_Plugin {
 
 		// OAuth 2.0 components.
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-database.php';
+		require_once GOLDTWMCP_PATH . 'includes/oauth/class-token-registry.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-oauth-server.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-scopes.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-authorize-endpoint.php';
@@ -79,6 +80,7 @@ class GoldtWebMCP_Plugin {
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-revoke-endpoint.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-bearer-auth.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-admin-ui.php';
+		require_once GOLDTWMCP_PATH . 'includes/admin/class-token-registry-admin.php';
 		require_once GOLDTWMCP_PATH . 'includes/core/class-info-page.php';
 	}
 
@@ -169,6 +171,9 @@ class GoldtWebMCP_Plugin {
 
 		$admin_ui = new \GoldtWebMCP\OAuth\Admin_UI();
 		$admin_ui->init();
+
+		$token_registry_admin = new \GoldtWebMCP\Admin\Token_Registry_Admin();
+		$token_registry_admin->init();
 
 		$info_page = new \GoldtWebMCP\Core\Info_Page();
 		$info_page->init();
