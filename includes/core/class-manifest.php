@@ -285,6 +285,21 @@ class Manifest {
 			$scopes[ $scope ] = $data['description'];
 		}
 
+		// Build the list of OAuth clients registered in the database so AI agents
+		// can discover which client_id values are accepted by this site.
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Constant query, table name from $wpdb->prefix; manifest is generated per-request.
+		$rows               = $wpdb->get_results(
+			"SELECT client_id, client_name FROM {$wpdb->prefix}goldtwmcp_oauth_clients ORDER BY client_name",
+			ARRAY_A
+		);
+		$registered_clients = array();
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $r ) {
+				$registered_clients[ $r['client_id'] ] = $r['client_name'];
+			}
+		}
+
 		$manifest['auth'] = array(
 			'type'                  => 'oauth2',
 			'flow'                  => 'authorization_code',
@@ -295,6 +310,7 @@ class Manifest {
 			'code_challenge_method' => 'S256',
 			'redirect_uri'          => 'urn:ietf:wg:oauth:2.0:oob',
 			'scopes'                => $scopes,
+			'registered_clients'    => $registered_clients,
 		);
 
 		// Add usage instructions.
