@@ -118,7 +118,7 @@ class Database {
 		dbDelta( $sql_token_registry );
 
 		self::insert_default_clients();
-		self::set_version( '1.3.0' );
+		self::set_version( '1.4.0' );
 	}
 
 	/**
@@ -164,6 +164,47 @@ class Database {
 		if ( version_compare( $current_version, '1.3.0', '<' ) ) {
 			self::upgrade_to_1_3_0();
 		}
+
+		if ( version_compare( $current_version, '1.4.0', '<' ) ) {
+			self::upgrade_to_1_4_0();
+		}
+	}
+
+	/**
+	 * Upgrade to version 1.4.0 - Seed the webmcp-master default OAuth client.
+	 *
+	 * Idempotent: only inserts the row when client_id 'webmcp-master' is not
+	 * already present, so existing sites that activate the new version get the
+	 * new client without duplicates.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_1_4_0() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth setup, runs once on upgrade.
+		$exists = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
+				'webmcp-master'
+			)
+		);
+
+		if ( ! $exists ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth setup, inserting webmcp-master client.
+			$wpdb->insert(
+				"{$wpdb->prefix}goldtwmcp_oauth_clients",
+				array(
+					'client_id'      => 'webmcp-master',
+					'client_name'    => 'WebMCP Master',
+					'client_type'    => 'public',
+					'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
+					'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
+				)
+			);
+		}
+
+		self::set_version( '1.4.0' );
 	}
 
 	/**
@@ -351,6 +392,13 @@ class Database {
 		global $wpdb;
 
 		$clients = array(
+			array(
+				'client_id'      => 'webmcp-master',
+				'client_name'    => 'WebMCP Master',
+				'client_type'    => 'public',
+				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
+				'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
+			),
 			array(
 				'client_id'      => 'claude-ai',
 				'client_name'    => 'Claude AI (Anthropic)',
