@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,11 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. API Response - Example JSON response from API call
 
 == Changelog ==
+
+= 0.4.1 - 2026-05-13 =
+* Added: Manifest now exposes `auth.registered_clients` — an object mapping each registered OAuth `client_id` to its display name, so AI agents can discover which clients this site accepts without an extra round-trip.
+* Added: New default OAuth client `webmcp-master` (WebMCP Master) with full scopes (`read`, `write`, `delete`, `manage_users`) — seeded on fresh installs and idempotently inserted on upgrade for existing sites.
+* Schema: Database upgrade routine 1.4.0 — inserts the `webmcp-master` client when missing.
 
 = 0.4.0 - 2026-05-11 =
 * Added: Token Registry — sidecar table (`{prefix}aiconnect_token_registry`) records every issued/refreshed token (only the 16-char prefix is stored, not the full secret), tracking issued_at / expires_at / last_used_at / revoked_at / revoked_by / source / ip_address.

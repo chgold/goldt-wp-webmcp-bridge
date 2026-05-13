@@ -1,6 +1,6 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.0-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.1-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -603,6 +603,11 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.4.1 - 2026-05-13
+* **Added:** Manifest now exposes `auth.registered_clients` — an object mapping each registered OAuth `client_id` to its display name (`{"webmcp-master": "WebMCP Master", "claude-ai": "Claude AI (Anthropic)", ...}`). Lets AI agents discover accepted clients directly from the manifest.
+* **Added:** New default OAuth client `webmcp-master` (display name "WebMCP Master") with full scopes (`read`, `write`, `delete`, `manage_users`). Seeded on fresh installs and idempotently inserted on upgrade for existing sites.
+* **Schema:** Database upgrade `1.4.0` — `upgrade_to_1_4_0()` checks for `webmcp-master` and inserts it if absent (no duplicates).
 
 ### Version 0.4.0 - 2026-05-11
 * **Added:** Token Registry sidecar table (`{prefix}aiconnect_token_registry`) — records every issued/refreshed token using only the 16-char prefix (full secrets are never persisted in the registry). Tracks issued_at, expires_at, last_used_at, revoked_at, revoked_by, source (generator|oauth|refresh) and ip_address.
