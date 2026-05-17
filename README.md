@@ -1,6 +1,6 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.1-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.2-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -603,6 +603,9 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.4.2 - 2026-05-14
+* **Added:** OAuth consent screen now shows a "Open in New Tab" banner when accessed from a regular browser tab (not a popup). Clicking the button opens authorization in a new tab and returns the user to their chat session. Banner also supports "Continue here" to dismiss and proceed normally.
 
 ### Version 0.4.1 - 2026-05-13
 * **Added:** Manifest now exposes `auth.registered_clients` — an object mapping each registered OAuth `client_id` to its display name (`{"webmcp-master": "WebMCP Master", "claude-ai": "Claude AI (Anthropic)", ...}`). Lets AI agents discover accepted clients directly from the manifest.
