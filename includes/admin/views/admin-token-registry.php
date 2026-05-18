@@ -45,7 +45,10 @@ $status_labels = array(
 			$is_current = ( $status === $key );
 			?>
 			<li>
-				<?php if ( ! $first ) : ?>|<?php endif; ?>
+				<?php
+				if ( ! $first ) :
+					?>
+					|<?php endif; ?>
 				<a
 					href="<?php echo esc_url( add_query_arg( 'status', $key, $base_url ) ); ?>"
 					class="<?php echo $is_current ? 'current' : ''; ?>"

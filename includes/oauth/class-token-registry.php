@@ -150,7 +150,7 @@ class Token_Registry {
 		$now   = time();
 		$table = self::table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name interpolated from $wpdb->prefix only.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->query(
 			$wpdb->prepare(
 				"UPDATE `{$table}` SET last_used_at = %d WHERE token_prefix = %s AND revoked_at IS NULL AND expires_at > %d",
@@ -159,6 +159,7 @@ class Token_Registry {
 				$now
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	/**
@@ -185,7 +186,7 @@ class Token_Registry {
 			$formats[]          = '%d';
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Sidecar registry update.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Sidecar registry update, no caching needed for token operations.
 		$wpdb->update(
 			self::table_name(),
 			$data,
@@ -220,7 +221,7 @@ class Token_Registry {
 			$formats[]          = '%d';
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Sidecar registry update.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Sidecar registry update, no caching needed for token operations.
 		$updated = $wpdb->update(
 			self::table_name(),
 			$data,
@@ -251,7 +252,7 @@ class Token_Registry {
 
 		$table = self::table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name interpolated from $wpdb->prefix only.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM `{$table}` WHERE token_prefix = %s AND revoked_at IS NULL AND expires_at > %d LIMIT 1",
@@ -259,6 +260,7 @@ class Token_Registry {
 				time()
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return ! empty( $row );
 	}
@@ -283,13 +285,14 @@ class Token_Registry {
 
 		$table = self::table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name interpolated from $wpdb->prefix only.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM `{$table}` WHERE token_prefix = %s AND revoked_at IS NOT NULL LIMIT 1",
 				$prefix
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return ! empty( $row );
 	}
@@ -351,7 +354,7 @@ class Token_Registry {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Where clause built from whitelisted fragments, values bound via prepare.
 		$rows = $wpdb->get_results(
-			$wpdb->prepare(
+			$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $values is a dynamic array built from optional filters; count matches at runtime.
 				"SELECT * FROM `{$table}` WHERE {$where_sql} ORDER BY issued_at DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				$values
 			),
@@ -377,7 +380,7 @@ class Token_Registry {
 
 		$table = self::table_name();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name interpolated from $wpdb->prefix only.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM `{$table}` WHERE id = %d",
@@ -385,6 +388,7 @@ class Token_Registry {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return is_array( $row ) ? $row : null;
 	}

@@ -315,7 +315,8 @@ class OAuth_Server {
 			array( '%s' )
 		);
 
-		Token_Registry::revoke( $token, get_current_user_id() ?: null );
+		$revoked_by = get_current_user_id();
+		Token_Registry::revoke( $token, $revoked_by ? $revoked_by : null );
 
 		return false !== $updated;
 	}

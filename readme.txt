@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.1
+Stable tag: 0.4.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. API Response - Example JSON response from API call
 
 == Changelog ==
+
+= 0.4.2 - 2026-05-18 =
+* Fixed: PHPCS WordPress coding standards compliance — resolved 16 errors and 3 warnings across `class-database.php`, `class-token-registry.php`, `class-oauth-server.php`, and `admin-token-registry.php`.
 
 = 0.4.1 - 2026-05-13 =
 * Added: Manifest now exposes `auth.registered_clients` — an object mapping each registered OAuth `client_id` to its display name, so AI agents can discover which clients this site accepts without an extra round-trip.

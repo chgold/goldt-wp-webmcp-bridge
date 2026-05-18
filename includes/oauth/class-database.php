@@ -275,17 +275,17 @@ class Database {
 		}
 
 		$additions = array(
-			'token_prefix' => "ADD COLUMN token_prefix VARCHAR(16) NOT NULL AFTER id",
-			'user_id'      => "ADD COLUMN user_id BIGINT(20) UNSIGNED NOT NULL AFTER token_prefix",
-			'client_id'    => "ADD COLUMN client_id VARCHAR(80) NOT NULL AFTER user_id",
-			'scope'        => "ADD COLUMN scope VARCHAR(255) NOT NULL AFTER client_id",
-			'issued_at'    => "ADD COLUMN issued_at BIGINT(20) UNSIGNED NOT NULL AFTER scope",
-			'expires_at'   => "ADD COLUMN expires_at BIGINT(20) UNSIGNED NOT NULL AFTER issued_at",
-			'last_used_at' => "ADD COLUMN last_used_at BIGINT(20) UNSIGNED DEFAULT NULL AFTER expires_at",
-			'revoked_at'   => "ADD COLUMN revoked_at BIGINT(20) UNSIGNED DEFAULT NULL AFTER last_used_at",
-			'revoked_by'   => "ADD COLUMN revoked_by BIGINT(20) UNSIGNED DEFAULT NULL AFTER revoked_at",
+			'token_prefix' => 'ADD COLUMN token_prefix VARCHAR(16) NOT NULL AFTER id',
+			'user_id'      => 'ADD COLUMN user_id BIGINT(20) UNSIGNED NOT NULL AFTER token_prefix',
+			'client_id'    => 'ADD COLUMN client_id VARCHAR(80) NOT NULL AFTER user_id',
+			'scope'        => 'ADD COLUMN scope VARCHAR(255) NOT NULL AFTER client_id',
+			'issued_at'    => 'ADD COLUMN issued_at BIGINT(20) UNSIGNED NOT NULL AFTER scope',
+			'expires_at'   => 'ADD COLUMN expires_at BIGINT(20) UNSIGNED NOT NULL AFTER issued_at',
+			'last_used_at' => 'ADD COLUMN last_used_at BIGINT(20) UNSIGNED DEFAULT NULL AFTER expires_at',
+			'revoked_at'   => 'ADD COLUMN revoked_at BIGINT(20) UNSIGNED DEFAULT NULL AFTER last_used_at',
+			'revoked_by'   => 'ADD COLUMN revoked_by BIGINT(20) UNSIGNED DEFAULT NULL AFTER revoked_at',
 			'source'       => "ADD COLUMN source ENUM('generator','oauth','refresh') NOT NULL DEFAULT 'oauth' AFTER revoked_by",
-			'ip_address'   => "ADD COLUMN ip_address VARCHAR(45) DEFAULT NULL AFTER source",
+			'ip_address'   => 'ADD COLUMN ip_address VARCHAR(45) DEFAULT NULL AFTER source',
 		);
 
 		foreach ( $additions as $column => $sql_fragment ) {
