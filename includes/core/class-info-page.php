@@ -163,6 +163,10 @@ class Info_Page {
 				'id'   => 'meta-ai',
 				'name' => 'Meta AI',
 			),
+			array(
+				'id'   => 'webmcp-master',
+				'name' => 'WebMCP Master (webmcp-master.ai)',
+			),
 		);
 
 		?>
