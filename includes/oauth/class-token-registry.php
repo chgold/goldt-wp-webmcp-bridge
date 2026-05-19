@@ -352,7 +352,7 @@ class Token_Registry {
 		$values[] = $limit;
 		$values[] = $offset;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Where clause built from whitelisted fragments, values bound via prepare.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Where clause built from whitelisted constant fragments only; values bound via prepare().
 		$rows = $wpdb->get_results(
 			$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $values is a dynamic array built from optional filters; count matches at runtime.
 				"SELECT * FROM `{$table}` WHERE {$where_sql} ORDER BY issued_at DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -360,6 +360,7 @@ class Token_Registry {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		return is_array( $rows ) ? $rows : array();
 	}

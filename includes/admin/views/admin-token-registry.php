@@ -14,9 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$base_url = admin_url( 'admin.php?page=' . \GoldtWebMCP\Admin\Token_Registry_Admin::PAGE_SLUG );
+$goldtwmcp_base_url = admin_url( 'admin.php?page=' . \GoldtWebMCP\Admin\Token_Registry_Admin::PAGE_SLUG );
 
-$status_labels = array(
+$goldtwmcp_status_labels = array(
 	'active'  => __( 'Active', 'goldt-webmcp-bridge' ),
 	'revoked' => __( 'Revoked', 'goldt-webmcp-bridge' ),
 	'all'     => __( 'All', 'goldt-webmcp-bridge' ),
@@ -40,24 +40,24 @@ $status_labels = array(
 
 	<ul class="subsubsub">
 		<?php
-		$first = true;
-		foreach ( $status_labels as $key => $label ) :
-			$is_current = ( $status === $key );
+		$goldtwmcp_first = true;
+		foreach ( $goldtwmcp_status_labels as $goldtwmcp_key => $goldtwmcp_label ) :
+			$goldtwmcp_is_current = ( $status === $goldtwmcp_key );
 			?>
 			<li>
 				<?php
-				if ( ! $first ) :
+				if ( ! $goldtwmcp_first ) :
 					?>
 					|<?php endif; ?>
 				<a
-					href="<?php echo esc_url( add_query_arg( 'status', $key, $base_url ) ); ?>"
-					class="<?php echo $is_current ? 'current' : ''; ?>"
+					href="<?php echo esc_url( add_query_arg( 'status', $goldtwmcp_key, $goldtwmcp_base_url ) ); ?>"
+					class="<?php echo $goldtwmcp_is_current ? 'current' : ''; ?>"
 				>
-					<?php echo esc_html( $label ); ?>
+					<?php echo esc_html( $goldtwmcp_label ); ?>
 				</a>
 			</li>
 			<?php
-			$first = false;
+			$goldtwmcp_first = false;
 		endforeach;
 		?>
 	</ul>
@@ -89,35 +89,35 @@ $status_labels = array(
 			<?php else : ?>
 				<?php foreach ( $rows as $goldtwmcp_row ) : ?>
 					<?php
-					$row_user       = get_userdata( (int) $goldtwmcp_row['user_id'] );
-					$row_revoked_by = ! empty( $goldtwmcp_row['revoked_by'] ) ? get_userdata( (int) $goldtwmcp_row['revoked_by'] ) : null;
-					$is_revoked     = null !== $goldtwmcp_row['revoked_at'];
+					$goldtwmcp_row_user       = get_userdata( (int) $goldtwmcp_row['user_id'] );
+					$goldtwmcp_row_revoked_by = ! empty( $goldtwmcp_row['revoked_by'] ) ? get_userdata( (int) $goldtwmcp_row['revoked_by'] ) : null;
+					$goldtwmcp_is_revoked     = null !== $goldtwmcp_row['revoked_at'];
 					?>
 					<tr>
 						<td><code><?php echo esc_html( $goldtwmcp_row['token_prefix'] ); ?>…</code></td>
-						<td>
-							<?php
-							if ( $row_user ) {
-								echo esc_html( $row_user->user_login );
-							} else {
-								echo '#' . esc_html( (string) $goldtwmcp_row['user_id'] );
-							}
-							?>
-						</td>
+					<td>
+						<?php
+						if ( $goldtwmcp_row_user ) {
+							echo esc_html( $goldtwmcp_row_user->user_login );
+						} else {
+							echo '#' . esc_html( (string) $goldtwmcp_row['user_id'] );
+						}
+						?>
+					</td>
 						<td><?php echo esc_html( (string) $goldtwmcp_row['client_id'] ); ?></td>
 						<td><?php echo esc_html( (string) $goldtwmcp_row['scope'] ); ?></td>
 						<td><?php echo esc_html( (string) $goldtwmcp_row['source'] ); ?></td>
 						<td><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $goldtwmcp_row['issued_at'] ) ); ?></td>
-						<td>
-							<?php
-							$exp = (int) $goldtwmcp_row['expires_at'];
-							if ( $exp < time() ) {
-								echo '<span style="color: #999;">' . esc_html( gmdate( 'Y-m-d H:i', $exp ) ) . ' ' . esc_html__( '(expired)', 'goldt-webmcp-bridge' ) . '</span>';
-							} else {
-								echo esc_html( gmdate( 'Y-m-d H:i', $exp ) );
-							}
-							?>
-						</td>
+					<td>
+						<?php
+						$goldtwmcp_exp = (int) $goldtwmcp_row['expires_at'];
+						if ( $goldtwmcp_exp < time() ) {
+							echo '<span style="color: #999;">' . esc_html( gmdate( 'Y-m-d H:i', $goldtwmcp_exp ) ) . ' ' . esc_html__( '(expired)', 'goldt-webmcp-bridge' ) . '</span>';
+						} else {
+							echo esc_html( gmdate( 'Y-m-d H:i', $goldtwmcp_exp ) );
+						}
+						?>
+					</td>
 						<td>
 							<?php
 							if ( null === $goldtwmcp_row['last_used_at'] ) {
@@ -127,40 +127,40 @@ $status_labels = array(
 							}
 							?>
 						</td>
-						<td>
-							<?php
-							if ( $is_revoked ) {
-								echo esc_html( gmdate( 'Y-m-d H:i', (int) $goldtwmcp_row['revoked_at'] ) );
-								if ( $row_revoked_by ) {
-									echo '<br><small>' . esc_html__( 'by', 'goldt-webmcp-bridge' ) . ' ' . esc_html( $row_revoked_by->user_login ) . '</small>';
-								}
-							} else {
-								echo '<span style="color: #999;">—</span>';
+					<td>
+						<?php
+						if ( $goldtwmcp_is_revoked ) {
+							echo esc_html( gmdate( 'Y-m-d H:i', (int) $goldtwmcp_row['revoked_at'] ) );
+							if ( $goldtwmcp_row_revoked_by ) {
+								echo '<br><small>' . esc_html__( 'by', 'goldt-webmcp-bridge' ) . ' ' . esc_html( $goldtwmcp_row_revoked_by->user_login ) . '</small>';
 							}
-							?>
-						</td>
+						} else {
+							echo '<span style="color: #999;">—</span>';
+						}
+						?>
+					</td>
 						<td><?php echo esc_html( (string) ( $goldtwmcp_row['ip_address'] ?? '' ) ); ?></td>
-						<td>
-							<?php if ( ! $is_revoked ) : ?>
-								<form method="post" style="display: inline;">
-									<?php wp_nonce_field( 'goldtwmcp_token_registry_revoke' ); ?>
-									<input
-										type="hidden"
-										name="goldtwmcp_revoke_registry_id"
-										value="<?php echo esc_attr( (string) $goldtwmcp_row['id'] ); ?>"
-									>
-									<button
-										type="submit"
-										class="button button-small"
-										onclick="return confirm('<?php echo esc_js( __( 'Revoke this token? AI agents using it will be disconnected.', 'goldt-webmcp-bridge' ) ); ?>');"
-									>
-										<?php esc_html_e( 'Revoke', 'goldt-webmcp-bridge' ); ?>
-									</button>
-								</form>
-							<?php else : ?>
-								<span style="color: #999;"><?php esc_html_e( 'Revoked', 'goldt-webmcp-bridge' ); ?></span>
-							<?php endif; ?>
-						</td>
+					<td>
+						<?php if ( ! $goldtwmcp_is_revoked ) : ?>
+							<form method="post" style="display: inline;">
+								<?php wp_nonce_field( 'goldtwmcp_token_registry_revoke' ); ?>
+								<input
+									type="hidden"
+									name="goldtwmcp_revoke_registry_id"
+									value="<?php echo esc_attr( (string) $goldtwmcp_row['id'] ); ?>"
+								>
+								<button
+									type="submit"
+									class="button button-small"
+									onclick="return confirm('<?php echo esc_js( __( 'Revoke this token? AI agents using it will be disconnected.', 'goldt-webmcp-bridge' ) ); ?>');"
+								>
+									<?php esc_html_e( 'Revoke', 'goldt-webmcp-bridge' ); ?>
+								</button>
+							</form>
+						<?php else : ?>
+							<span style="color: #999;"><?php esc_html_e( 'Revoked', 'goldt-webmcp-bridge' ); ?></span>
+						<?php endif; ?>
+					</td>
 					</tr>
 				<?php endforeach; ?>
 			<?php endif; ?>

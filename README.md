@@ -1,6 +1,6 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.2-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.3-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -603,6 +603,9 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.4.3 - 2026-05-19
+* **Fixed:** `wp plugin check` warnings — renamed unprefixed view variables to `goldtwmcp_` prefix; wrapped `$table` in `esc_sql()` in schema-introspection queries; suppressed false-positive `PluginCheck.Security.DirectDB` warnings on whitelisted SQL fragments.
 
 ### Version 0.4.2 - 2026-05-18
 * **Fixed:** PHPCS WordPress coding standards compliance — resolved 16 errors and 3 warnings across `class-database.php`, `class-token-registry.php`, `class-oauth-server.php`, and `admin-token-registry.php`.
