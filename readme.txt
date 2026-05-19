@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.4
+Stable tag: 0.4.5
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,10 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. API Response - Example JSON response from API call
 
 == Changelog ==
+
+= 0.4.5 - 2026-05-19 =
+* Fixed: Copy Code button on the OAuth authorization code page (OOB) was silently failing — the `copyCode()` JavaScript function was missing. Added with `navigator.clipboard` API and `execCommand` fallback.
+* Added: `webmcp-master.ai` added to the supported platforms list on the `/ai-connect/` info page.
 
 = 0.4.4 - 2026-05-19 =
 * Fixed: WordPress.org review — MyMemory external service URLs updated to working addresses.

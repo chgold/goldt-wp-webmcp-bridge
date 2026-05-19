@@ -1,6 +1,6 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.4-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.5-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -603,6 +603,10 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.4.5 - 2026-05-19
+* **Fixed:** Copy Code button on the OAuth authorization code (OOB) page was silently failing — the `copyCode()` JavaScript function was missing entirely. Added with `navigator.clipboard` API + `execCommand` fallback.
+* **Added:** `webmcp-master.ai` added to the supported platforms list on the `/ai-connect/` info page.
 
 ### Version 0.4.4 - 2026-05-19
 * **Fixed:** WordPress.org review — MyMemory external service URLs updated to working addresses.
