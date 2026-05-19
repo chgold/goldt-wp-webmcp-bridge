@@ -55,11 +55,6 @@ class Core_Module extends Module_Base {
 							'type'        => 'integer',
 							'description' => 'Author ID to filter by',
 						),
-						'status'   => array(
-							'type'        => 'string',
-							'description' => 'Post status (publish, draft, etc)',
-							'default'     => 'publish',
-						),
 						'limit'    => array(
 							'type'        => 'integer',
 							'description' => 'Maximum number of posts to return',
@@ -108,11 +103,6 @@ class Core_Module extends Module_Base {
 						'parent' => array(
 							'type'        => 'integer',
 							'description' => 'Parent page ID',
-						),
-						'status' => array(
-							'type'        => 'string',
-							'description' => 'Page status',
-							'default'     => 'publish',
 						),
 						'limit'  => array(
 							'type'        => 'integer',
@@ -176,7 +166,7 @@ class Core_Module extends Module_Base {
 
 		$args = array(
 			'post_type'      => 'post',
-			'post_status'    => $params['status'] ?? 'publish',
+			'post_status'    => 'any',
 			'posts_per_page' => $limit,
 			'offset'         => $offset,
 		);
@@ -238,8 +228,13 @@ class Core_Module extends Module_Base {
 			$post = \get_page_by_path( sanitize_title( $identifier ), OBJECT, 'post' );
 		}
 
-		if ( ! $post ) {
-			return $this->error_response( 'Post not found', 'post_not_found' );
+		if ( ! $post || 'post' !== $post->post_type ) {
+			return new \WP_Error( 'post_not_found', 'Post not found', array( 'status' => 404 ) );
+		}
+
+		// Enforce per-post visibility: non-published posts require explicit read capability.
+		if ( 'publish' !== $post->post_status && ! \current_user_can( 'read_post', $post->ID ) ) {
+			return new \WP_Error( 'post_not_found', 'Post not found', array( 'status' => 404 ) );
 		}
 
 		return $this->success_response( $this->format_post( $post ) );
@@ -263,7 +258,7 @@ class Core_Module extends Module_Base {
 
 		$args = array(
 			'post_type'      => 'page',
-			'post_status'    => $params['status'] ?? 'publish',
+			'post_status'    => 'any',
 			'posts_per_page' => $limit,
 		);
 
@@ -317,7 +312,12 @@ class Core_Module extends Module_Base {
 		}
 
 		if ( ! $page || 'page' !== $page->post_type ) {
-			return $this->error_response( 'Page not found', 'page_not_found' );
+			return new \WP_Error( 'page_not_found', 'Page not found', array( 'status' => 404 ) );
+		}
+
+		// Enforce per-page visibility: non-published pages require explicit read capability.
+		if ( 'publish' !== $page->post_status && ! \current_user_can( 'read_post', $page->ID ) ) {
+			return new \WP_Error( 'page_not_found', 'Page not found', array( 'status' => 404 ) );
 		}
 
 		return $this->success_response( $this->format_post( $page ) );

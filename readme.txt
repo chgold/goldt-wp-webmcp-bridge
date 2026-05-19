@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.3
+Stable tag: 0.4.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,11 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 0.4.4 - 2026-05-19 =
+* Fixed: WordPress.org review — MyMemory external service URLs updated to working addresses.
+* Fixed: WordPress.org review — `searchPosts` and `searchPages` now use native WordPress capability filtering (`post_status => 'any'`): subscribers see only published posts, authors see their own drafts, editors/admins see all. The `status` parameter has been removed from the tool schema since it is no longer needed.
+* Fixed: WordPress.org review — `getPost` and `getPage` now enforce `current_user_can('read_post')` for non-published content, preventing unauthorized access to drafts/private pages by ID.
+
 = 0.4.3 - 2026-05-19 =
 * Fixed: `wp plugin check` warnings — renamed unprefixed view variables to `goldtwmcp_` prefix; wrapped `$table` in `esc_sql()` in schema-introspection queries; suppressed false-positive `PluginCheck.Security.DirectDB` warnings on whitelisted SQL fragments.
 
@@ -445,8 +450,8 @@ This plugin optionally uses the **MyMemory Translation API** when the "Translati
 * **When it is used:** Only when an AI agent calls the `translation.translate` tool AND the plugin settings have "MyMemory API" selected as the translation provider
 * **What data is sent:** The text to be translated and the target/source language codes
 * **Default:** Disabled by default. The default provider is "AI Self-Translate" (no external requests)
-* **Terms of Service:** https://mymemory.translated.net/doc/usagelimits.php
-* **Privacy Policy:** https://mymemory.translated.net/doc/privacy.php
+* **Terms of Service:** https://mymemory.translated.net/terms-and-conditions
+* **Privacy Policy:** https://mymemory.translated.net/terms-and-conditions
 
 If "MyMemory API" is not selected, no data is sent to any external service.
 
