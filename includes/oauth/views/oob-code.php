@@ -44,5 +44,38 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<p><strong><?php esc_html_e( 'Important:', 'goldt-webmcp-bridge' ); ?></strong> <?php esc_html_e( 'This code expires in 10 minutes and can only be used once.', 'goldt-webmcp-bridge' ); ?></p>
 		</div>
 	</div>
+	<script>
+	function copyCode() {
+		var code = document.getElementById( 'authCode' ).innerText;
+		var btn  = document.querySelector( '.copy-btn' );
+		var msg  = document.getElementById( 'copySuccess' );
+
+		function showSuccess() {
+			if ( btn ) { btn.disabled = true; }
+			if ( msg ) { msg.style.display = 'block'; }
+			setTimeout( function () {
+				if ( btn ) { btn.disabled = false; }
+				if ( msg ) { msg.style.display = 'none'; }
+			}, 3000 );
+		}
+
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( code ).then( showSuccess ).catch( fallback );
+		} else {
+			fallback();
+		}
+
+		function fallback() {
+			var ta = document.createElement( 'textarea' );
+			ta.value = code;
+			ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+			document.body.appendChild( ta );
+			ta.focus();
+			ta.select();
+			try { document.execCommand( 'copy' ); showSuccess(); } catch ( e ) {}
+			document.body.removeChild( ta );
+		}
+	}
+	</script>
 </body>
 </html>
