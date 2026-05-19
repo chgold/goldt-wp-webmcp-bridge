@@ -223,7 +223,11 @@ class Core_Module extends Module_Base {
 		}
 
 		if ( is_numeric( $identifier ) ) {
-			$post = \get_post( absint( $identifier ) );
+			$post_id = (int) $identifier;
+			if ( $post_id <= 0 ) {
+				return new \WP_Error( 'post_not_found', 'Post not found', array( 'status' => 404 ) );
+			}
+			$post = \get_post( $post_id );
 		} else {
 			$post = \get_page_by_path( sanitize_title( $identifier ), OBJECT, 'post' );
 		}
@@ -306,7 +310,11 @@ class Core_Module extends Module_Base {
 		}
 
 		if ( is_numeric( $identifier ) ) {
-			$page = \get_post( absint( $identifier ) );
+			$page_id = (int) $identifier;
+			if ( $page_id <= 0 ) {
+				return new \WP_Error( 'page_not_found', 'Page not found', array( 'status' => 404 ) );
+			}
+			$page = \get_post( $page_id );
 		} else {
 			$page = \get_page_by_path( sanitize_title( $identifier ), OBJECT, 'page' );
 		}
