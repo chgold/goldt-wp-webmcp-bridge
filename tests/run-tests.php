@@ -48,7 +48,13 @@ class GoldT_WebMCP_Test_Runner {
         if ($this->is_pro_active()) {
             $this->run_test('Pro Plugin Detected', [$this, 'test_pro_detected']);
             $this->run_test('Pro Hooks Registered', [$this, 'test_pro_hooks']);
-            $this->run_test('WooCommerce Tools Available', [$this, 'test_woocommerce_tools']);
+            // WooCommerce tools are only registered when WooCommerce itself is active.
+            // Skip the tools check when WooCommerce is not installed in this environment.
+            if (class_exists('WooCommerce')) {
+                $this->run_test('WooCommerce Tools Available', [$this, 'test_woocommerce_tools']);
+            } else {
+                $this->run_test('WooCommerce Tools (skipped — WooCommerce not installed)', function() { return true; });
+            }
         } else {
             // Only test this if Pro is NOT active
             $this->run_test('WooCommerce NOT in Free', [$this, 'test_no_woocommerce_in_free']);
