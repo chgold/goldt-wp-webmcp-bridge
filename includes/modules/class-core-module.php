@@ -166,7 +166,7 @@ class Core_Module extends Module_Base {
 
 		$args = array(
 			'post_type'      => 'post',
-			'post_status'    => 'any',
+			'post_status'    => 'publish',
 			'posts_per_page' => $limit,
 			'offset'         => $offset,
 		);
@@ -262,7 +262,7 @@ class Core_Module extends Module_Base {
 
 		$args = array(
 			'post_type'      => 'page',
-			'post_status'    => 'any',
+			'post_status'    => 'publish',
 			'posts_per_page' => $limit,
 		);
 
