@@ -1,6 +1,6 @@
 # GoldT WebMCP Bridge - WebMCP Bridge for WordPress
 
-![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.5-blue.svg)
+![WordPress Plugin Version](https://img.shields.io/badge/version-0.4.6-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)
@@ -603,6 +603,9 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 0.4.6 - 2026-05-20
+* **Fixed (security):** `searchPosts` and `searchPages` reverted from `post_status=>'any'` back to `'publish'`. `WP_Query` with `'any'` bypasses WordPress capability checks entirely — it returns all posts including other users' drafts even to subscribers. Hardcoding `'publish'` ensures only published content is returned. The `status` schema parameter remains removed (since 0.4.4).
 
 ### Version 0.4.5 - 2026-05-19
 * **Fixed:** Copy Code button on the OAuth authorization code (OOB) page was silently failing — the `copyCode()` JavaScript function was missing entirely. Added with `navigator.clipboard` API + `execCommand` fallback.
