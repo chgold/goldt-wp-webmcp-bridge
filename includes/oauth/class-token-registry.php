@@ -132,14 +132,17 @@ class Token_Registry {
 	}
 
 	/**
-	 * Update `last_used_at` for an active registry row matching the token prefix.
+	 * Update last_used_at, last_used_ip, and last_used_ua for an active registry row.
 	 *
-	 * Silent on failure.
+	 * Called on every successful bearer auth. Silent on failure — registry writes
+	 * must never break user requests.
 	 *
-	 * @param string $token Full access token.
+	 * @param string      $token Full access token.
+	 * @param string|null $ip    Client IP address (IPv4 or IPv6, max 45 chars).
+	 * @param string|null $ua    HTTP User-Agent string (truncated to 255 chars).
 	 * @return void
 	 */
-	public static function touch( $token ) {
+	public static function touch( $token, $ip = null, $ua = null ) {
 		global $wpdb;
 
 		$prefix = self::prefix( $token );
@@ -150,11 +153,26 @@ class Token_Registry {
 		$now   = time();
 		$table = self::table_name();
 
+		// Sanitize ip: must be a valid IP (IPv4 or IPv6).
+		if ( null !== $ip ) {
+			$ip = (string) $ip;
+			if ( ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+				$ip = null;
+			}
+		}
+
+		// Sanitize ua: truncate to 255.
+		if ( null !== $ua ) {
+			$ua = substr( (string) $ua, 0, 255 );
+		}
+
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->query(
 			$wpdb->prepare(
-				"UPDATE `{$table}` SET last_used_at = %d WHERE token_prefix = %s AND revoked_at IS NULL AND expires_at > %d",
+				"UPDATE `{$table}` SET last_used_at = %d, last_used_ip = %s, last_used_ua = %s WHERE token_prefix = %s AND revoked_at IS NULL AND expires_at > %d",
 				$now,
+				$ip,
+				$ua,
 				$prefix,
 				$now
 			)
@@ -163,7 +181,62 @@ class Token_Registry {
 	}
 
 	/**
-	 * Soft-delete (revoke) a token in the registry.
+	 * Cascade-revoke the matching rows in the OAuth tokens table.
+	 *
+	 * Matches by the 16-char prefix stored in LEFT(token, 16). This invalidates
+	 * BOTH the access_token AND the refresh_token on the same row, so an AI agent
+	 * cannot exchange its refresh_token for a new access_token after a revoke.
+	 *
+	 * Idempotent: WHERE revoked_at IS NULL so repeat calls are no-ops.
+	 * Silent on failure — cascade errors must never surface to users.
+	 *
+	 * @param string[] $prefixes Array of 16-char token prefixes.
+	 * @param int      $time     Unix timestamp to use as revoked_at value.
+	 * @return void
+	 */
+	private static function cascade_revoke_oauth_rows( array $prefixes, $time ) {
+		global $wpdb;
+
+		if ( empty( $prefixes ) ) {
+			return;
+		}
+
+		// Sanitize: only plausible-length strings.
+		$prefixes = array_values(
+			array_filter(
+				$prefixes,
+				function ( $p ) {
+					return is_string( $p ) && strlen( $p ) >= 4 && strlen( $p ) <= 32;
+				}
+			)
+		);
+
+		if ( empty( $prefixes ) ) {
+			return;
+		}
+
+		try {
+			$oauth_table  = $wpdb->prefix . 'goldtwmcp_oauth_tokens';
+			$now_mysql    = gmdate( 'Y-m-d H:i:s', (int) $time );
+			$placeholders = implode( ', ', array_fill( 0, count( $prefixes ), '%s' ) );
+
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Cascade revoke; table from $wpdb->prefix; prefixes sanitized.
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE `{$oauth_table}` SET revoked_at = %s WHERE revoked_at IS NULL AND LEFT(token, 16) IN ({$placeholders})",
+					array_merge( array( $now_mysql ), $prefixes )
+				)
+			);
+			// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		} catch ( \Throwable $e ) {
+			// Best-effort: swallow all errors — cascade failures must never surface to users.
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Cascade error logging; non-blocking audit trail.
+			error_log( 'Token_Registry::cascade_revoke_oauth_rows failed: ' . $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Soft-delete (revoke) a token in the registry and cascade to oauth_tokens.
 	 *
 	 * Silent on failure — does not throw even if the row is missing.
 	 *
@@ -179,7 +252,8 @@ class Token_Registry {
 			return;
 		}
 
-		$data    = array( 'revoked_at' => time() );
+		$time    = time();
+		$data    = array( 'revoked_at' => $time );
 		$formats = array( '%d' );
 		if ( null !== $revoked_by ) {
 			$data['revoked_by'] = (int) $revoked_by;
@@ -187,7 +261,7 @@ class Token_Registry {
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Sidecar registry update, no caching needed for token operations.
-		$wpdb->update(
+		$affected = $wpdb->update(
 			self::table_name(),
 			$data,
 			array(
@@ -197,10 +271,14 @@ class Token_Registry {
 			$formats,
 			array( '%s', null )
 		);
+
+		if ( $affected > 0 ) {
+			self::cascade_revoke_oauth_rows( array( $prefix ), $time );
+		}
 	}
 
 	/**
-	 * Soft-delete a registry row by its numeric ID.
+	 * Soft-delete a registry row by its numeric ID, with cascade to oauth_tokens.
 	 *
 	 * @param int      $id          Registry row ID.
 	 * @param int|null $revoked_by  Acting user ID.
@@ -214,7 +292,17 @@ class Token_Registry {
 			return false;
 		}
 
-		$data    = array( 'revoked_at' => time() );
+		$table = self::table_name();
+
+		// Fetch prefix for cascade before revoking.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$prefix = $wpdb->get_var(
+			$wpdb->prepare( "SELECT token_prefix FROM `{$table}` WHERE id = %d", $id )
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		$time    = time();
+		$data    = array( 'revoked_at' => $time );
 		$formats = array( '%d' );
 		if ( null !== $revoked_by ) {
 			$data['revoked_by'] = (int) $revoked_by;
@@ -223,7 +311,7 @@ class Token_Registry {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Sidecar registry update, no caching needed for token operations.
 		$updated = $wpdb->update(
-			self::table_name(),
+			$table,
 			$data,
 			array(
 				'id'         => $id,
@@ -233,7 +321,349 @@ class Token_Registry {
 			array( '%d', null )
 		);
 
-		return is_int( $updated ) && $updated > 0;
+		$ok = is_int( $updated ) && $updated > 0;
+		if ( $ok && $prefix ) {
+			self::cascade_revoke_oauth_rows( array( (string) $prefix ), $time );
+		}
+
+		return $ok;
+	}
+
+	/**
+	 * Revoke all active tokens for a specific user, cascading to oauth_tokens.
+	 *
+	 * Used by the user-facing "Revoke all my tokens" action.
+	 *
+	 * @param int      $user_id    WordPress user ID.
+	 * @param int|null $revoked_by Acting user (same user for self-revoke, admin ID for admin action).
+	 * @return int Number of registry rows revoked.
+	 */
+	public static function revoke_all_for_user( $user_id, $revoked_by = null ) {
+		global $wpdb;
+
+		$user_id = (int) $user_id;
+		if ( $user_id <= 0 ) {
+			return 0;
+		}
+
+		$table = self::table_name();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$prefixes = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT token_prefix FROM `{$table}` WHERE user_id = %d AND revoked_at IS NULL",
+				$user_id
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( empty( $prefixes ) ) {
+			return 0;
+		}
+
+		$time = time();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk revoke for user.
+		$affected = $wpdb->update(
+			$table,
+			array(
+				'revoked_at' => $time,
+				'revoked_by' => null !== $revoked_by ? (int) $revoked_by : 0,
+			),
+			array(
+				'user_id'    => $user_id,
+				'revoked_at' => null,
+			),
+			array( '%d', '%d' ),
+			array( '%d', null )
+		);
+
+		$affected = is_int( $affected ) ? $affected : 0;
+
+		if ( $affected > 0 ) {
+			self::cascade_revoke_oauth_rows( $prefixes, $time );
+		}
+
+		return $affected;
+	}
+
+	/**
+	 * Revoke a set of registry rows by their IDs, cascading to oauth_tokens.
+	 *
+	 * Used by the user-facing "Revoke all matching current filter" action.
+	 *
+	 * @param int[]    $ids        Array of registry row IDs to revoke.
+	 * @param int|null $revoked_by Acting user ID.
+	 * @return int Number of registry rows revoked.
+	 */
+	public static function revoke_by_ids( array $ids, $revoked_by = null ) {
+		global $wpdb;
+
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+
+		$table    = self::table_name();
+		$ids_ints = array_map( 'intval', $ids );
+		$ids_ints = array_filter(
+			$ids_ints,
+			function ( $id ) {
+				return $id > 0;
+			}
+		);
+
+		if ( empty( $ids_ints ) ) {
+			return 0;
+		}
+
+		$placeholders = implode( ', ', array_fill( 0, count( $ids_ints ), '%d' ) );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$prefixes = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT token_prefix FROM `{$table}` WHERE id IN ({$placeholders})",
+				$ids_ints
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+
+		if ( empty( $prefixes ) ) {
+			return 0;
+		}
+
+		$time = time();
+		$rb   = null !== $revoked_by ? (int) $revoked_by : 0;
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+		$affected = (int) $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE `{$table}` SET revoked_at = %d, revoked_by = %d WHERE id IN ({$placeholders}) AND revoked_at IS NULL",
+				array_merge( array( $time, $rb ), $ids_ints )
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+
+		if ( $affected > 0 ) {
+			self::cascade_revoke_oauth_rows( $prefixes, $time );
+		}
+
+		return $affected;
+	}
+
+	/**
+	 * Revoke all tokens never used and older than $days days.
+	 *
+	 * @param int      $days       Threshold age in days (default 30).
+	 * @param int|null $revoked_by Acting user ID (0 for system/cron).
+	 * @return int Number of registry rows revoked.
+	 */
+	public static function revoke_unused( $days = 30, $revoked_by = null ) {
+		global $wpdb;
+
+		$cutoff = time() - ( (int) $days * DAY_IN_SECONDS );
+		$table  = self::table_name();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$prefixes = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT token_prefix FROM `{$table}` WHERE last_used_at IS NULL AND issued_at < %d AND revoked_at IS NULL",
+				$cutoff
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( empty( $prefixes ) ) {
+			return 0;
+		}
+
+		$time = time();
+		$rb   = null !== $revoked_by ? (int) $revoked_by : 0;
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE `{$table}` SET revoked_at = %d, revoked_by = %d WHERE last_used_at IS NULL AND issued_at < %d AND revoked_at IS NULL",
+				$time,
+				$rb,
+				$cutoff
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$affected = (int) $wpdb->rows_affected;
+
+		if ( $affected > 0 ) {
+			self::cascade_revoke_oauth_rows( $prefixes, $time );
+		}
+
+		return $affected;
+	}
+
+	/**
+	 * Revoke all tokens not used in the last $days days.
+	 *
+	 * @param int      $days       Threshold inactivity in days (default 180).
+	 * @param int|null $revoked_by Acting user ID (0 for system/cron).
+	 * @return int Number of registry rows revoked.
+	 */
+	public static function revoke_inactive( $days = 180, $revoked_by = null ) {
+		global $wpdb;
+
+		$cutoff = time() - ( (int) $days * DAY_IN_SECONDS );
+		$table  = self::table_name();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$prefixes = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT token_prefix FROM `{$table}` WHERE last_used_at IS NOT NULL AND last_used_at < %d AND revoked_at IS NULL",
+				$cutoff
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( empty( $prefixes ) ) {
+			return 0;
+		}
+
+		$time = time();
+		$rb   = null !== $revoked_by ? (int) $revoked_by : 0;
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE `{$table}` SET revoked_at = %d, revoked_by = %d WHERE last_used_at IS NOT NULL AND last_used_at < %d AND revoked_at IS NULL",
+				$time,
+				$rb,
+				$cutoff
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$affected = (int) $wpdb->rows_affected;
+
+		if ( $affected > 0 ) {
+			self::cascade_revoke_oauth_rows( $prefixes, $time );
+		}
+
+		return $affected;
+	}
+
+	/**
+	 * Check whether the lazy cleanup should run (>24h since last run).
+	 *
+	 * @return bool True if cleanup should run now.
+	 */
+	public static function should_run_cleanup() {
+		$last = (int) get_option( 'goldt_webmcp_last_cleanup', 0 );
+		return ( time() - $last ) > DAY_IN_SECONDS;
+	}
+
+	/**
+	 * Run all 4 cleanup rules and record the timestamp.
+	 *
+	 * Rules 1-3 soft-delete registry rows AND cascade into oauth_tokens.
+	 * Rule 4 hard-deletes registry rows already revoked > 365 days ago.
+	 *
+	 * @return array{unused:int, inactive:int, expired:int, deleted:int}
+	 */
+	public static function run_cleanup() {
+		global $wpdb;
+
+		$table  = self::table_name();
+		$now    = time();
+		$result = array(
+			'unused'   => 0,
+			'inactive' => 0,
+			'expired'  => 0,
+			'deleted'  => 0,
+		);
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		try {
+			// Rule 1: never used + older than 30 days → revoke + cascade.
+			$p1 = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT token_prefix FROM `{$table}` WHERE last_used_at IS NULL AND issued_at < %d AND revoked_at IS NULL",
+					$now - 30 * DAY_IN_SECONDS
+				)
+			);
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE `{$table}` SET revoked_at = %d, revoked_by = 0 WHERE last_used_at IS NULL AND issued_at < %d AND revoked_at IS NULL",
+					$now,
+					$now - 30 * DAY_IN_SECONDS
+				)
+			);
+			$result['unused'] = (int) $wpdb->rows_affected;
+			if ( $result['unused'] > 0 && ! empty( $p1 ) ) {
+				self::cascade_revoke_oauth_rows( $p1, $now );
+			}
+
+			// Rule 2: last used > 180 days ago → revoke + cascade.
+			$p2 = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT token_prefix FROM `{$table}` WHERE last_used_at IS NOT NULL AND last_used_at < %d AND revoked_at IS NULL",
+					$now - 180 * DAY_IN_SECONDS
+				)
+			);
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE `{$table}` SET revoked_at = %d, revoked_by = 0 WHERE last_used_at IS NOT NULL AND last_used_at < %d AND revoked_at IS NULL",
+					$now,
+					$now - 180 * DAY_IN_SECONDS
+				)
+			);
+			$result['inactive'] = (int) $wpdb->rows_affected;
+			if ( $result['inactive'] > 0 && ! empty( $p2 ) ) {
+				self::cascade_revoke_oauth_rows( $p2, $now );
+			}
+
+			// Rule 3: expired > 90 days ago and not yet revoked → revoke + cascade.
+			$p3 = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT token_prefix FROM `{$table}` WHERE revoked_at IS NULL AND expires_at < %d",
+					$now - 90 * DAY_IN_SECONDS
+				)
+			);
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE `{$table}` SET revoked_at = %d, revoked_by = 0 WHERE revoked_at IS NULL AND expires_at < %d",
+					$now,
+					$now - 90 * DAY_IN_SECONDS
+				)
+			);
+			$result['expired'] = (int) $wpdb->rows_affected;
+			if ( $result['expired'] > 0 && ! empty( $p3 ) ) {
+				self::cascade_revoke_oauth_rows( $p3, $now );
+			}
+
+			// Rule 4: revoked > 365 days ago → hard DELETE (PII erasure).
+			$wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM `{$table}` WHERE revoked_at IS NOT NULL AND revoked_at < %d",
+					$now - 365 * DAY_IN_SECONDS
+				)
+			);
+			$result['deleted'] = (int) $wpdb->rows_affected;
+
+		} catch ( \Throwable $e ) {
+			// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Cleanup error logging; non-blocking audit trail.
+			error_log( 'Token_Registry::run_cleanup failed: ' . $e->getMessage() );
+		}
+
+		update_option( 'goldt_webmcp_last_cleanup', $now );
+
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Cleanup audit log; intentional production logging per Token Management SPEC §5.3.
+		error_log(
+			sprintf(
+				'[GoldtWebMCP] Token cleanup: unused=%d inactive=%d expired=%d deleted=%d',
+				$result['unused'],
+				$result['inactive'],
+				$result['expired'],
+				$result['deleted']
+			)
+		);
+
+		return $result;
 	}
 
 	/**
@@ -303,8 +733,8 @@ class Token_Registry {
 	 * @param array $args {
 	 *     Optional filters.
 	 *
-	 *     @type string $status   'active' (default), 'revoked', or 'all'.
-	 *     @type int    $user_id  Filter by user ID.
+	 *     @type string $status   'active'|'renewable'|'unused'|'inactive'|'expired'|'revoked'|'all'. Default 'active'.
+	 *     @type int    $user_id  Filter by user ID (0 = all).
 	 *     @type int    $limit    Max rows (default 100, max 500).
 	 *     @type int    $offset   Pagination offset.
 	 * }
@@ -323,21 +753,62 @@ class Token_Registry {
 
 		$limit  = max( 1, min( 500, (int) $args['limit'] ) );
 		$offset = max( 0, (int) $args['offset'] );
+		$now    = time();
 
 		$where  = array( '1=1' );
 		$values = array();
 
 		switch ( $args['status'] ) {
+
+			// Revoked_at IS NOT NULL.
 			case 'revoked':
 				$where[] = 'revoked_at IS NOT NULL';
 				break;
-			case 'all':
-				break;
+
+			// Not-yet-expired tokens that have been used (= truly Active).
 			case 'active':
-			default:
 				$where[]  = 'revoked_at IS NULL';
 				$where[]  = 'expires_at > %d';
-				$values[] = time();
+				$where[]  = 'last_used_at IS NOT NULL';
+				$values[] = $now;
+				break;
+
+			// Not-yet-expired tokens that were NEVER used.
+			case 'unused':
+				$where[]  = 'revoked_at IS NULL';
+				$where[]  = 'expires_at > %d';
+				$where[]  = 'last_used_at IS NULL';
+				$values[] = $now;
+				break;
+
+			// Tokens not used in the last 30 days (but used at some point).
+			case 'inactive':
+				$where[]  = 'revoked_at IS NULL';
+				$where[]  = 'last_used_at IS NOT NULL';
+				$where[]  = 'last_used_at < %d';
+				$values[] = $now - 30 * DAY_IN_SECONDS;
+				break;
+
+			// access_token expired but refresh_token is still valid.
+			case 'renewable':
+				$where[]  = 'revoked_at IS NULL';
+				$where[]  = 'expires_at <= %d';
+				$where[]  = '(refresh_expires_at IS NOT NULL AND refresh_expires_at > %d)';
+				$values[] = $now;
+				$values[] = $now;
+				break;
+
+			// access_token expired, no valid refresh.
+			case 'expired':
+				$where[]  = 'revoked_at IS NULL';
+				$where[]  = 'expires_at <= %d';
+				$where[]  = '(refresh_expires_at IS NULL OR refresh_expires_at <= %d)';
+				$values[] = $now;
+				$values[] = $now;
+				break;
+
+			case 'all':
+			default:
 				break;
 		}
 
@@ -363,6 +834,39 @@ class Token_Registry {
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Check whether the current user has at least one active or renewable token.
+	 *
+	 * Used to decide whether to show the "My AI Tokens" nav entry.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return bool
+	 */
+	public static function user_has_active_tokens( $user_id ) {
+		global $wpdb;
+
+		$user_id = (int) $user_id;
+		if ( $user_id <= 0 ) {
+			return false;
+		}
+
+		$table = self::table_name();
+		$now   = time();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM `{$table}` WHERE user_id = %d AND (revoked_at IS NULL OR revoked_at = 0) AND (expires_at > %d OR (refresh_expires_at IS NOT NULL AND refresh_expires_at > %d))",
+				$user_id,
+				$now,
+				$now
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		return $count > 0;
 	}
 
 	/**

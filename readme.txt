@@ -2,9 +2,9 @@
 Contributors: chagold
 Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.4.6
+Stable tag: 0.5.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 

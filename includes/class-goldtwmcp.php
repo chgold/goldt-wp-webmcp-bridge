@@ -81,6 +81,7 @@ class GoldtWebMCP_Plugin {
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-bearer-auth.php';
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-admin-ui.php';
 		require_once GOLDTWMCP_PATH . 'includes/admin/class-token-registry-admin.php';
+		require_once GOLDTWMCP_PATH . 'includes/user/class-my-tokens-page.php';
 		require_once GOLDTWMCP_PATH . 'includes/core/class-info-page.php';
 	}
 
@@ -175,8 +176,17 @@ class GoldtWebMCP_Plugin {
 		$token_registry_admin = new \GoldtWebMCP\Admin\Token_Registry_Admin();
 		$token_registry_admin->init();
 
+		$my_tokens_page = new \GoldtWebMCP\User\My_Tokens_Page();
+		$my_tokens_page->init();
+
 		$info_page = new \GoldtWebMCP\Core\Info_Page();
 		$info_page->init();
+
+		// Register daily cron for token cleanup.
+		add_action( 'goldtwmcp_token_cleanup_cron', array( '\GoldtWebMCP\OAuth\Token_Registry', 'run_cleanup' ) );
+		if ( ! wp_next_scheduled( 'goldtwmcp_token_cleanup_cron' ) ) {
+			wp_schedule_event( strtotime( 'tomorrow 02:00:00' ), 'daily', 'goldtwmcp_token_cleanup_cron' );
+		}
 	}
 
 	/**

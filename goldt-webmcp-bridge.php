@@ -3,7 +3,7 @@
  * Plugin Name: GoldT WebMCP Bridge
  * Plugin URI: https://goldt-webmcp-bridge.gold-t.co.il/
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
- * Version: 0.4.6
+ * Version: 0.5.0
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '0.4.6' );
+define( 'GOLDTWMCP_VERSION', '0.5.0' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
 
@@ -55,6 +55,11 @@ register_deactivation_hook( __FILE__, 'goldtwmcp_deactivate' );
  * @return void
  */
 function goldtwmcp_deactivate() {
+	// Unschedule token cleanup cron.
+	$timestamp = wp_next_scheduled( 'goldtwmcp_token_cleanup_cron' );
+	if ( $timestamp ) {
+		wp_unschedule_event( $timestamp, 'goldtwmcp_token_cleanup_cron' );
+	}
 	flush_rewrite_rules();
 }
 

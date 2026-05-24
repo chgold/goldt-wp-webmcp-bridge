@@ -168,6 +168,22 @@ class Database {
 		if ( version_compare( $current_version, '1.4.0', '<' ) ) {
 			self::upgrade_to_1_4_0();
 		}
+
+		if ( version_compare( $current_version, '2.0.0', '<' ) ) {
+			self::upgrade_to_2_0_0();
+		}
+
+		if ( version_compare( $current_version, '2.0.1', '<' ) ) {
+			self::upgrade_to_2_0_1();
+		}
+
+		if ( version_compare( $current_version, '2.0.2', '<' ) ) {
+			self::upgrade_to_2_0_2();
+		}
+
+		if ( version_compare( $current_version, '2.0.3', '<' ) ) {
+			self::upgrade_to_2_0_3();
+		}
 	}
 
 	/**
@@ -474,6 +490,207 @@ class Database {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.0 — add forensic columns to token registry.
+	 *
+	 * Adds last_used_ip, last_used_ua, and refresh_expires_at.
+	 * Idempotent: uses SHOW COLUMNS check before each ALTER.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_0() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'aiconnect_token_registry';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from $wpdb->prefix; schema introspection.
+		$columns = $wpdb->get_results( 'SHOW COLUMNS FROM `' . esc_sql( $table ) . '`', ARRAY_A );
+		if ( ! is_array( $columns ) ) {
+			self::set_version( '2.0.0' );
+			return;
+		}
+
+		$names = array();
+		foreach ( $columns as $col ) {
+			if ( isset( $col['Field'] ) ) {
+				$names[ $col['Field'] ] = true;
+			}
+		}
+
+		$new_columns = array(
+			'last_used_ip'       => 'ADD COLUMN last_used_ip VARCHAR(45) NULL AFTER last_used_at',
+			'last_used_ua'       => 'ADD COLUMN last_used_ua VARCHAR(255) NULL AFTER last_used_ip',
+			'refresh_expires_at' => 'ADD COLUMN refresh_expires_at BIGINT(20) UNSIGNED NULL AFTER expires_at',
+		);
+
+		foreach ( $new_columns as $column => $sql_fragment ) {
+			if ( ! isset( $names[ $column ] ) ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Schema upgrade; fragment is a whitelisted constant string.
+				$wpdb->query( 'ALTER TABLE `' . esc_sql( $table ) . '` ' . $sql_fragment );
+			}
+		}
+
+		// Add last_used_at index if it doesn't exist.
+		$indexes = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+			'SHOW INDEX FROM `' . esc_sql( $table ) . '` WHERE Key_name = \'last_used_at\'',
+			ARRAY_A
+		);
+		if ( empty( $indexes ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+			$wpdb->query( 'ALTER TABLE `' . esc_sql( $table ) . '` ADD INDEX last_used_at (last_used_at)' );
+		}
+
+		self::set_version( '2.0.0' );
+	}
+
+	/**
+	 * Upgrade to version 2.0.1 — backfill refresh_expires_at from oauth_tokens.
+	 *
+	 * Joins the registry against oauth_tokens on token prefix to populate
+	 * refresh_expires_at where it is currently NULL.
+	 * Idempotent: WHERE clause limits to NULL rows only.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_1() {
+		global $wpdb;
+
+		$registry   = $wpdb->prefix . 'aiconnect_token_registry';
+		$oauth_toks = $wpdb->prefix . 'goldtwmcp_oauth_tokens';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$wpdb->query(
+			"UPDATE `{$registry}` r
+			 INNER JOIN `{$oauth_toks}` t ON LEFT(t.token, 16) = r.token_prefix
+			 SET r.refresh_expires_at = UNIX_TIMESTAMP(t.refresh_token_expires_at)
+			 WHERE r.refresh_expires_at IS NULL
+			   AND t.refresh_token_expires_at IS NOT NULL"
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		self::set_version( '2.0.1' );
+	}
+
+	/**
+	 * Upgrade to version 2.0.2 — backfill registry rows for pre-existing oauth tokens.
+	 *
+	 * Any oauth_token that has no corresponding registry row (e.g. issued before
+	 * the registry existed) gets a synthetic row so it appears in the UI.
+	 * Idempotent: uses LEFT JOIN / IS NULL to find missing rows only.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_2() {
+		global $wpdb;
+
+		$registry   = $wpdb->prefix . 'aiconnect_token_registry';
+		$oauth_toks = $wpdb->prefix . 'goldtwmcp_oauth_tokens';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$wpdb->query(
+			"INSERT INTO `{$registry}` (token_prefix, user_id, client_id, scope, issued_at, expires_at, refresh_expires_at, source, revoked_at, revoked_by)
+			 SELECT
+			   LEFT(t.token, 16),
+			   t.user_id,
+			   t.client_id,
+			   '',
+			   UNIX_TIMESTAMP(t.created_at),
+			   UNIX_TIMESTAMP(t.expires_at),
+			   UNIX_TIMESTAMP(t.refresh_token_expires_at),
+			   'oauth',
+			   CASE WHEN t.revoked_at IS NOT NULL THEN UNIX_TIMESTAMP(t.revoked_at) ELSE NULL END,
+			   CASE WHEN t.revoked_at IS NOT NULL THEN 0 ELSE NULL END
+			 FROM `{$oauth_toks}` t
+			 LEFT JOIN `{$registry}` r ON LEFT(t.token, 16) = r.token_prefix
+			 WHERE r.id IS NULL
+			   AND UNIX_TIMESTAMP(t.created_at) > 0"
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		self::set_version( '2.0.2' );
+	}
+
+	/**
+	 * Upgrade to version 2.0.3 — auto-revoke legacy backfilled tokens.
+	 *
+	 * Tokens inserted by 2.0.2 (never used, no IP signature) are considered
+	 * forgotten/leaked and are revoked as a security baseline. The cascade into
+	 * oauth_tokens is handled by the registry revoke path.
+	 *
+	 * Identification of backfilled rows:
+	 *   revoked_at IS NULL AND last_used_at IS NULL AND last_used_ip IS NULL
+	 *   AND last_used_ua IS NULL AND source = 'oauth' AND revoked_by IS NULL
+	 *   AND ip_address IS NULL
+	 *
+	 * Idempotent: only touches rows matching the backfill signature.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_3() {
+		global $wpdb;
+
+		$registry   = $wpdb->prefix . 'aiconnect_token_registry';
+		$oauth_toks = $wpdb->prefix . 'goldtwmcp_oauth_tokens';
+		$now        = time();
+		$now_mysql  = gmdate( 'Y-m-d H:i:s', $now );
+
+		// Collect prefixes of legacy rows so we can cascade into oauth_tokens.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$prefixes = $wpdb->get_col(
+			"SELECT token_prefix FROM `{$registry}`
+			 WHERE revoked_at IS NULL
+			   AND last_used_at IS NULL
+			   AND last_used_ip IS NULL
+			   AND last_used_ua IS NULL
+			   AND ip_address IS NULL
+			   AND source = 'oauth'"
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		if ( ! empty( $prefixes ) ) {
+			// Revoke in registry.
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE `{$registry}`
+					 SET revoked_at = %d, revoked_by = 0
+					 WHERE revoked_at IS NULL
+					   AND last_used_at IS NULL
+					   AND last_used_ip IS NULL
+					   AND last_used_ua IS NULL
+					   AND ip_address IS NULL
+					   AND source = 'oauth'",
+					$now
+				)
+			);
+			// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+			// Cascade into oauth_tokens.
+			$safe_prefixes = array_filter(
+				$prefixes,
+				function ( $p ) {
+					return is_string( $p ) && strlen( $p ) >= 4 && strlen( $p ) <= 32;
+				}
+			);
+
+			if ( ! empty( $safe_prefixes ) ) {
+				$placeholders = implode( ', ', array_fill( 0, count( $safe_prefixes ), '%s' ) );
+				// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+				$wpdb->query(
+					$wpdb->prepare(
+						"UPDATE `{$oauth_toks}`
+						 SET revoked_at = %s
+						 WHERE revoked_at IS NULL
+						   AND LEFT(token, 16) IN ({$placeholders})",
+						array_merge( array( $now_mysql ), $safe_prefixes )
+					)
+				);
+				// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+			}
+		}
+
+		self::set_version( '2.0.3' );
 	}
 
 	/**

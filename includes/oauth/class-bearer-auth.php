@@ -65,7 +65,18 @@ class Bearer_Auth {
 			return $user_id;
 		}
 
-		Token_Registry::touch( $token );
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : null;
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : null;
+		Token_Registry::touch( $token, $ip, $ua );
+
+		// Lazy cleanup — best-effort, swallow all errors.
+		try {
+			if ( Token_Registry::should_run_cleanup() ) {
+				Token_Registry::run_cleanup();
+			}
+		} catch ( \Throwable $e ) {
+			unset( $e ); // Intentionally swallowed — cleanup must never break auth.
+		}
 
 		return $token_data['user_id'];
 	}
@@ -110,7 +121,9 @@ class Bearer_Auth {
 			);
 		}
 
-		Token_Registry::touch( $token );
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : null;
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : null;
+		Token_Registry::touch( $token, $ip, $ua );
 
 		return true;
 	}
