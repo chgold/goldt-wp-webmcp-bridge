@@ -43,7 +43,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							echo esc_html( implode( ', ', $goldtwmcp_scopes ) );
 							?>
 						</td>
-						<td><?php echo esc_html( mysql2date( 'Y-m-d H:i', $goldtwmcp_token->created_at ) ); ?></td>
+						<td><?php echo esc_html( gmdate( 'Y-m-d H:i', strtotime( $goldtwmcp_token->created_at . ' UTC' ) ) ); ?></td>
 						<td>
 							<?php
 							$goldtwmcp_expires = strtotime( $goldtwmcp_token->expires_at . ' UTC' );
@@ -51,7 +51,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							if ( $goldtwmcp_expires < $goldtwmcp_now ) {
 								echo '<span style="color: #dc3232;">' . esc_html__( 'Expired', 'goldt-webmcp-bridge' ) . '</span>';
 							} else {
-								echo esc_html( mysql2date( 'Y-m-d H:i', $goldtwmcp_token->expires_at ) );
+								echo esc_html( gmdate( 'Y-m-d H:i', strtotime( $goldtwmcp_token->expires_at . ' UTC' ) ) );
 							}
 							?>
 						</td>
@@ -62,7 +62,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								if ( $goldtwmcp_refresh_expires < $goldtwmcp_now ) {
 									echo '<span style="color: #dc3232;">' . esc_html__( 'Expired', 'goldt-webmcp-bridge' ) . '</span>';
 								} else {
-									echo esc_html( mysql2date( 'Y-m-d H:i', $goldtwmcp_token->refresh_token_expires_at ) );
+									echo esc_html( gmdate( 'Y-m-d H:i', strtotime( $goldtwmcp_token->refresh_token_expires_at . ' UTC' ) ) );
 								}
 							} else {
 								echo '<span style="color: #999;">' . esc_html__( 'N/A', 'goldt-webmcp-bridge' ) . '</span>';
