@@ -271,14 +271,14 @@ class GoldtWebMCP_Plugin {
 							<td>
 							<?php
 								global $wpdb;
-								echo $wpdb->db_server_info() ? '✓ Connected' : '✗ Not connected';
+								echo esc_html( $wpdb->db_server_info() ? '✓ Connected' : '✗ Not connected' );
 							?>
 							</td>
 						</tr>
 
 						<tr>
 							<td><strong>Redis:</strong></td>
-							<td><?php echo extension_loaded( 'redis' ) ? '✓ Available' : '○ Not installed (optional)'; ?></td>
+							<td><?php echo esc_html( extension_loaded( 'redis' ) ? '✓ Available' : '○ Not installed (optional)' ); ?></td>
 						</tr>
 						<tr>
 							<td><strong>Composer Dependencies:</strong></td>

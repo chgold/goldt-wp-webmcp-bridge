@@ -3,7 +3,7 @@
  * Plugin Name: GoldT WebMCP Bridge
  * Plugin URI: https://goldt-webmcp-bridge.gold-t.co.il/
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
- * Version: 0.5.0
+ * Version: 0.5.1
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '0.5.0' );
+define( 'GOLDTWMCP_VERSION', '0.5.1' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
 
@@ -133,17 +133,6 @@ function goldtwmcp_init() {
 		return;
 	}
 
-	if ( ! class_exists( 'WooCommerce' ) ) {
-		add_action(
-			'admin_notices',
-			function () {
-				echo '<div class="notice notice-warning"><p>';
-				echo esc_html__( 'GoldT WebMCP Bridge: WooCommerce is recommended for full functionality.', 'goldt-webmcp-bridge' );
-				echo '</p></div>';
-			}
-		);
-	}
-
 	require_once GOLDTWMCP_PATH . 'includes/class-goldtwmcp.php';
 	$plugin = new GoldtWebMCP_Plugin();
 	$plugin->run();
@@ -157,7 +146,7 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'goldtwmcp_act
  * @return array
  */
 function goldtwmcp_action_links( $links ) {
-	$settings_link = '<a href="admin.php?page=goldtwmcp">' . esc_html__( 'Settings', 'goldt-webmcp-bridge' ) . '</a>';
+	$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=goldt-webmcp-bridge' ) ) . '">' . esc_html__( 'Settings', 'goldt-webmcp-bridge' ) . '</a>';
 	array_unshift( $links, $settings_link );
 	return $links;
 }
