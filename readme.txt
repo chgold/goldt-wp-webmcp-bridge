@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,11 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. API Response - Example JSON response from API call
 
 == Changelog ==
+
+= 0.5.1 - 2026-06-01 =
+* Fixed: Settings link in plugins list pointed to non-existent page slug `goldtwmcp` — corrected to `goldt-webmcp-bridge`.
+* Fixed: Two unescaped `echo` calls in admin status page wrapped with `esc_html()`.
+* Removed: Unnecessary WooCommerce recommendation notice (WooCommerce is not required by this plugin).
 
 = 0.4.6 - 2026-05-20 =
 * Fixed (security): searchPosts and searchPages now hardcode post_status=publish instead of 'any'. WP_Query with 'any' bypasses WordPress capability checks entirely and returns all posts including other users' drafts — even to subscribers. Reverted to explicit 'publish'.
