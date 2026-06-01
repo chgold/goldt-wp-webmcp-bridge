@@ -21,7 +21,7 @@ class GoldtWebMCP_Plugin {
 	 *
 	 * @var string
 	 */
-	private $version = '0.4.0';
+	private $version = GOLDTWMCP_VERSION;
 
 	/**
 	 * Manifest instance.

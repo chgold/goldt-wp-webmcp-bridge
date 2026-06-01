@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.2
+Stable tag: 0.5.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. API Response - Example JSON response from API call
 
 == Changelog ==
+
+= 0.5.3 - 2026-06-01 =
+* Fixed: Admin status page was displaying version 0.4.0 instead of the actual plugin version. Changed hardcoded `$version = '0.4.0'` class property to use `GOLDTWMCP_VERSION` constant.
 
 = 0.5.2 - 2026-06-01 =
 * Fixed: Replaced deprecated `mysql2date()` calls with `gmdate()` in OAuth tokens admin view (deprecated since WordPress 5.3).
