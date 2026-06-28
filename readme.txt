@@ -352,8 +352,8 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 1. Dashboard - System status and quick access to settings
 2. Settings - Security controls, rate limits, user management
-3. WebMCP Manifest - Auto-generated tool definitions
-4. API Response - Example JSON response from API call
+3. Connect page - One-click prompt generator for Claude, ChatGPT, Gemini, and other AI agents
+4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
 
