@@ -216,17 +216,27 @@ class Info_Page {
 			<button class="aic-copy-btn" onclick="aicCopy('aic-manifest-url', this)">Copy</button>
 		</div>
 
-		<div class="aic-label">OAuth Authorize URL</div>
-		<div class="aic-url-row">
-			<input id="aic-oauth-url" type="text" class="aic-url-input" value="<?php echo esc_attr( home_url( '/?goldtwmcp_oauth_authorize=1' ) ); ?>" readonly>
-			<button class="aic-copy-btn" onclick="aicCopy('aic-oauth-url', this)">Copy</button>
+		<?php if ( $is_logged_in ) : ?>
+		<!-- Personalized prompt generator (logged-in users only) -->
+		<div style="margin-top:20px;">
+			<div class="aic-label">&#129302; AI Connection Prompt &mdash; one-click setup with your personal token</div>
+			<p style="font-size:13px;color:#9ca3af;margin:4px 0 12px;">
+				Generates a ready-to-paste prompt for Claude, ChatGPT or any WebMCP client. Includes your Bearer token so the AI connects instantly — no OAuth dance required.
+			</p>
+			<button id="aic-gen-btn" class="aic-prompt-copy-btn" style="margin-bottom:12px;" onclick="aicGeneratePrompt(this)">&#9889; Generate AI Prompt</button>
+			<div id="aic-prompt-result" style="display:none;">
+				<textarea id="aic-generated-prompt" class="aic-prompt-textarea" readonly rows="18"></textarea>
+				<button class="aic-prompt-copy-btn" style="margin-top:8px;" onclick="aicCopy('aic-generated-prompt',this)">&#128203; Copy Prompt</button>
+			</div>
+			<div id="aic-gen-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
 		</div>
-
-		<div class="aic-label" style="margin-top: 4px;">Quick Prompt &mdash; paste this into your AI agent to get started</div>
+		<?php else : ?>
+		<div class="aic-label" style="margin-top: 16px;">Quick Prompt &mdash; paste this into your AI agent to get started</div>
 		<div class="aic-prompt-wrap">
 			<textarea id="aic-quick-prompt" class="aic-prompt-textarea" readonly><?php echo esc_textarea( $quick_prompt ); ?></textarea>
 			<button class="aic-prompt-copy-btn" onclick="aicCopy('aic-quick-prompt', this)">Copy</button>
 		</div>
+		<?php endif; ?>
 	</div>
 
 	<!-- Section 2: Supported AI Platforms -->
@@ -284,7 +294,44 @@ class Info_Page {
 </div>
 
 		<?php wp_footer(); ?>
-
+<script>
+function aicGeneratePrompt(btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  var err = document.getElementById('aic-gen-error');
+  err.style.display = 'none';
+  fetch('<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/generate-prompt' ) ); ?>', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-WP-Nonce': '<?php echo esc_js( wp_create_nonce( 'wp_rest' ) ); ?>'
+    },
+    body: JSON.stringify({ scope: 'read write' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data && data.prompt) {
+      var ta = document.getElementById('aic-generated-prompt');
+      ta.value = data.prompt;
+      ta.rows = data.prompt.split('\n').length + 2;
+      document.getElementById('aic-prompt-result').style.display = 'block';
+      btn.style.display = 'none';
+    } else {
+      err.textContent = (data && data.message) ? data.message : 'Failed to generate prompt.';
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '⚡ Generate AI Prompt';
+    }
+  })
+  .catch(function(e) {
+    err.textContent = 'Error: ' + e.message;
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '⚡ Generate AI Prompt';
+  });
+}
+</script>
 </body>
 </html>
 		<?php
