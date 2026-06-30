@@ -1,264 +1,775 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/**
+ * AI Connect — Modern Console Hero design.
+ * All rules scoped under .aiconnect-app to avoid collisions with WP admin
+ * styles or third-party plugins on the same page.
+ *
+ * Design tokens (CSS variables) match the brand mockup spec.
+ */
 
-body {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-	background: #f0f2f5;
-	color: #1a1a2e;
-	min-height: 100vh;
+.aiconnect-app {
+	--ink: #0B1220;
+	--ink-2: #111A2B;
+	--coral: #FF5D52;
+	--coral-press: #E84A40;
+	--canvas: #F2F4F7;
+	--card: #FFFFFF;
+	--line: #E3E8EF;
+	--line-soft: #EEF1F5;
+	--signal: #34D399;
+	--muted: #64748B;
+	--muted-2: #94A3B8;
+	--text: #1E293B;
+	--console-line: #1E2A3D;
+	--console-text: #C7D2E0;
+	--console-mute: #6B7B92;
+	--radius: 16px;
+	--radius-sm: 10px;
+	--shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(15,23,42,.12);
+	--shadow-console: 0 24px 60px -24px rgba(11,18,32,.55);
+	--font-display: "Space Grotesk", system-ui, sans-serif;
+	--font-body: "Inter", system-ui, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-.aic-header {
-	background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-	color: #fff;
-	padding: 32px 24px 28px;
-	text-align: center;
+/* Reset only inside the app root — no global *{...} so we don't fight WP. */
+.aiconnect-app, .aiconnect-app *, .aiconnect-app *::before, .aiconnect-app *::after {
+	box-sizing: border-box;
 }
 
-.aic-header-logo {
+body.aiconnect-page {
+	margin: 0;
+	background: #F2F4F7;
+	color: #1E293B;
+	font-family: "Inter", system-ui, sans-serif;
+	font-size: 15px;
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
+	scroll-behavior: smooth;
+}
+
+/* ============================================================
+ * Page shell
+ * ============================================================ */
+.aiconnect-app .shell {
+	max-width: 1080px;
+	margin: 0 auto;
+	padding: 40px 24px 80px;
+}
+
+/* ============================================================
+ * Brand header
+ * ============================================================ */
+.aiconnect-app .pagehead {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin-bottom: 32px;
+}
+.aiconnect-app .logo {
+	width: 48px;
+	height: 48px;
+	border-radius: 13px;
+	flex: none;
+	background: linear-gradient(145deg, #FF6E63, #FF4438);
+	display: grid;
+	place-items: center;
+	box-shadow: 0 6px 16px -6px rgba(255,68,56,.6);
+}
+.aiconnect-app .logo svg { width: 26px; height: 26px; }
+.aiconnect-app .pagehead .titles h1 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 22px;
+	letter-spacing: -.02em;
+	margin: 0;
+	color: var(--ink);
+}
+.aiconnect-app .pagehead .titles p {
+	margin: 1px 0 0;
+	color: var(--muted);
+	font-size: 13.5px;
+	letter-spacing: .01em;
+}
+.aiconnect-app .pagehead .spacer { flex: 1; }
+.aiconnect-app .rolepill {
 	display: inline-flex;
 	align-items: center;
-	gap: 12px;
-	margin-bottom: 8px;
+	gap: 7px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	padding: 7px 13px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--text);
 }
+.aiconnect-app .rolepill .dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--signal);
+	box-shadow: 0 0 0 3px rgba(52,211,153,.18);
+}
+.aiconnect-app .tokens-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	padding: 7px 13px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--text);
+	cursor: pointer;
+	font-family: inherit;
+	transition: background .14s ease, border-color .14s ease;
+}
+.aiconnect-app .tokens-pill:hover { background: var(--canvas); border-color: #CED7E2; }
+.aiconnect-app .tokens-pill .count { color: var(--muted-2); font-size: 12px; font-weight: 400; }
+.aiconnect-app .docslink {
+	font-size: 13px;
+	color: var(--muted);
+	text-decoration: none;
+	font-weight: 500;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 4px;
+}
+.aiconnect-app .docslink:hover { color: var(--ink); }
 
-.aic-header-icon {
-	width: 40px;
-	height: 40px;
-	background: #e94560;
-	border-radius: 10px;
+/* ============================================================
+ * Console hero (the signature)
+ * ============================================================ */
+.aiconnect-app .console {
+	position: relative;
+	background: var(--ink);
+	color: var(--console-text);
+	border-radius: var(--radius);
+	overflow: hidden;
+	box-shadow: var(--shadow-console);
+	margin-bottom: 24px;
+	border: 1px solid #14203414;
+}
+.aiconnect-app .console::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		radial-gradient(620px 220px at 88% -8%, rgba(255,93,82,.16), transparent 70%),
+		radial-gradient(520px 260px at 4% 110%, rgba(52,211,153,.07), transparent 70%);
+}
+.aiconnect-app .console-top {
+	position: relative;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	font-size: 20px;
+	gap: 10px;
+	padding: 14px 20px;
+	border-bottom: 1px solid var(--console-line);
+}
+.aiconnect-app .traffic { display: flex; gap: 7px; }
+.aiconnect-app .traffic i {
+	width: 11px;
+	height: 11px;
+	border-radius: 50%;
+	display: block;
+}
+.aiconnect-app .traffic i:nth-child(1) { background: #FF5F57; }
+.aiconnect-app .traffic i:nth-child(2) { background: #FEBC2E; }
+.aiconnect-app .traffic i:nth-child(3) { background: #28C840; }
+.aiconnect-app .console-top .label {
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--console-mute);
+	letter-spacing: .02em;
+	margin-left: 6px;
+}
+.aiconnect-app .console-top .ready {
+	margin-left: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	color: #8EE9C4;
+	background: rgba(52,211,153,.08);
+	border: 1px solid rgba(52,211,153,.22);
+	padding: 4px 10px;
+	border-radius: 999px;
+}
+.aiconnect-app .console-top .ready .pulse {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--signal);
+	box-shadow: 0 0 0 0 rgba(52,211,153,.6);
+	animation: aic-pulse 2.4s infinite;
+}
+@keyframes aic-pulse {
+	0% { box-shadow: 0 0 0 0 rgba(52,211,153,.5); }
+	70% { box-shadow: 0 0 0 7px rgba(52,211,153,0); }
+	100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
 }
 
-.aic-header h1 {
-	font-size: 28px;
-	font-weight: 700;
-	letter-spacing: -0.5px;
+.aiconnect-app .console-body { position: relative; padding: 28px 28px 26px; }
+.aiconnect-app .console-body .eyebrow {
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	color: var(--coral);
+	margin: 0 0 10px;
 }
-
-.aic-header-sub {
-	font-size: 15px;
-	opacity: 0.75;
-	margin-top: 4px;
+.aiconnect-app .console-body h2 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 25px;
+	letter-spacing: -.02em;
+	color: #fff;
+	margin: 0 0 8px;
 }
-
-.aic-user-badge {
-	display: inline-block;
-	margin-top: 14px;
-	background: rgba(255,255,255,0.12);
-	border: 1px solid rgba(255,255,255,0.2);
-	border-radius: 20px;
-	padding: 5px 16px;
-	font-size: 13px;
-	color: #e0e0e0;
+.aiconnect-app .console-body .lede {
+	color: #A9B6C8;
+	font-size: 14.5px;
+	max-width: 60ch;
+	margin: 0 0 22px;
 }
+.aiconnect-app .console-body .lede b { color: #D7E0EC; font-weight: 600; }
 
-.aic-login-notice {
-	display: inline-block;
-	margin-top: 14px;
-	background: rgba(233,69,96,0.2);
-	border: 1px solid rgba(233,69,96,0.4);
-	border-radius: 20px;
-	padding: 5px 16px;
-	font-size: 13px;
-	color: #ffb3be;
+.aiconnect-app .btn {
+	font-family: var(--font-body);
+	font-weight: 600;
+	font-size: 14px;
+	border: none;
+	border-radius: 11px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	padding: 12px 20px;
+	transition: transform .12s ease, background .15s ease, box-shadow .15s ease;
 }
-
-.aic-container {
-	max-width: 860px;
-	margin: 32px auto;
-	padding: 0 16px 48px;
+.aiconnect-app .btn:active { transform: translateY(1px); }
+.aiconnect-app .btn:disabled { opacity: .65; cursor: wait; transform: none; }
+.aiconnect-app .btn-primary {
+	background: var(--coral);
+	color: #fff;
+	box-shadow: 0 8px 20px -8px rgba(255,93,82,.7);
 }
+.aiconnect-app .btn-primary:hover { background: var(--coral-press); }
+.aiconnect-app .btn svg { width: 17px; height: 17px; }
 
-.aic-card {
-	background: #fff;
+/* Generated output (inside console) */
+.aiconnect-app .output {
+	margin-top: 24px;
+	border: 1px solid var(--console-line);
 	border-radius: 12px;
-	box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-	padding: 28px 32px;
+	background: #0A111E;
+	overflow: hidden;
+}
+.aiconnect-app .output-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 11px 16px;
+	border-bottom: 1px solid var(--console-line);
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--console-mute);
+}
+.aiconnect-app .output-head .tag { color: #8EE9C4; }
+.aiconnect-app .output-head .acts { margin-left: auto; display: flex; gap: 8px; }
+.aiconnect-app .miniact {
+	font-family: var(--font-body);
+	font-size: 12px;
+	font-weight: 500;
+	color: #B6C2D2;
+	background: rgba(255,255,255,.04);
+	border: 1px solid var(--console-line);
+	border-radius: 8px;
+	padding: 5px 11px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	transition: background .14s ease, border-color .14s ease;
+}
+.aiconnect-app .miniact:hover { background: rgba(255,255,255,.08); border-color: #2C3B52; }
+.aiconnect-app .miniact:disabled { opacity: .6; cursor: wait; }
+.aiconnect-app .miniact svg { width: 13px; height: 13px; }
+.aiconnect-app .output pre {
+	margin: 0;
+	padding: 18px 18px 20px;
+	overflow: auto;
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	line-height: 1.7;
+	color: #9FB0C4;
+	white-space: pre-wrap;
+	word-break: break-all;
+	max-height: 520px;
+}
+.aiconnect-app .output pre.is-placeholder { color: var(--console-mute); font-style: italic; }
+.aiconnect-app .output .c-key { color: #FF8A82; }
+.aiconnect-app .output .c-val { color: #8EE9C4; }
+.aiconnect-app .output .c-note { color: #6B7B92; }
+.aiconnect-app .output .c-tool { color: #C8D4E4; }
+
+.aiconnect-app .gen-error {
+	margin-top: 16px;
+	padding: 12px 16px;
+	background: rgba(239,68,68,.1);
+	border: 1px solid rgba(239,68,68,.3);
+	border-radius: 8px;
+	color: #FCA5A5;
+	font-size: 13px;
+	font-family: var(--font-mono);
+}
+
+/* ============================================================
+ * Generic card
+ * ============================================================ */
+.aiconnect-app .card {
+	background: var(--card);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
 	margin-bottom: 24px;
 }
-
-.aic-card-title {
-	font-size: 18px;
-	font-weight: 700;
-	color: #0f3460;
-	margin-bottom: 18px;
-	padding-bottom: 12px;
-	border-bottom: 2px solid #f0f2f5;
+.aiconnect-app .card-pad { padding: 24px 26px; }
+.aiconnect-app .sec-head {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 11px;
+	margin-bottom: 4px;
 }
-
-.aic-label {
-	font-size: 12px;
+.aiconnect-app .sec-head .ico {
+	width: 34px;
+	height: 34px;
+	border-radius: 9px;
+	flex: none;
+	background: #FFF1F0;
+	color: var(--coral);
+	display: grid;
+	place-items: center;
+}
+.aiconnect-app .sec-head .ico svg { width: 18px; height: 18px; }
+.aiconnect-app .sec-head h3 {
+	font-family: var(--font-display);
 	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.6px;
-	color: #6b7280;
-	margin-bottom: 6px;
+	font-size: 17px;
+	letter-spacing: -.01em;
+	margin: 0;
+	color: var(--ink);
+}
+.aiconnect-app .sec-head p {
+	margin: 1px 0 0;
+	font-size: 13px;
+	color: var(--muted);
 }
 
-.aic-url-row {
+/* Disclosure (Manual setup) */
+.aiconnect-app details.disclosure {
+	background: var(--card);
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	margin-bottom: 24px;
+	box-shadow: var(--shadow);
+}
+.aiconnect-app details.disclosure summary {
+	list-style: none;
+	cursor: pointer;
+	padding: 17px 24px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-weight: 550;
+	color: var(--text);
+}
+.aiconnect-app details.disclosure summary::-webkit-details-marker { display: none; }
+.aiconnect-app details.disclosure summary .chev {
+	width: 18px;
+	height: 18px;
+	color: var(--muted-2);
+	transition: transform .2s ease;
+}
+.aiconnect-app details.disclosure[open] summary .chev { transform: rotate(90deg); }
+.aiconnect-app details.disclosure summary .sub {
+	color: var(--muted);
+	font-weight: 400;
+	font-size: 13.5px;
+}
+.aiconnect-app details.disclosure .disc-body {
+	padding: 0 24px 22px 54px;
+	color: var(--muted);
+	font-size: 13.5px;
+}
+.aiconnect-app details.disclosure .disc-body .url-row {
 	display: flex;
 	align-items: stretch;
 	gap: 0;
-	margin-bottom: 18px;
+	margin-top: 12px;
 	border-radius: 8px;
 	overflow: hidden;
-	border: 1px solid #e2e8f0;
+	border: 1px solid var(--line);
 }
-
-.aic-url-input {
+.aiconnect-app details.disclosure .disc-body .url-row input {
 	flex: 1;
-	font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+	font-family: var(--font-mono);
 	font-size: 13px;
 	padding: 10px 14px;
 	border: none;
-	background: #f8fafc;
-	color: #1e293b;
+	background: #F8FAFC;
+	color: #1E293B;
 	outline: none;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-
-.aic-copy-btn {
+.aiconnect-app details.disclosure .disc-body .url-row button {
 	padding: 10px 18px;
-	background: #0f3460;
+	background: var(--ink);
 	color: #fff;
 	border: none;
 	cursor: pointer;
 	font-size: 13px;
 	font-weight: 600;
-	transition: background 0.15s ease;
+	font-family: var(--font-body);
+	transition: background .15s ease;
 	white-space: nowrap;
 }
+.aiconnect-app details.disclosure .disc-body .url-row button:hover { background: var(--ink-2); }
+.aiconnect-app details.disclosure .disc-body .url-row button.copied { background: var(--signal); color: var(--ink); }
 
-.aic-copy-btn:hover { background: #16213e; }
-.aic-copy-btn.copied { background: #16a34a; }
+/* ============================================================
+ * Tokens controls (inside modal)
+ * ============================================================ */
+.aiconnect-app .tk-controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 18px 0 4px;
+	flex-wrap: wrap;
+}
+.aiconnect-app .select {
+	font-family: var(--font-body);
+	font-size: 13.5px;
+	color: var(--text);
+	border: 1px solid var(--line);
+	border-radius: 9px;
+	padding: 8px 12px;
+	background: #fff;
+}
+.aiconnect-app .btn-ghost {
+	background: #fff;
+	border: 1px solid var(--line);
+	color: var(--text);
+	border-radius: 9px;
+	padding: 8px 13px;
+	font-size: 13.5px;
+	font-weight: 500;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	font-family: var(--font-body);
+	transition: background .14s ease;
+}
+.aiconnect-app .btn-ghost:hover { background: var(--canvas); }
+.aiconnect-app .btn-ghost svg { width: 14px; height: 14px; }
+.aiconnect-app .btn-danger { color: #B91C1C; border-color: #FBD5D5; background: #FEF6F6; }
+.aiconnect-app .btn-danger:hover { background: #FDECEC; }
+.aiconnect-app .tk-controls .spacer { flex: 1; }
 
-.aic-prompt-wrap {
-	position: relative;
+.aiconnect-app .empty {
+	margin-top: 18px;
+	border: 1px dashed var(--line);
+	border-radius: 13px;
+	padding: 34px 24px;
+	text-align: center;
+	background: #FBFCFD;
+}
+.aiconnect-app .empty .ico {
+	width: 42px;
+	height: 42px;
+	border-radius: 12px;
+	margin: 0 auto 12px;
+	background: #F1F5F9;
+	color: var(--muted-2);
+	display: grid;
+	place-items: center;
+}
+.aiconnect-app .empty .ico svg { width: 21px; height: 21px; }
+.aiconnect-app .empty h4 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 15px;
+	color: var(--ink);
+	margin: 0 0 4px;
+}
+.aiconnect-app .empty p {
+	margin: 0 auto;
+	max-width: 46ch;
+	font-size: 13.5px;
+	color: var(--muted);
 }
 
-.aic-prompt-textarea {
-	width: 100%;
-	font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+.aiconnect-app .tokens-list {
+	margin-top: 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.aiconnect-app .token-row {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 14px;
+	padding: 12px 14px;
+	background: #F8FAFC;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+}
+.aiconnect-app .token-row.is-revoked { opacity: .55; background: #FEF6F6; border-color: #FBD5D5; }
+.aiconnect-app .token-row.is-expired { opacity: .75; }
+.aiconnect-app .token-info {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 	font-size: 13px;
-	line-height: 1.6;
-	padding: 14px;
-	border: 1px solid #e2e8f0;
-	border-radius: 8px;
-	background: #f8fafc;
-	color: #1e293b;
-	resize: none;
-	outline: none;
-	height: 100px;
+	color: var(--text);
+	min-width: 0;
 }
-
-.aic-prompt-copy-btn {
-	position: absolute;
-	top: 10px;
-	right: 10px;
+.aiconnect-app .token-line {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+.aiconnect-app .token-info code {
+	background: #fff;
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	color: var(--ink);
+	font-family: var(--font-mono);
+	border: 1px solid var(--line);
+}
+.aiconnect-app .token-meta { color: var(--muted); font-size: 12px; }
+.aiconnect-app .state-badge {
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .4px;
+	font-family: var(--font-mono);
+}
+.aiconnect-app .state-active { background: #DCFCE7; color: #166534; }
+.aiconnect-app .state-expired { background: #FEF3C7; color: #92400E; }
+.aiconnect-app .state-revoked { background: #FECACA; color: #991B1B; }
+.aiconnect-app .token-revoke {
 	padding: 6px 14px;
-	background: #0f3460;
+	background: #DC2626;
 	color: #fff;
 	border: none;
 	border-radius: 6px;
 	cursor: pointer;
 	font-size: 12px;
 	font-weight: 600;
-	transition: background 0.15s ease;
+	font-family: var(--font-body);
 }
+.aiconnect-app .token-revoke:hover { background: #B91C1C; }
+.aiconnect-app .token-revoke:disabled { opacity: .5; cursor: not-allowed; }
 
-.aic-prompt-copy-btn:hover { background: #16213e; }
-.aic-prompt-copy-btn.copied { background: #16a34a; }
-
-.aic-platforms-grid {
+/* ============================================================
+ * Platforms grid
+ * ============================================================ */
+.aiconnect-app .plat-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+	grid-template-columns: repeat(4, 1fr);
 	gap: 10px;
+	margin-top: 18px;
 }
-
-.aic-platform-chip {
+.aiconnect-app .plat {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 10px 14px;
-	border: 1px solid #e2e8f0;
-	border-radius: 8px;
-	background: #f8fafc;
-	font-size: 13px;
+	gap: 9px;
+	border: 1px solid var(--line);
+	border-radius: 11px;
+	padding: 12px 13px;
+	font-size: 13.5px;
 	font-weight: 500;
-	color: #374151;
+	color: var(--text);
+	transition: border-color .14s ease, background .14s ease;
 }
-
-.aic-platform-dot {
+.aiconnect-app .plat:hover { border-color: #CED7E2; background: #FBFCFD; }
+.aiconnect-app .plat .dot {
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	background: #22c55e;
-	flex-shrink: 0;
+	background: var(--signal);
+	flex: none;
+	box-shadow: 0 0 0 3px rgba(52,211,153,.14);
+}
+.aiconnect-app .plat .sub {
+	display: block;
+	font-size: 11.5px;
+	color: var(--muted-2);
+	font-weight: 400;
+	margin-top: 1px;
+}
+.aiconnect-app .plat.feat { border-color: #FFD9D5; background: #FFF7F6; }
+.aiconnect-app .plat.feat .dot {
+	background: var(--coral);
+	box-shadow: 0 0 0 3px rgba(255,93,82,.14);
 }
 
-.aic-steps {
-	counter-reset: aic-step;
-	list-style: none;
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-}
-
-.aic-step {
-	display: flex;
+/* ============================================================
+ * Steps rail
+ * ============================================================ */
+.aiconnect-app .steps {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
 	gap: 16px;
-	align-items: flex-start;
+	margin-top: 20px;
 }
-
-.aic-step-num {
-	counter-increment: aic-step;
-	width: 30px;
-	height: 30px;
-	border-radius: 50%;
-	background: #0f3460;
+.aiconnect-app .step { position: relative; padding-top: 6px; }
+.aiconnect-app .step .num {
+	font-family: var(--font-mono);
+	font-weight: 600;
+	font-size: 12px;
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	display: grid;
+	place-items: center;
+	background: var(--ink);
 	color: #fff;
-	font-size: 14px;
-	font-weight: 700;
+	margin-bottom: 12px;
+}
+.aiconnect-app .step h5 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 14.5px;
+	color: var(--ink);
+	margin: 0 0 5px;
+	letter-spacing: -.01em;
+}
+.aiconnect-app .step p {
+	margin: 0;
+	font-size: 13px;
+	color: var(--muted);
+	line-height: 1.5;
+}
+.aiconnect-app .step::after {
+	content: "";
+	position: absolute;
+	top: 19px;
+	left: 38px;
+	right: -8px;
+	height: 1px;
+	background: linear-gradient(90deg, var(--line), transparent);
+}
+.aiconnect-app .step:last-child::after { display: none; }
+
+/* ============================================================
+ * Modal (tokens history)
+ * ============================================================ */
+.aiconnect-app .modal-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(11,18,32,.55);
+	backdrop-filter: blur(4px);
+	z-index: 9998;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex-shrink: 0;
+	padding: 20px;
+	animation: aic-fade-in .15s ease;
+}
+.aiconnect-app .modal {
+	background: var(--card);
+	border-radius: var(--radius);
+	max-width: 760px;
+	width: 100%;
+	max-height: 85vh;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 24px 60px -16px rgba(11,18,32,.55);
+	animation: aic-slide-up .2s ease;
+}
+.aiconnect-app .modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 18px 24px;
+	border-bottom: 1px solid var(--line-soft);
+}
+.aiconnect-app .modal-title {
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--ink);
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.aiconnect-app .modal-close {
+	background: transparent;
+	border: none;
+	font-size: 26px;
+	line-height: 1;
+	color: var(--muted-2);
+	cursor: pointer;
+	padding: 4px 12px;
+	border-radius: 6px;
+	font-family: inherit;
+}
+.aiconnect-app .modal-close:hover { background: var(--canvas); color: var(--ink); }
+.aiconnect-app .modal-body { padding: 6px 24px 24px; overflow-y: auto; }
+
+/* ============================================================
+ * Utilities + a11y
+ * ============================================================ */
+.aiconnect-app .is-hidden { display: none !important; }
+.aiconnect-app a:focus-visible,
+.aiconnect-app button:focus-visible,
+.aiconnect-app summary:focus-visible,
+.aiconnect-app select:focus-visible {
+	outline: 2px solid var(--coral);
+	outline-offset: 2px;
+	border-radius: 8px;
 }
 
-.aic-step-content {
-	padding-top: 4px;
-}
+@keyframes aic-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes aic-slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-.aic-step-content strong {
-	display: block;
-	font-size: 14px;
-	color: #1a1a2e;
-	margin-bottom: 2px;
+/* ============================================================
+ * Responsive
+ * ============================================================ */
+@media (max-width: 860px) {
+	.aiconnect-app .plat-grid { grid-template-columns: repeat(2, 1fr); }
+	.aiconnect-app .steps { grid-template-columns: 1fr 1fr; }
+	.aiconnect-app .step::after { display: none; }
 }
-
-.aic-step-content span {
-	font-size: 13px;
-	color: #6b7280;
+@media (max-width: 560px) {
+	.aiconnect-app .shell { padding: 26px 16px 60px; }
+	.aiconnect-app .pagehead { flex-wrap: wrap; }
+	.aiconnect-app .pagehead .spacer { display: none; }
+	.aiconnect-app .console-body { padding: 22px 18px; }
+	.aiconnect-app .console-body h2 { font-size: 21px; }
+	.aiconnect-app .plat-grid,
+	.aiconnect-app .steps { grid-template-columns: 1fr; }
+	.aiconnect-app .docslink { display: none; }
 }
-
-.aic-footer {
-	text-align: center;
-	font-size: 12px;
-	color: #9ca3af;
-	margin-top: 12px;
+@media (prefers-reduced-motion: reduce) {
+	.aiconnect-app *,
+	.aiconnect-app *::before,
+	.aiconnect-app *::after {
+		animation: none !important;
+		transition: none !important;
+	}
 }
-
-.aic-footer a {
-	color: #6b7280;
-	text-decoration: none;
-}
-
-.aic-footer a:hover { text-decoration: underline; }
