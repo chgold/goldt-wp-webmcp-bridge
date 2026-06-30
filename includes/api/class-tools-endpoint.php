@@ -227,9 +227,10 @@ class Tools_Endpoint {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function generate_prompt( $request ) {
-		$user_id = \get_current_user_id();
-		$scope   = sanitize_text_field( $request->get_param( 'scope' ) ?: 'read write' );
-		$scopes  = array_filter( explode( ' ', $scope ) );
+		$user_id     = \get_current_user_id();
+		$scope_param = $request->get_param( 'scope' );
+		$scope       = sanitize_text_field( ! empty( $scope_param ) ? $scope_param : 'read write' );
+		$scopes      = array_filter( explode( ' ', $scope ) );
 
 		$oauth      = new \GoldtWebMCP\OAuth\OAuth_Server();
 		$token_data = $oauth->create_access_token( 'claude-ai', $user_id, $scopes, 'user-ui' );
@@ -258,16 +259,16 @@ class Tools_Endpoint {
 	 * @return string
 	 */
 	private function build_mcp_prompt( $access_token, $refresh_token ) {
-		$base_url     = \home_url();
-		$site_name    = \get_bloginfo( 'name' );
-		$parsed       = \wp_parse_url( $base_url );
-		$host         = $parsed['host'] ?? 'wordpress';
-		$path_part    = rtrim( $parsed['path'] ?? '', '/' );
-		$site_name_mcp = $path_part !== '' ? $host . $path_part : $host;
-		$site_key     = preg_replace( '/[^a-zA-Z0-9_-]/', '_', $site_name_mcp );
-		$manifest_url = \rest_url( 'goldt-webmcp-bridge/v1/manifest' );
-		$tool_root    = \rest_url( 'goldt-webmcp-bridge/v1/tools' );
-		$token_url    = \rest_url( 'goldt-webmcp-bridge/v1/oauth/token' );
+		$base_url      = \home_url();
+		$site_name     = \get_bloginfo( 'name' );
+		$parsed        = \wp_parse_url( $base_url );
+		$host          = $parsed['host'] ?? 'WordPress';
+		$path_part     = rtrim( $parsed['path'] ?? '', '/' );
+		$site_name_mcp = '' !== $path_part ? $host . $path_part : $host;
+		$site_key      = preg_replace( '/[^a-zA-Z0-9_-]/', '_', $site_name_mcp );
+		$manifest_url  = \rest_url( 'goldt-webmcp-bridge/v1/manifest' );
+		$tool_root     = \rest_url( 'goldt-webmcp-bridge/v1/tools' );
+		$token_url     = \rest_url( 'goldt-webmcp-bridge/v1/oauth/token' );
 
 		$all_tools  = array();
 		$read_tools = array();

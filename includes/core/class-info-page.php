@@ -216,6 +216,12 @@ class Info_Page {
 			<button class="aic-copy-btn" onclick="aicCopy('aic-manifest-url', this)">Copy</button>
 		</div>
 
+		<div class="aic-label" style="margin-top: 16px;">OAuth Authorize URL</div>
+		<div class="aic-url-row">
+			<input id="aic-oauth-url" type="text" class="aic-url-input" value="<?php echo esc_attr( $oauth_url ); ?>" readonly>
+			<button class="aic-copy-btn" onclick="aicCopy('aic-oauth-url', this)">Copy</button>
+		</div>
+
 		<?php if ( $is_logged_in ) : ?>
 		<!-- Personalized prompt generator (logged-in users only) -->
 		<div style="margin-top:20px;">
@@ -296,40 +302,40 @@ class Info_Page {
 		<?php wp_footer(); ?>
 <script>
 function aicGeneratePrompt(btn) {
-  btn.disabled = true;
-  btn.textContent = '⏳ Generating...';
-  var err = document.getElementById('aic-gen-error');
-  err.style.display = 'none';
-  fetch('<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/generate-prompt' ) ); ?>', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-WP-Nonce': '<?php echo esc_js( wp_create_nonce( 'wp_rest' ) ); ?>'
-    },
-    body: JSON.stringify({ scope: 'read write' })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    if (data && data.prompt) {
-      var ta = document.getElementById('aic-generated-prompt');
-      ta.value = data.prompt;
-      ta.rows = data.prompt.split('\n').length + 2;
-      document.getElementById('aic-prompt-result').style.display = 'block';
-      btn.style.display = 'none';
-    } else {
-      err.textContent = (data && data.message) ? data.message : 'Failed to generate prompt.';
-      err.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = '⚡ Generate AI Prompt';
-    }
-  })
-  .catch(function(e) {
-    err.textContent = 'Error: ' + e.message;
-    err.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '⚡ Generate AI Prompt';
-  });
+	btn.disabled = true;
+	btn.textContent = '⏳ Generating...';
+	var err = document.getElementById('aic-gen-error');
+	err.style.display = 'none';
+	fetch('<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/generate-prompt' ) ); ?>', {
+	method: 'POST',
+	credentials: 'same-origin',
+	headers: {
+		'Content-Type': 'application/json',
+		'X-WP-Nonce': '<?php echo esc_js( wp_create_nonce( 'wp_rest' ) ); ?>'
+	},
+	body: JSON.stringify({ scope: 'read write' })
+	})
+	.then(function(r){ return r.json(); })
+	.then(function(data) {
+	if (data && data.prompt) {
+		var ta = document.getElementById('aic-generated-prompt');
+		ta.value = data.prompt;
+		ta.rows = data.prompt.split('\n').length + 2;
+		document.getElementById('aic-prompt-result').style.display = 'block';
+		btn.style.display = 'none';
+	} else {
+		err.textContent = (data && data.message) ? data.message : 'Failed to generate prompt.';
+		err.style.display = 'block';
+		btn.disabled = false;
+		btn.textContent = '⚡ Generate AI Prompt';
+	}
+	})
+	.catch(function(e) {
+	err.textContent = 'Error: ' + e.message;
+	err.style.display = 'block';
+	btn.disabled = false;
+	btn.textContent = '⚡ Generate AI Prompt';
+	});
 }
 </script>
 </body>
