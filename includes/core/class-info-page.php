@@ -189,8 +189,8 @@ class Info_Page {
 		<?php if ( $is_logged_in ) : ?>
 		<div class="aic-header-meta">
 			<span class="aic-user-badge">Logged in as <?php echo esc_html( $display_name ); ?></span>
-			<button id="aic-tokens-toggle" type="button" class="aic-tokens-toggle" onclick="aicToggleTokens(this)" aria-expanded="false">
-				&#128274; My AI Tokens <span id="aic-tokens-count" class="aic-tokens-count"></span>
+			<button id="aic-tokens-toggle" type="button" class="aic-header-pill" onclick="aicOpenTokensModal()">
+				&#128274; My AI Tokens <span id="aic-tokens-count" class="aic-pill-count"></span>
 			</button>
 		</div>
 	<?php else : ?>
@@ -215,71 +215,76 @@ class Info_Page {
 		<div class="aic-card-title">
 			<span>&#129302;</span> Connect your AI Agent
 		</div>
-		<p style="font-size:13px;color:#9ca3af;margin:0 0 16px;">
+		<p class="aic-hero-intro">
 			Click the button below to generate a complete connection prompt — Bearer token, refresh token, and the full list of tools you can call. Paste it into Claude, ChatGPT, Gemini, or any AI agent. <strong>Permissions automatically match your WordPress role.</strong>
 		</p>
 
-		<button id="aic-gen-btn" class="aic-prompt-copy-btn aic-gen-main-btn" onclick="aicGeneratePrompt(this)">&#9889; Generate AI Prompt</button>
-
-		<div id="aic-prompt-result" style="display:none;margin-top:16px;">
-			<textarea id="aic-generated-prompt" class="aic-prompt-textarea" readonly rows="22"></textarea>
-			<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-				<button class="aic-prompt-copy-btn" onclick="aicCopy('aic-generated-prompt',this)">&#128203; Copy full prompt</button>
-				<button id="aic-regen-btn" class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicGeneratePrompt(this)">&#128260; Regenerate (new token)</button>
-			</div>
-		</div>
-		<div id="aic-gen-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
-	</div>
-
-	<!-- Hidden tokens panel — opens from the header button -->
-	<div id="aic-tokens-body" class="aic-card aic-tokens-card" style="display:none;">
-		<div class="aic-card-title">
-			<span>&#128274;</span> My AI Tokens
-		</div>
-		<p style="font-size:13px;color:#9ca3af;margin:0 0 12px;">
-			Each prompt you generate creates a personal Bearer token. Revoke any token here to instantly cut off the AI agent that holds it.
-		</p>
-
-		<div class="aic-tokens-toolbar">
-			<div class="aic-tokens-filter-wrap">
-				<label for="aic-tokens-filter">Filter</label>
-				<select id="aic-tokens-filter">
-					<option value="all">All my tokens</option>
-					<option value="active">Active (in use)</option>
-					<option value="unused">Issued but unused</option>
-					<option value="inactive">Inactive 30+ days</option>
-					<option value="renewable">Access expired, refresh valid</option>
-					<option value="expired">Fully expired</option>
-					<option value="revoked">Revoked</option>
-				</select>
-			</div>
-			<div class="aic-tokens-actions">
-				<button class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicLoadTokens()">&#128260; Refresh</button>
-				<button class="aic-prompt-copy-btn" style="background:#b91c1c;" onclick="aicRevokeAllTokens()">&#9888;&#65039; Revoke all</button>
-			</div>
+		<div class="aic-hero-btn-wrap">
+			<button id="aic-gen-btn" type="button" class="aic-hero-btn" onclick="aicGeneratePrompt(this)">&#9889; Generate AI Prompt</button>
 		</div>
 
-		<div id="aic-tokens-loading" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">Loading…</div>
-		<div id="aic-tokens-empty" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">No tokens match this filter.</div>
-		<div id="aic-tokens-list" style="margin-top:12px;"></div>
-		<div id="aic-tokens-error" style="margin-top:8px;color:#f87171;font-size:13px;display:none;"></div>
+		<div id="aic-prompt-result" class="aic-prompt-result is-hidden">
+			<textarea id="aic-generated-prompt" class="aic-prompt-textarea aic-prompt-textarea-tall" readonly rows="22"></textarea>
+			<div class="aic-prompt-actions">
+				<button type="button" class="aic-btn-primary" onclick="aicCopy('aic-generated-prompt',this)">&#128203; Copy full prompt</button>
+				<button id="aic-regen-btn" type="button" class="aic-btn-secondary" onclick="aicGeneratePrompt(this)">&#128260; Regenerate (new token)</button>
+			</div>
+		</div>
+		<div id="aic-gen-error" class="aic-error is-hidden"></div>
 	</div>
 
 	<!-- Section 2: For advanced users (manifest URL only) -->
 	<div class="aic-card aic-advanced-card">
 		<details>
 			<summary>Manual setup (for AI agents that don't accept generated prompts)</summary>
-			<div style="margin-top:14px;">
-				<div class="aic-label">Manifest URL — give this to the AI if it asks for one</div>
+			<div class="aic-advanced-body">
+				<div class="aic-label">Manifest URL &mdash; give this to the AI if it asks for one</div>
 				<div class="aic-url-row">
 					<input id="aic-manifest-url" type="text" class="aic-url-input" value="<?php echo esc_attr( $manifest_url ); ?>" readonly>
-					<button class="aic-copy-btn" onclick="aicCopy('aic-manifest-url', this)">Copy</button>
+					<button type="button" class="aic-copy-btn" onclick="aicCopy('aic-manifest-url', this)">Copy</button>
 				</div>
-				<p style="font-size:12px;color:#9ca3af;margin-top:10px;">
+				<p class="aic-advanced-note">
 					The AI agent will read this manifest, then send you to an OAuth login page in your browser. Approve there, and the agent receives its own token automatically.
 				</p>
 			</div>
 		</details>
+	</div>
+
+	<!-- Tokens modal — opens from the header pill button -->
+	<div id="aic-tokens-modal" class="aic-modal-backdrop is-hidden" onclick="aicCloseTokensModal(event)">
+		<div class="aic-modal" onclick="event.stopPropagation();">
+			<div class="aic-modal-header">
+				<h2 class="aic-modal-title"><span>&#128274;</span> My AI Tokens</h2>
+				<button type="button" class="aic-modal-close" onclick="aicCloseTokensModal()" aria-label="Close">&times;</button>
+			</div>
+			<div class="aic-modal-body">
+				<p class="aic-modal-intro">
+					Each prompt you generate creates a personal Bearer token. Revoke any token here to instantly cut off the AI agent that holds it.
+				</p>
+				<div class="aic-tokens-toolbar">
+					<div class="aic-tokens-filter-wrap">
+						<label for="aic-tokens-filter">Filter</label>
+						<select id="aic-tokens-filter">
+							<option value="all">All my tokens</option>
+							<option value="active">Active (in use)</option>
+							<option value="unused">Issued but unused</option>
+							<option value="inactive">Inactive 30+ days</option>
+							<option value="renewable">Access expired, refresh valid</option>
+							<option value="expired">Fully expired</option>
+							<option value="revoked">Revoked</option>
+						</select>
+					</div>
+					<div class="aic-tokens-actions">
+						<button type="button" class="aic-btn-secondary" onclick="aicLoadTokens()">&#128260; Refresh</button>
+						<button type="button" class="aic-btn-danger" onclick="aicRevokeAllTokens()">&#9888;&#65039; Revoke all</button>
+					</div>
+				</div>
+				<div id="aic-tokens-loading" class="aic-tokens-status is-hidden">Loading&hellip;</div>
+				<div id="aic-tokens-empty" class="aic-tokens-status is-hidden">No tokens match this filter.</div>
+				<div id="aic-tokens-list" class="aic-tokens-list"></div>
+				<div id="aic-tokens-error" class="aic-error is-hidden"></div>
+			</div>
+		</div>
 	</div>
 		<?php else : ?>
 	<!-- Logged-out fallback: manifest URL only, no generator -->
@@ -299,37 +304,100 @@ class Info_Page {
 		</div>
 	</div>
 	<style>
-		.aic-header-meta { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
-		.aic-tokens-toggle { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#f3f4f6; font-size:13px; font-weight:500; border-radius:6px; cursor:pointer; }
-		.aic-tokens-toggle:hover { background:rgba(255,255,255,0.14); }
-		.aic-tokens-toggle[aria-expanded="true"] { background:#1f2937; border-color:#374151; }
-		.aic-tokens-count { color:#9ca3af; font-size:12px; font-weight:400; margin-left:2px; }
-		.aic-hero-card { border-left:4px solid #10b981; }
-		.aic-gen-main-btn { font-size:15px; padding:12px 24px; }
-		.aic-advanced-card details summary { cursor:pointer; color:#9ca3af; font-size:13px; padding:4px 0; }
-		.aic-advanced-card details summary:hover { color:#f3f4f6; }
-		.aic-advanced-card details[open] summary { color:#f3f4f6; }
-		.aic-tokens-card { border-left:4px solid #6366f1; }
-		.aic-tokens-toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
-		.aic-tokens-filter-wrap { display:flex; flex-direction:column; gap:4px; flex:1; min-width:160px; }
-		.aic-tokens-filter-wrap label { font-size:12px; font-weight:600; color:#9ca3af; }
-		.aic-tokens-filter-wrap select { padding:8px 10px; background:#1f2937; color:#f3f4f6; border:1px solid #374151; border-radius:6px; font-size:13px; cursor:pointer; }
+		/* === Utility === */
+		.is-hidden { display: none !important; }
+
+		/* === Header pill (My AI Tokens trigger) === */
+		.aic-header-meta { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:14px; }
+		.aic-header-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 14px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:13px; font-weight:500; border-radius:20px; cursor:pointer; transition:background 0.15s ease; }
+		.aic-header-pill:hover { background:rgba(255,255,255,0.22); }
+		.aic-pill-count { color:rgba(255,255,255,0.7); font-size:12px; font-weight:400; margin-left:2px; }
+
+		/* === Hero card (prompt generator) === */
+		.aic-hero-card { border-left:4px solid #16a34a; }
+		.aic-hero-intro { font-size:14px; color:#475569; line-height:1.55; margin:0 0 18px; }
+		.aic-hero-intro strong { color:#0f3460; }
+		.aic-hero-btn-wrap { text-align:center; padding:8px 0 4px; }
+		.aic-hero-btn {
+			display:inline-flex; align-items:center; gap:8px;
+			padding:14px 32px;
+			background:linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+			color:#fff; border:none; border-radius:10px;
+			font-size:16px; font-weight:600; font-family:inherit;
+			cursor:pointer; box-shadow:0 4px 14px rgba(15,52,96,0.25);
+			transition:transform 0.1s ease, box-shadow 0.15s ease;
+		}
+		.aic-hero-btn:hover { box-shadow:0 6px 20px rgba(15,52,96,0.35); transform:translateY(-1px); }
+		.aic-hero-btn:active { transform:translateY(0); }
+		.aic-hero-btn:disabled { opacity:0.7; cursor:wait; transform:none; box-shadow:none; }
+
+		/* === Prompt result (textarea + action row) === */
+		.aic-prompt-result { margin-top:20px; padding-top:20px; border-top:2px solid #f0f2f5; }
+		.aic-prompt-textarea-tall { height:auto; min-height:400px; }
+		.aic-prompt-actions { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+
+		/* === Buttons (shared, NOT positioned absolute) === */
+		.aic-btn-primary, .aic-btn-secondary, .aic-btn-danger {
+			padding:10px 18px; border:none; border-radius:8px;
+			font-size:13px; font-weight:600; font-family:inherit;
+			cursor:pointer; transition:background 0.15s ease;
+		}
+		.aic-btn-primary { background:#0f3460; color:#fff; }
+		.aic-btn-primary:hover { background:#16213e; }
+		.aic-btn-primary.copied { background:#16a34a; }
+		.aic-btn-secondary { background:#e2e8f0; color:#1e293b; }
+		.aic-btn-secondary:hover { background:#cbd5e1; }
+		.aic-btn-danger { background:#dc2626; color:#fff; }
+		.aic-btn-danger:hover { background:#b91c1c; }
+
+		.aic-error { color:#dc2626; font-size:13px; margin-top:10px; padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; }
+
+		/* === Advanced (manual setup) === */
+		.aic-advanced-card { padding:18px 32px; }
+		.aic-advanced-card details summary { cursor:pointer; color:#6b7280; font-size:14px; font-weight:600; padding:4px 0; outline:none; user-select:none; }
+		.aic-advanced-card details summary:hover { color:#0f3460; }
+		.aic-advanced-card details[open] summary { color:#0f3460; margin-bottom:8px; }
+		.aic-advanced-body { padding-top:14px; }
+		.aic-advanced-note { font-size:12px; color:#6b7280; margin-top:10px; line-height:1.5; }
+
+		/* === Modal (tokens history) === */
+		.aic-modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(3px); z-index:9998; display:flex; align-items:center; justify-content:center; padding:20px; animation:aicFadeIn 0.15s ease; }
+		.aic-modal { background:#fff; border-radius:14px; max-width:760px; width:100%; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:aicSlideUp 0.2s ease; }
+		.aic-modal-header { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:2px solid #f0f2f5; }
+		.aic-modal-title { font-size:18px; font-weight:700; color:#0f3460; margin:0; display:flex; align-items:center; gap:8px; }
+		.aic-modal-close { background:transparent; border:none; font-size:28px; line-height:1; color:#9ca3af; cursor:pointer; padding:4px 12px; border-radius:6px; }
+		.aic-modal-close:hover { background:#f0f2f5; color:#1e293b; }
+		.aic-modal-body { padding:20px 24px; overflow-y:auto; }
+		.aic-modal-intro { font-size:13px; color:#475569; margin:0 0 16px; line-height:1.5; }
+
+		/* === Tokens toolbar & list (inside modal) === */
+		.aic-tokens-toolbar { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px; }
+		.aic-tokens-filter-wrap { display:flex; flex-direction:column; gap:4px; flex:1; min-width:200px; }
+		.aic-tokens-filter-wrap label { font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.4px; }
+		.aic-tokens-filter-wrap select { padding:9px 12px; background:#f8fafc; color:#1e293b; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; cursor:pointer; font-family:inherit; }
+		.aic-tokens-filter-wrap select:focus { outline:none; border-color:#0f3460; }
 		.aic-tokens-actions { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
-		.aic-token-row { display:grid; grid-template-columns:1fr auto; gap:12px; padding:10px 12px; background:#1f2937; border:1px solid #374151; border-radius:6px; margin-bottom:8px; }
-		.aic-token-row.aic-token-revoked { opacity:0.55; }
-		.aic-token-row.aic-token-expired { opacity:0.7; }
-		.aic-token-info { display:flex; flex-direction:column; gap:4px; font-size:13px; color:#f3f4f6; }
+		.aic-tokens-status { color:#6b7280; font-size:13px; padding:14px; text-align:center; background:#f8fafc; border-radius:8px; }
+		.aic-tokens-list { display:flex; flex-direction:column; gap:8px; }
+
+		.aic-token-row { display:grid; grid-template-columns:1fr auto; gap:14px; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; }
+		.aic-token-row.aic-token-revoked { opacity:0.55; background:#fef2f2; border-color:#fecaca; }
+		.aic-token-row.aic-token-expired { opacity:0.75; }
+		.aic-token-info { display:flex; flex-direction:column; gap:6px; font-size:13px; color:#1e293b; min-width:0; }
 		.aic-token-info .aic-token-line { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-		.aic-token-info code { background:#0f172a; padding:2px 6px; border-radius:3px; font-size:12px; color:#cbd5e1; }
-		.aic-token-meta { color:#9ca3af; font-size:12px; }
-		.aic-state-badge { padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; text-transform:uppercase; }
-		.aic-state-active { background:#065f46; color:#a7f3d0; }
-		.aic-state-expired { background:#78350f; color:#fde68a; }
-		.aic-state-revoked { background:#7f1d1d; color:#fecaca; }
+		.aic-token-info code { background:#fff; padding:2px 8px; border-radius:4px; font-size:12px; color:#0f3460; font-family:'SFMono-Regular',Consolas,monospace; border:1px solid #e2e8f0; }
+		.aic-token-meta { color:#6b7280; font-size:12px; }
+		.aic-state-badge { padding:2px 10px; border-radius:12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; }
+		.aic-state-active { background:#dcfce7; color:#166534; }
+		.aic-state-expired { background:#fef3c7; color:#92400e; }
+		.aic-state-revoked { background:#fecaca; color:#991b1b; }
 		.aic-token-actions { display:flex; align-items:center; }
-		.aic-token-revoke-btn { padding:6px 12px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px; }
+		.aic-token-revoke-btn { padding:6px 14px; background:#dc2626; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; }
 		.aic-token-revoke-btn:hover { background:#b91c1c; }
 		.aic-token-revoke-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+		@keyframes aicFadeIn { from { opacity:0; } to { opacity:1; } }
+		@keyframes aicSlideUp { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
 	</style>
 	<?php endif; ?>
 
@@ -397,10 +465,23 @@ class Info_Page {
 
 	function el(id){ return document.getElementById(id); }
 
+	function setHidden(node, hidden) {
+		if (!node) return;
+		node.classList.toggle('is-hidden', !!hidden);
+	}
+
+	function restoreGenBtnLabel(btn) {
+		btn.disabled = false;
+		btn.innerHTML = btn.id === 'aic-regen-btn'
+			? '&#128260; Regenerate (new token)'
+			: '&#9889; Generate AI Prompt';
+	}
+
 	window.aicGeneratePrompt = function(btn) {
 		btn.disabled = true;
-		btn.textContent = '⏳ Generating...';
-		var err = el('aic-gen-error'); err.style.display = 'none';
+		btn.innerHTML = '&#9203; Generating&hellip;';
+		var err = el('aic-gen-error');
+		setHidden(err, true);
 
 		fetch(GEN_URL, {
 			method: 'POST',
@@ -413,25 +494,21 @@ class Info_Page {
 			if (data && data.prompt) {
 				var ta = el('aic-generated-prompt');
 				ta.value = data.prompt;
-				ta.rows = Math.min(data.prompt.split('\n').length + 2, 40);
-				el('aic-prompt-result').style.display = 'block';
-				var genBtn = el('aic-gen-btn'); if (genBtn) genBtn.style.display = 'none';
-				var regenBtn = el('aic-regen-btn');
-				if (regenBtn) { regenBtn.style.display = ''; regenBtn.disabled = false; regenBtn.innerHTML = '&#128260; Regenerate (new token)'; }
-				// Refresh tokens list so the user sees the freshly issued token.
-				aicLoadTokens();
+				setHidden(el('aic-prompt-result'), false);
+				// Hide the big primary button after first generate; user uses Regenerate from now on.
+				setHidden(el('aic-gen-btn'), true);
+				restoreGenBtnLabel(btn);
+				updateTokensCount();
 			} else {
 				err.textContent = (data && data.message) ? data.message : 'Failed to generate prompt.';
-				err.style.display = 'block';
-				btn.disabled = false;
-				btn.innerHTML = btn.id === 'aic-regen-btn' ? '&#128260; Regenerate (new token)' : '&#9889; Generate AI Prompt';
+				setHidden(err, false);
+				restoreGenBtnLabel(btn);
 			}
 		})
 		.catch(function(e){
 			err.textContent = 'Error: ' + e.message;
-			err.style.display = 'block';
-			btn.disabled = false;
-			btn.innerHTML = btn.id === 'aic-regen-btn' ? '&#128260; Regenerate (new token)' : '&#9889; Generate AI Prompt';
+			setHidden(err, false);
+			restoreGenBtnLabel(btn);
 		});
 	};
 
@@ -463,17 +540,29 @@ class Info_Page {
 		.catch(function(){ /* silent */ });
 	}
 
-	window.aicToggleTokens = function(btn) {
-		var body = el('aic-tokens-body');
-		if (!body) return;
-		var open = body.style.display !== 'none';
-		body.style.display = open ? 'none' : 'block';
-		btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-		if (!open) {
-			aicLoadTokens(); // lazy-load on open
-			body.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}
+	window.aicOpenTokensModal = function() {
+		var modal = el('aic-tokens-modal');
+		if (!modal) return;
+		setHidden(modal, false);
+		document.body.style.overflow = 'hidden';
+		aicLoadTokens();
 	};
+
+	window.aicCloseTokensModal = function(ev) {
+		// When called from backdrop click, only close if the click was on the backdrop itself.
+		if (ev && ev.target && ev.target.id && ev.target.id !== 'aic-tokens-modal') return;
+		var modal = el('aic-tokens-modal');
+		if (!modal) return;
+		setHidden(modal, true);
+		document.body.style.overflow = '';
+	};
+
+	// ESC closes the modal.
+	document.addEventListener('keydown', function(e){
+		if (e.key !== 'Escape') return;
+		var modal = el('aic-tokens-modal');
+		if (modal && !modal.classList.contains('is-hidden')) aicCloseTokensModal();
+	});
 
 	window.aicLoadTokens = function() {
 		var filterSel = el('aic-tokens-filter');
@@ -483,9 +572,9 @@ class Info_Page {
 		var loading = el('aic-tokens-loading');
 		var errBox = el('aic-tokens-error');
 		if (!list) return;
-		errBox.style.display = 'none';
-		empty.style.display = 'none';
-		loading.style.display = '';
+		setHidden(errBox, true);
+		setHidden(empty, true);
+		setHidden(loading, false);
 		list.innerHTML = '';
 
 		fetch(TOKENS_URL + '?status=' + encodeURIComponent(status), {
@@ -494,10 +583,10 @@ class Info_Page {
 		})
 		.then(function(r){ return r.json(); })
 		.then(function(data){
-			loading.style.display = 'none';
+			setHidden(loading, true);
 			var tokens = (data && data.tokens) || [];
 			if (!tokens.length) {
-				empty.style.display = '';
+				setHidden(empty, false);
 				return;
 			}
 			var html = '';
@@ -522,7 +611,7 @@ class Info_Page {
 				html +=     '</div>';
 				html +=   '</div>';
 				html +=   '<div class="aic-token-actions">';
-				html +=     '<button class="aic-token-revoke-btn" ' + disabled + ' onclick="aicRevokeToken(' + t.id + ', this)">' + btnLabel + '</button>';
+				html +=     '<button type="button" class="aic-token-revoke-btn" ' + disabled + ' onclick="aicRevokeToken(' + t.id + ', this)">' + btnLabel + '</button>';
 				html +=   '</div>';
 				html += '</div>';
 			});
@@ -530,9 +619,9 @@ class Info_Page {
 			updateTokensCount();
 		})
 		.catch(function(e){
-			loading.style.display = 'none';
+			setHidden(loading, true);
 			errBox.textContent = 'Error loading tokens: ' + e.message;
-			errBox.style.display = '';
+			setHidden(errBox, false);
 		});
 	};
 
