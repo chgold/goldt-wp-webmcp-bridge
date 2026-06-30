@@ -227,15 +227,50 @@ class Info_Page {
 		<div style="margin-top:20px;">
 			<div class="aic-label">&#129302; AI Connection Prompt &mdash; one-click setup with your personal token</div>
 			<p style="font-size:13px;color:#9ca3af;margin:4px 0 12px;">
-				Generates a ready-to-paste prompt for Claude, ChatGPT or any WebMCP client. Includes your Bearer token so the AI connects instantly — no OAuth dance required.
+				Generates a ready-to-paste prompt for Claude, ChatGPT, Gemini, or any WebMCP-compatible client. Includes your Bearer token so the AI connects instantly — no OAuth dance required.
 			</p>
+
+			<div class="aic-gen-controls">
+				<div class="aic-gen-field">
+					<label for="aic-gen-agent">AI agent</label>
+					<select id="aic-gen-agent">
+						<option value="" disabled selected>Loading…</option>
+					</select>
+				</div>
+				<div class="aic-gen-field">
+					<label for="aic-gen-scope">Access level</label>
+					<select id="aic-gen-scope">
+						<option value="" disabled selected>Loading…</option>
+					</select>
+				</div>
+				<div class="aic-gen-field">
+					<label for="aic-gen-template">Format</label>
+					<select id="aic-gen-template">
+						<option value="">Recommended for agent</option>
+						<option value="mcp">MCP (Claude Desktop / WebMCP)</option>
+						<option value="rest">HTTP REST (curl / direct calls)</option>
+					</select>
+				</div>
+			</div>
+
+			<p id="aic-gen-scope-hint" style="font-size:12px;color:#9ca3af;margin:0 0 12px;"></p>
+
 			<button id="aic-gen-btn" class="aic-prompt-copy-btn" style="margin-bottom:12px;" onclick="aicGeneratePrompt(this)">&#9889; Generate AI Prompt</button>
+			<button id="aic-regen-btn" class="aic-prompt-copy-btn" style="margin-bottom:12px;display:none;background:#4b5563;" onclick="aicGeneratePrompt(this)">&#128260; Regenerate (new token)</button>
+
 			<div id="aic-prompt-result" style="display:none;">
 				<textarea id="aic-generated-prompt" class="aic-prompt-textarea" readonly rows="18"></textarea>
 				<button class="aic-prompt-copy-btn" style="margin-top:8px;" onclick="aicCopy('aic-generated-prompt',this)">&#128203; Copy Prompt</button>
 			</div>
 			<div id="aic-gen-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
 		</div>
+		<style>
+			.aic-gen-controls { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:12px; }
+			.aic-gen-field { display:flex; flex-direction:column; gap:4px; }
+			.aic-gen-field label { font-size:12px; font-weight:600; color:#9ca3af; }
+			.aic-gen-field select { padding:8px 10px; background:#1f2937; color:#f3f4f6; border:1px solid #374151; border-radius:6px; font-size:13px; cursor:pointer; }
+			.aic-gen-field select:focus { outline:none; border-color:#0f3460; }
+		</style>
 		<?php else : ?>
 		<div class="aic-label" style="margin-top: 16px;">Quick Prompt &mdash; paste this into your AI agent to get started</div>
 		<div class="aic-prompt-wrap">
@@ -301,42 +336,100 @@ class Info_Page {
 
 		<?php wp_footer(); ?>
 <script>
-function aicGeneratePrompt(btn) {
-	btn.disabled = true;
-	btn.textContent = '⏳ Generating...';
-	var err = document.getElementById('aic-gen-error');
-	err.style.display = 'none';
-	fetch('<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/generate-prompt' ) ); ?>', {
-	method: 'POST',
-	credentials: 'same-origin',
-	headers: {
-		'Content-Type': 'application/json',
-		'X-WP-Nonce': '<?php echo esc_js( wp_create_nonce( 'wp_rest' ) ); ?>'
-	},
-	body: JSON.stringify({ scope: 'read write' })
-	})
-	.then(function(r){ return r.json(); })
-	.then(function(data) {
-	if (data && data.prompt) {
-		var ta = document.getElementById('aic-generated-prompt');
-		ta.value = data.prompt;
-		ta.rows = data.prompt.split('\n').length + 2;
-		document.getElementById('aic-prompt-result').style.display = 'block';
-		btn.style.display = 'none';
-	} else {
-		err.textContent = (data && data.message) ? data.message : 'Failed to generate prompt.';
-		err.style.display = 'block';
-		btn.disabled = false;
-		btn.textContent = '⚡ Generate AI Prompt';
+(function(){
+	var GEN_URL  = '<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/generate-prompt' ) ); ?>';
+	var OPTS_URL = '<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/prompt-options' ) ); ?>';
+	var NONCE    = '<?php echo esc_js( wp_create_nonce( 'wp_rest' ) ); ?>';
+	var presetsCache = {};
+	var loggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
+	if (!loggedIn) return;
+
+	function el(id){ return document.getElementById(id); }
+
+	function loadOptions() {
+		fetch(OPTS_URL, { credentials: 'same-origin', headers: { 'X-WP-Nonce': NONCE } })
+			.then(function(r){ return r.json(); })
+			.then(function(data){
+				var agentSel = el('aic-gen-agent');
+				var scopeSel = el('aic-gen-scope');
+				if (!agentSel || !scopeSel) return;
+				agentSel.innerHTML = '';
+				(data.clients || []).forEach(function(c){
+					var o = document.createElement('option');
+					o.value = c.id; o.textContent = c.label;
+					o.dataset.template = c.default_template;
+					if (c.id === 'claude-ai') o.selected = true;
+					agentSel.appendChild(o);
+				});
+				scopeSel.innerHTML = '';
+				(data.presets || []).forEach(function(p){
+					var o = document.createElement('option');
+					o.value = p.key; o.textContent = p.label;
+					if (p.key === 'read_write') o.selected = true;
+					scopeSel.appendChild(o);
+					presetsCache[p.key] = p.description || '';
+				});
+				updateScopeHint();
+			})
+			.catch(function(){ /* leave UI as-is; generate still works with defaults */ });
 	}
-	})
-	.catch(function(e) {
-	err.textContent = 'Error: ' + e.message;
-	err.style.display = 'block';
-	btn.disabled = false;
-	btn.textContent = '⚡ Generate AI Prompt';
+
+	function updateScopeHint() {
+		var scopeSel = el('aic-gen-scope');
+		var hint = el('aic-gen-scope-hint');
+		if (!scopeSel || !hint) return;
+		hint.textContent = presetsCache[scopeSel.value] || '';
+	}
+
+	window.aicGeneratePrompt = function(btn) {
+		btn.disabled = true;
+		btn.textContent = '⏳ Generating...';
+		var err = el('aic-gen-error'); err.style.display = 'none';
+
+		var payload = {
+			client_id:    el('aic-gen-agent') ? el('aic-gen-agent').value || 'claude-ai' : 'claude-ai',
+			scope_preset: el('aic-gen-scope') ? el('aic-gen-scope').value || 'read_write' : 'read_write'
+		};
+		var tpl = el('aic-gen-template') ? el('aic-gen-template').value : '';
+		if (tpl) payload.template = tpl;
+
+		fetch(GEN_URL, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
+			body: JSON.stringify(payload)
+		})
+		.then(function(r){ return r.json(); })
+		.then(function(data){
+			if (data && data.prompt) {
+				var ta = el('aic-generated-prompt');
+				ta.value = data.prompt;
+				ta.rows = Math.min(data.prompt.split('\n').length + 2, 40);
+				el('aic-prompt-result').style.display = 'block';
+				var genBtn = el('aic-gen-btn'); if (genBtn) genBtn.style.display = 'none';
+				var regenBtn = el('aic-regen-btn');
+				if (regenBtn) { regenBtn.style.display = ''; regenBtn.disabled = false; regenBtn.innerHTML = '&#128260; Regenerate (new token)'; }
+			} else {
+				err.textContent = (data && data.message) ? data.message : 'Failed to generate prompt.';
+				err.style.display = 'block';
+				btn.disabled = false;
+				btn.innerHTML = btn.id === 'aic-regen-btn' ? '&#128260; Regenerate (new token)' : '&#9889; Generate AI Prompt';
+			}
+		})
+		.catch(function(e){
+			err.textContent = 'Error: ' + e.message;
+			err.style.display = 'block';
+			btn.disabled = false;
+			btn.innerHTML = btn.id === 'aic-regen-btn' ? '&#128260; Regenerate (new token)' : '&#9889; Generate AI Prompt';
+		});
+	};
+
+	document.addEventListener('DOMContentLoaded', function(){
+		loadOptions();
+		var scopeSel = el('aic-gen-scope');
+		if (scopeSel) scopeSel.addEventListener('change', updateScopeHint);
 	});
-}
+})();
 </script>
 </body>
 </html>
