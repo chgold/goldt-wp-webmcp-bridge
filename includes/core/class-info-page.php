@@ -249,41 +249,59 @@ class Info_Page {
 	</div>
 
 		<?php if ( $is_logged_in ) : ?>
-	<!-- Section 1b: My AI Tokens (logged-in users only) -->
-	<div class="aic-card">
-		<div class="aic-card-title">
-			<span>&#128274;</span> My AI Tokens
-		</div>
-		<p style="font-size:13px;color:#9ca3af;margin:0 0 12px;">
-			Every prompt you generate above creates a personal Bearer token. Tokens here can be used by AI agents to access your WordPress content. Revoke any token instantly — that AI loses access immediately.
-		</p>
+	<!-- Section 1b: My AI Tokens — collapsed by default so the prompt stays the hero -->
+	<div class="aic-card aic-tokens-card">
+		<button type="button" class="aic-tokens-toggle" onclick="aicToggleTokens(this)" aria-expanded="false">
+			<span class="aic-tokens-toggle-left">
+				<span>&#128274;</span> My AI Tokens
+				<span class="aic-tokens-count" id="aic-tokens-count"></span>
+			</span>
+			<span class="aic-tokens-toggle-chev">&#9656;</span>
+		</button>
+		<div id="aic-tokens-body" style="display:none;margin-top:14px;">
+			<p style="font-size:13px;color:#9ca3af;margin:0 0 12px;">
+				Each prompt you generate creates a personal Bearer token. Revoke any token to instantly cut off the AI agent that holds it.
+			</p>
 
-		<div class="aic-tokens-toolbar">
-			<div class="aic-gen-field" style="flex:1;min-width:160px;">
-				<label for="aic-tokens-filter">Filter</label>
-				<select id="aic-tokens-filter">
-					<option value="all">All my tokens</option>
-					<option value="active">Active (in use)</option>
-					<option value="unused">Issued but unused</option>
-					<option value="inactive">Inactive 30+ days</option>
-					<option value="renewable">Access expired, refresh valid</option>
-					<option value="expired">Fully expired</option>
-					<option value="revoked">Revoked</option>
-				</select>
+			<div class="aic-tokens-toolbar">
+				<div class="aic-tokens-filter-wrap">
+					<label for="aic-tokens-filter">Filter</label>
+					<select id="aic-tokens-filter">
+						<option value="all">All my tokens</option>
+						<option value="active">Active (in use)</option>
+						<option value="unused">Issued but unused</option>
+						<option value="inactive">Inactive 30+ days</option>
+						<option value="renewable">Access expired, refresh valid</option>
+						<option value="expired">Fully expired</option>
+						<option value="revoked">Revoked</option>
+					</select>
+				</div>
+				<div class="aic-tokens-actions">
+					<button class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicLoadTokens()">&#128260; Refresh</button>
+					<button class="aic-prompt-copy-btn" style="background:#b91c1c;" onclick="aicRevokeAllTokens()">&#9888;&#65039; Revoke all</button>
+				</div>
 			</div>
-			<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
-				<button class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicLoadTokens()">&#128260; Refresh</button>
-				<button class="aic-prompt-copy-btn" style="background:#b91c1c;" onclick="aicRevokeAllTokens()">&#9888;&#65039; Revoke all</button>
-			</div>
-		</div>
 
-		<div id="aic-tokens-loading" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">Loading…</div>
-		<div id="aic-tokens-empty" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">No tokens match this filter.</div>
-		<div id="aic-tokens-list" style="margin-top:12px;"></div>
-		<div id="aic-tokens-error" style="margin-top:8px;color:#f87171;font-size:13px;display:none;"></div>
+			<div id="aic-tokens-loading" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">Loading…</div>
+			<div id="aic-tokens-empty" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">No tokens match this filter.</div>
+			<div id="aic-tokens-list" style="margin-top:12px;"></div>
+			<div id="aic-tokens-error" style="margin-top:8px;color:#f87171;font-size:13px;display:none;"></div>
+		</div>
 	</div>
 	<style>
+		.aic-tokens-card { padding:0; }
+		.aic-tokens-toggle { display:flex; justify-content:space-between; align-items:center; width:100%; padding:16px 20px; background:transparent; border:0; color:#f3f4f6; font-size:16px; font-weight:600; cursor:pointer; text-align:left; }
+		.aic-tokens-toggle:hover { background:rgba(255,255,255,0.03); }
+		.aic-tokens-toggle-left { display:flex; align-items:center; gap:8px; }
+		.aic-tokens-count { color:#9ca3af; font-size:13px; font-weight:400; }
+		.aic-tokens-toggle-chev { transition:transform 0.15s; color:#9ca3af; font-size:14px; }
+		.aic-tokens-toggle[aria-expanded="true"] .aic-tokens-toggle-chev { transform:rotate(90deg); }
+		#aic-tokens-body { padding:0 20px 20px; }
 		.aic-tokens-toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+		.aic-tokens-filter-wrap { display:flex; flex-direction:column; gap:4px; flex:1; min-width:160px; }
+		.aic-tokens-filter-wrap label { font-size:12px; font-weight:600; color:#9ca3af; }
+		.aic-tokens-filter-wrap select { padding:8px 10px; background:#1f2937; color:#f3f4f6; border:1px solid #374151; border-radius:6px; font-size:13px; cursor:pointer; }
+		.aic-tokens-actions { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
 		.aic-token-row { display:grid; grid-template-columns:1fr auto; gap:12px; padding:10px 12px; background:#1f2937; border:1px solid #374151; border-radius:6px; margin-bottom:8px; }
 		.aic-token-row.aic-token-revoked { opacity:0.55; }
 		.aic-token-row.aic-token-expired { opacity:0.7; }
@@ -418,6 +436,28 @@ class Info_Page {
 		});
 	}
 
+	function updateTokensCount() {
+		fetch(TOKENS_URL + '?status=active', {
+			credentials: 'same-origin',
+			headers: { 'X-WP-Nonce': NONCE }
+		})
+		.then(function(r){ return r.json(); })
+		.then(function(data){
+			var n = (data && data.tokens) ? data.tokens.length : 0;
+			var c = el('aic-tokens-count');
+			if (c) c.textContent = n > 0 ? '(' + n + ' active)' : '(none)';
+		})
+		.catch(function(){ /* silent */ });
+	}
+
+	window.aicToggleTokens = function(btn) {
+		var body = el('aic-tokens-body');
+		var open = body.style.display !== 'none';
+		body.style.display = open ? 'none' : '';
+		btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+		if (!open) aicLoadTokens(); // lazy-load on first open + every re-open
+	};
+
 	window.aicLoadTokens = function() {
 		var filterSel = el('aic-tokens-filter');
 		var status = filterSel ? filterSel.value : 'all';
@@ -453,7 +493,6 @@ class Info_Page {
 				html +=   '<div class="aic-token-info">';
 				html +=     '<div class="aic-token-line">';
 				html +=       '<span class="aic-state-badge ' + stateClass + '">' + escapeHtml(t.state) + '</span>';
-				html +=       '<strong>' + escapeHtml(t.client_label) + '</strong>';
 				html +=       '<code>' + escapeHtml(t.token_prefix) + '…</code>';
 				html +=       '<span class="aic-token-meta">scope: ' + escapeHtml(t.scope) + '</span>';
 				html +=     '</div>';
@@ -471,6 +510,7 @@ class Info_Page {
 				html += '</div>';
 			});
 			list.innerHTML = html;
+			updateTokensCount();
 		})
 		.catch(function(e){
 			loading.style.display = 'none';
@@ -529,7 +569,9 @@ class Info_Page {
 	document.addEventListener('DOMContentLoaded', function(){
 		var filterSel = el('aic-tokens-filter');
 		if (filterSel) filterSel.addEventListener('change', aicLoadTokens);
-		aicLoadTokens();
+		// Don't load full list on page load — only fetch the count.
+		// User opens the tokens panel manually if they want to see/manage.
+		updateTokensCount();
 	});
 })();
 </script>
