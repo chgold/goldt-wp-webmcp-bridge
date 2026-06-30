@@ -388,6 +388,111 @@ class Token_Registry {
 	}
 
 	/**
+	 * Hard-delete a single registry row + its OAuth token rows.
+	 *
+	 * Use this when the caller wants the token gone from the history
+	 * (the user-facing "delete" action), as opposed to revoke which
+	 * keeps the row marked as revoked for audit.
+	 *
+	 * @param int $id      Registry row ID.
+	 * @param int $user_id Owning user ID (ownership check).
+	 * @return bool True if a row was deleted, false otherwise.
+	 */
+	public static function delete_by_id( $id, $user_id ) {
+		global $wpdb;
+
+		$id      = (int) $id;
+		$user_id = (int) $user_id;
+		if ( $id <= 0 || $user_id <= 0 ) {
+			return false;
+		}
+
+		$table = self::table_name();
+
+		// Fetch prefix + ownership in one read.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT token_prefix, user_id FROM `{$table}` WHERE id = %d", $id ),
+			ARRAY_A
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( ! $row || (int) $row['user_id'] !== $user_id ) {
+			return false;
+		}
+
+		$prefix = (string) $row['token_prefix'];
+
+		// Delete the OAuth token rows first so refresh attempts fail before the registry row is gone.
+		if ( '' !== $prefix ) {
+			self::cascade_delete_oauth_rows( array( $prefix ) );
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- User-initiated registry delete.
+		$deleted = $wpdb->delete( $table, array( 'id' => $id ), array( '%d' ) );
+		return is_int( $deleted ) && $deleted > 0;
+	}
+
+	/**
+	 * Hard-delete every registry row for a user + their OAuth token rows.
+	 *
+	 * @param int $user_id Owning user ID.
+	 * @return int Number of registry rows deleted.
+	 */
+	public static function delete_all_for_user( $user_id ) {
+		global $wpdb;
+
+		$user_id = (int) $user_id;
+		if ( $user_id <= 0 ) {
+			return 0;
+		}
+
+		$table = self::table_name();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$prefixes = $wpdb->get_col(
+			$wpdb->prepare( "SELECT token_prefix FROM `{$table}` WHERE user_id = %d", $user_id )
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( ! empty( $prefixes ) ) {
+			self::cascade_delete_oauth_rows( $prefixes );
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- User-initiated bulk delete.
+		$deleted = $wpdb->delete( $table, array( 'user_id' => $user_id ), array( '%d' ) );
+		return is_int( $deleted ) ? $deleted : 0;
+	}
+
+	/**
+	 * Hard-delete OAuth token rows whose token starts with any of the given prefixes.
+	 *
+	 * Called as part of {@see self::delete_by_id()} / {@see self::delete_all_for_user()}.
+	 *
+	 * @param string[] $prefixes Token prefixes (already extracted from the registry).
+	 * @return void
+	 */
+	private static function cascade_delete_oauth_rows( array $prefixes ) {
+		if ( empty( $prefixes ) ) {
+			return;
+		}
+
+		global $wpdb;
+		$oauth_table = $wpdb->prefix . 'goldtwmcp_oauth_tokens';
+
+		try {
+			$placeholders = implode( ',', array_fill( 0, count( $prefixes ), '%s' ) );
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnsupportedPlaceholder, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Cascade delete; placeholders built dynamically from sanitized prefix count, replacements count matches at runtime.
+			$sql = "DELETE FROM `{$oauth_table}` WHERE LEFT(token, 16) IN ({$placeholders})";
+			$wpdb->query( $wpdb->prepare( $sql, $prefixes ) );
+			// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnsupportedPlaceholder, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		} catch ( \Throwable $e ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Log cascade failures so admins can investigate; never thrown to the user.
+			error_log( 'Token_Registry::cascade_delete_oauth_rows failed: ' . $e->getMessage() );
+		}
+	}
+
+	/**
 	 * Revoke a set of registry rows by their IDs, cascading to oauth_tokens.
 	 *
 	 * Used by the user-facing "Revoke all matching current filter" action.

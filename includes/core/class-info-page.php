@@ -151,6 +151,23 @@ class Info_Page {
 		$current_user = $is_logged_in ? wp_get_current_user() : null;
 		$display_name = $current_user ? esc_html( $current_user->display_name ) : '';
 
+		// Translate the user's primary WordPress role into a human-readable label
+		// for the header pill. Built-in core roles get their localized translation
+		// from $wp_roles; custom roles fall back to ucfirst() on the slug.
+		$role_label = '';
+		if ( $current_user ) {
+			$roles = (array) $current_user->roles;
+			if ( ! empty( $roles ) ) {
+				$primary  = (string) $roles[0];
+				$wp_roles = function_exists( 'wp_roles' ) ? wp_roles() : null;
+				if ( $wp_roles && isset( $wp_roles->role_names[ $primary ] ) ) {
+					$role_label = translate_user_role( $wp_roles->role_names[ $primary ] );
+				} else {
+					$role_label = ucfirst( str_replace( array( '_', '-' ), ' ', $primary ) );
+				}
+			}
+		}
+
 		$quick_prompt = 'Connect to ' . $site_name . ' using the WebMCP protocol.' . "\n"
 			. 'Manifest URL: ' . $manifest_url . "\n"
 			. 'For authentication, go to the OAuth authorize URL and follow the instructions.' . "\n"
@@ -229,7 +246,7 @@ class Info_Page {
 					<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 					My AI Tokens <span id="aic-tokens-count" class="count"></span>
 				</button>
-				<span class="rolepill"><span class="dot"></span> <?php echo esc_html( $display_name ); ?></span>
+				<span class="rolepill" title="<?php echo esc_attr( $display_name ); ?>"><span class="dot"></span> <?php echo esc_html( '' !== $role_label ? $role_label : $display_name ); ?></span>
 			<?php else : ?>
 				<span class="rolepill" style="color:#B91C1C;">Login required</span>
 			<?php endif; ?>
@@ -247,9 +264,7 @@ class Info_Page {
 		<!-- ============== CONSOLE HERO ============== -->
 		<section class="console" aria-label="Connect your AI agent">
 			<div class="console-top">
-				<span class="traffic"><i></i><i></i><i></i></span>
 				<span class="label">ai-connect &middot; connection</span>
-				<span class="ready"><span class="pulse"></span> Ready</span>
 			</div>
 			<div class="console-body">
 				<p class="eyebrow">Connect your AI agent</p>
@@ -309,7 +324,7 @@ class Info_Page {
 					<button type="button" class="modal-close" onclick="aicCloseTokensModal()" aria-label="Close">&times;</button>
 				</div>
 				<div class="modal-body">
-					<p style="font-size:13.5px;color:var(--muted);margin:0 0 4px;">Every prompt you generate creates a personal Bearer token. Revoke one to cut off the agent that holds it.</p>
+					<p style="font-size:13.5px;color:var(--muted);margin:0 0 4px;">Every prompt you generate creates a personal Bearer token. Delete one to instantly cut off the AI agent that holds it &mdash; the token is removed from your records too.</p>
 
 					<div class="tk-controls">
 						<select class="select" id="aic-tokens-filter" aria-label="Filter tokens">
@@ -319,7 +334,6 @@ class Info_Page {
 							<option value="inactive">Inactive 30+ days</option>
 							<option value="renewable">Access expired, refresh valid</option>
 							<option value="expired">Fully expired</option>
-							<option value="revoked">Revoked</option>
 						</select>
 						<button type="button" class="btn-ghost" onclick="aicLoadTokens()">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -328,7 +342,7 @@ class Info_Page {
 						<span class="spacer"></span>
 						<button type="button" class="btn-ghost btn-danger" onclick="aicRevokeAllTokens()">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-							Revoke all
+							Delete all
 						</button>
 					</div>
 
@@ -340,7 +354,7 @@ class Info_Page {
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
 						</span>
 						<h4>No tokens here yet</h4>
-						<p>Generate a prompt above and the first token will appear here, ready to revoke whenever you want.</p>
+						<p>Generate a prompt above and the first token will appear here, ready to delete whenever you want.</p>
 					</div>
 					<div id="aic-tokens-list" class="tokens-list"></div>
 					<div id="aic-tokens-error" class="gen-error is-hidden" style="margin-top:14px;"></div>
@@ -655,8 +669,7 @@ class Info_Page {
 			tokens.forEach(function(t){
 				var stateClass = 'state-' + t.state;
 				var rowClass = 'is-' + t.state;
-				var disabled = (t.state === 'revoked') ? 'disabled' : '';
-				var btnLabel = (t.state === 'revoked') ? 'Revoked' : 'Revoke';
+				var btnLabel = 'Delete';
 				html += '<div class="token-row ' + rowClass + '" data-id="' + t.id + '">';
 				html +=   '<div class="token-info">';
 				html +=     '<div class="token-line">';
@@ -669,11 +682,10 @@ class Info_Page {
 				html +=       '<span>Expires: ' + fmtTime(t.expires_at) + '</span>';
 				html +=       '<span>Last used: ' + (t.last_used_at ? fmtTime(t.last_used_at) : 'never') + '</span>';
 				if (t.last_used_ip) html += '<span>IP: ' + escapeHtml(t.last_used_ip) + '</span>';
-				if (t.revoked_at) html += '<span>Revoked: ' + fmtTime(t.revoked_at) + '</span>';
 				html +=     '</div>';
 				html +=   '</div>';
 				html +=   '<div>';
-				html +=     '<button type="button" class="token-revoke" ' + disabled + ' onclick="aicRevokeToken(' + t.id + ', this)">' + btnLabel + '</button>';
+				html +=     '<button type="button" class="token-revoke" onclick="aicRevokeToken(' + t.id + ', this)">' + btnLabel + '</button>';
 				html +=   '</div>';
 				html += '</div>';
 			});
@@ -688,7 +700,7 @@ class Info_Page {
 	};
 
 	window.aicRevokeToken = function(id, btn) {
-		if (!confirm('Revoke this token? Any AI agent currently using it will lose access immediately.')) return;
+		if (!confirm('Delete this token? Any AI agent currently using it will lose access immediately, and the token will be removed from your records.')) return;
 		btn.disabled = true;
 		btn.textContent = '\u23F3';
 		fetch(TOKENS_URL + '/' + id, {
@@ -702,19 +714,19 @@ class Info_Page {
 				aicLoadTokens();
 			} else {
 				btn.disabled = false;
-				btn.textContent = 'Revoke';
-				alert((data && data.message) || 'Revoke failed.');
+				btn.textContent = 'Delete';
+				alert((data && data.message) || 'Delete failed.');
 			}
 		})
 		.catch(function(e){
 			btn.disabled = false;
-			btn.textContent = 'Revoke';
+			btn.textContent = 'Delete';
 			alert('Error: ' + e.message);
 		});
 	};
 
 	window.aicRevokeAllTokens = function() {
-		if (!confirm('Revoke ALL your active AI tokens? All connected AI agents will lose access immediately. This cannot be undone.')) return;
+		if (!confirm('Delete ALL your AI tokens? All connected AI agents will lose access immediately and the history will be cleared. This cannot be undone.')) return;
 		fetch(TOKENS_URL, {
 			method: 'DELETE',
 			credentials: 'same-origin',
@@ -723,10 +735,10 @@ class Info_Page {
 		.then(function(r){ return r.json(); })
 		.then(function(data){
 			if (data && data.success) {
-				alert('Revoked ' + (data.revoked || 0) + ' token(s).');
+				alert('Deleted ' + (data.revoked || 0) + ' token(s).');
 				aicLoadTokens();
 			} else {
-				alert((data && data.message) || 'Revoke-all failed.');
+				alert((data && data.message) || 'Delete-all failed.');
 			}
 		})
 		.catch(function(e){

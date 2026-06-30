@@ -340,7 +340,11 @@ class Tools_Endpoint {
 	}
 
 	/**
-	 * Revoke one of the current user's tokens by registry ID.
+	 * Delete one of the current user's tokens by registry ID.
+	 *
+	 * Hard-deletes both the registry row and the underlying OAuth token row.
+	 * The agent that held this token can no longer connect (token gone) AND
+	 * the user no longer sees the row in history.
 	 *
 	 * @param \WP_REST_Request $request REST request object.
 	 * @return \WP_REST_Response|\WP_Error
@@ -352,37 +356,29 @@ class Tools_Endpoint {
 			return new \WP_Error( 'invalid_id', 'Invalid token ID.', array( 'status' => 400 ) );
 		}
 
-		// Verify ownership before revoking — prevents user A from revoking user B's token.
-		global $wpdb;
-		$table = \GoldtWebMCP\OAuth\Token_Registry::table_name();
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Ownership check; table name from $wpdb->prefix; $id is bound via prepare().
-		$owner = (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT user_id FROM `{$table}` WHERE id = %d", $id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix.
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-		if ( $owner !== $user_id ) {
-			return new \WP_Error( 'forbidden', 'You can only revoke your own tokens.', array( 'status' => 403 ) );
+		// Token_Registry::delete_by_id() enforces ownership internally.
+		$ok = \GoldtWebMCP\OAuth\Token_Registry::delete_by_id( $id, $user_id );
+		if ( ! $ok ) {
+			return new \WP_Error( 'not_found', 'Token not found or already deleted.', array( 'status' => 404 ) );
 		}
 
-		$ok = \GoldtWebMCP\OAuth\Token_Registry::revoke_by_id( $id, $user_id );
 		return \rest_ensure_response(
 			array(
-				'success' => (bool) $ok,
+				'success' => true,
 				'id'      => $id,
 			)
 		);
 	}
 
 	/**
-	 * Revoke ALL of the current user's active tokens.
+	 * Delete ALL of the current user's tokens (active and revoked).
 	 *
 	 * @param \WP_REST_Request $request REST request object.
 	 * @return \WP_REST_Response
 	 */
 	public function revoke_all_my_tokens( $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by WP REST callback.
 		$user_id = (int) \get_current_user_id();
-		$count   = \GoldtWebMCP\OAuth\Token_Registry::revoke_all_for_user( $user_id, $user_id );
+		$count   = \GoldtWebMCP\OAuth\Token_Registry::delete_all_for_user( $user_id );
 
 		return \rest_ensure_response(
 			array(
@@ -565,60 +561,64 @@ class Tools_Endpoint {
 	private function build_mcp_prompt( $access_token, $refresh_token, $client_id = 'claude-ai', array $scopes = array( 'read' ) ) {
 		$ctx           = $this->collect_prompt_context();
 		$granted_tools = $this->filter_tools_by_scopes( $ctx['all_tools'], $scopes );
-		$read_tools    = array();
-		foreach ( $granted_tools as $tool ) {
-			if ( ( $tool['required_scope'] ?? 'read' ) === 'read' ) {
-				$read_tools[] = $tool['name'];
-			}
-		}
 		$scope_summary = implode( ' + ', $scopes );
 
 		$lines   = array();
 		$lines[] = 'You have access to ' . $ctx['site_name'] . ' via AI Connect.';
-		$lines[] = 'Granted scope: ' . $scope_summary . ' (matches your WordPress permissions)';
+		$lines[] = 'Granted scope: ' . $scope_summary . ' (matches the user\'s WordPress permissions).';
 		$lines[] = '';
-		$lines[] = '## MCP (Recommended — Claude Desktop / WebMCP-compatible)';
-		$lines[] = 'Call webmcp_addSite with these parameters:';
+		$lines[] = '## Setup — pick the path your client supports';
+		$lines[] = '';
+		$lines[] = '### Option A — MCP (Claude Desktop / WebMCP-compatible)';
+		$lines[] = 'Call webmcp_addSite with:';
 		$lines[] = '  name:          "' . $ctx['site_name_mcp'] . '"';
 		$lines[] = '  manifest_url:  "' . $ctx['manifest_url'] . '"';
 		$lines[] = '  token:         "Bearer ' . $access_token . '"';
 		$lines[] = '  refresh_token: "' . $refresh_token . '"';
 		$lines[] = '';
-		$lines[] = 'IMPORTANT: Paste BOTH token and refresh_token — otherwise the connection will stop working after 1 hour.';
+		$lines[] = '### Option B — Direct HTTP (any client that can POST JSON)';
+		$lines[] = '  Endpoint base: ' . $ctx['tool_root'];
+		$lines[] = '  Authorization: Bearer ' . $access_token;
+		$lines[] = '  Content-Type:  application/json';
+		$lines[] = '  Method:        POST   (body is the tool arguments JSON, "{}" if none)';
 		$lines[] = '';
+		$lines[] = 'IMPORTANT: Store BOTH the token and the refresh_token. The access token';
+		$lines[] = 'expires after 1 hour; the refresh token is valid 30 days (see "Token Refresh"';
+		$lines[] = 'at the end of this prompt).';
+		$lines[] = '';
+
 		if ( ! empty( $granted_tools ) ) {
-			$lines[] = 'After adding the site, call these tools by EXACT name (do not search — use directly):';
+			$lines[] = '## Available tools';
+			$lines[] = 'Call each tool by its EXACT name. Do not use any "search tools" function —';
+			$lines[] = 'it may return tools from other sites. Start with getCurrentUser to verify.';
+			$lines[] = '';
+			$lines[] = '  ' . str_pad( 'MCP tool name', 50 ) . '  HTTP path                                        Description';
 			foreach ( $granted_tools as $tool ) {
-				$mcp_name = $ctx['site_key'] . '_' . str_replace( '.', '_', $tool['name'] );
-				$hint     = substr( $tool['description'] ?? '', 0, 70 );
-				$lines[]  = '  ' . str_pad( $mcp_name, 50 ) . '<- ' . $hint;
+				$mcp_name  = $ctx['site_key'] . '_' . str_replace( '.', '_', $tool['name'] );
+				$http_path = '/' . $tool['name'];
+				$hint      = $tool['description'] ?? '';
+				if ( strlen( $hint ) > 60 ) {
+					$hint = substr( $hint, 0, 57 ) . '...';
+				}
+				$lines[] = '  ' . str_pad( $mcp_name, 50 ) . '  ' . str_pad( $http_path, 48 ) . ' ' . $hint;
 			}
+			$lines[] = '';
 		} else {
-			$lines[] = '(No tools available for your current permissions.)';
-		}
-		$lines[] = '';
-		if ( ! empty( $read_tools ) ) {
-			$lines[] = '## Direct URL Access (Fallback — read-only tools)';
-			$lines[] = 'If MCP is not available, read-only tools can be called via POST:';
-			$lines[] = '  Authorization: Bearer ' . $access_token;
-			$lines[] = '  Content-Type: application/json';
-			$lines[] = '';
-			foreach ( $read_tools as $tool_name ) {
-				$lines[] = '  POST ' . $ctx['tool_root'] . '/' . $tool_name . '  body: {}';
-			}
+			$lines[] = '## Available tools';
+			$lines[] = '(No tools available for the current scope.)';
 			$lines[] = '';
 		}
-		$lines[] = '## Token Refresh (valid 30 days)';
-		$lines[] = 'When access_token expires (after 1 hour), refresh it:';
+
+		$lines[] = '## Token Refresh (when the 1-hour access token expires)';
 		$lines[] = '  POST ' . $ctx['token_url'];
 		$lines[] = '  Content-Type: application/json';
 		$lines[] = '  {"grant_type":"refresh_token","refresh_token":"' . $refresh_token . '","client_id":"' . $client_id . '"}';
-		$lines[] = 'Response contains a new access_token + new refresh_token (old pair is revoked).';
+		$lines[] = 'The response contains a NEW access_token and a NEW refresh_token.';
+		$lines[] = 'The old pair is immediately revoked — replace both in your storage.';
 		$lines[] = '';
-		$lines[] = 'IMPORTANT: Do NOT use webmcp tool search — it may return tools from other sites.';
-		$lines[] = 'Call the tools listed above by their EXACT full name. Start with getCurrentUser.';
-		$lines[] = 'Security note: This token acts on behalf of the user who generated it. Handle it with care.';
-		$lines[] = 'Documentation: https://ai-connect.gold-t.co.il/wordpress';
+		$lines[] = '## Notes';
+		$lines[] = '- The token acts on behalf of the user who generated it. Treat it as a secret.';
+		$lines[] = '- Documentation: https://ai-connect.gold-t.co.il/wordpress';
 
 		return implode( "\n", $lines );
 	}
