@@ -227,33 +227,8 @@ class Info_Page {
 		<div style="margin-top:20px;">
 			<div class="aic-label">&#129302; AI Connection Prompt &mdash; one-click setup with your personal token</div>
 			<p style="font-size:13px;color:#9ca3af;margin:4px 0 12px;">
-				Generates a ready-to-paste prompt for Claude, ChatGPT, Gemini, or any WebMCP-compatible client. Includes your Bearer token so the AI connects instantly — no OAuth dance required.
+				Generates a ready-to-paste prompt for Claude, ChatGPT, Gemini, or any WebMCP-compatible client. Includes your Bearer token so the AI connects instantly — no OAuth dance required. <strong>Permissions match your WordPress role</strong> — the AI can only do what you can do.
 			</p>
-
-			<div class="aic-gen-controls">
-				<div class="aic-gen-field">
-					<label for="aic-gen-agent">AI agent</label>
-					<select id="aic-gen-agent">
-						<option value="" disabled selected>Loading…</option>
-					</select>
-				</div>
-				<div class="aic-gen-field">
-					<label for="aic-gen-scope">Access level</label>
-					<select id="aic-gen-scope">
-						<option value="" disabled selected>Loading…</option>
-					</select>
-				</div>
-				<div class="aic-gen-field">
-					<label for="aic-gen-template">Format</label>
-					<select id="aic-gen-template">
-						<option value="">Recommended for agent</option>
-						<option value="mcp">MCP (Claude Desktop / WebMCP)</option>
-						<option value="rest">HTTP REST (curl / direct calls)</option>
-					</select>
-				</div>
-			</div>
-
-			<p id="aic-gen-scope-hint" style="font-size:12px;color:#9ca3af;margin:0 0 12px;"></p>
 
 			<button id="aic-gen-btn" class="aic-prompt-copy-btn" style="margin-bottom:12px;" onclick="aicGeneratePrompt(this)">&#9889; Generate AI Prompt</button>
 			<button id="aic-regen-btn" class="aic-prompt-copy-btn" style="margin-bottom:12px;display:none;background:#4b5563;" onclick="aicGeneratePrompt(this)">&#128260; Regenerate (new token)</button>
@@ -264,13 +239,6 @@ class Info_Page {
 			</div>
 			<div id="aic-gen-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
 		</div>
-		<style>
-			.aic-gen-controls { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:12px; }
-			.aic-gen-field { display:flex; flex-direction:column; gap:4px; }
-			.aic-gen-field label { font-size:12px; font-weight:600; color:#9ca3af; }
-			.aic-gen-field select { padding:8px 10px; background:#1f2937; color:#f3f4f6; border:1px solid #374151; border-radius:6px; font-size:13px; cursor:pointer; }
-			.aic-gen-field select:focus { outline:none; border-color:#0f3460; }
-		</style>
 		<?php else : ?>
 		<div class="aic-label" style="margin-top: 16px;">Quick Prompt &mdash; paste this into your AI agent to get started</div>
 		<div class="aic-prompt-wrap">
@@ -279,6 +247,60 @@ class Info_Page {
 		</div>
 		<?php endif; ?>
 	</div>
+
+		<?php if ( $is_logged_in ) : ?>
+	<!-- Section 1b: My AI Tokens (logged-in users only) -->
+	<div class="aic-card">
+		<div class="aic-card-title">
+			<span>&#128274;</span> My AI Tokens
+		</div>
+		<p style="font-size:13px;color:#9ca3af;margin:0 0 12px;">
+			Every prompt you generate above creates a personal Bearer token. Tokens here can be used by AI agents to access your WordPress content. Revoke any token instantly — that AI loses access immediately.
+		</p>
+
+		<div class="aic-tokens-toolbar">
+			<div class="aic-gen-field" style="flex:1;min-width:160px;">
+				<label for="aic-tokens-filter">Filter</label>
+				<select id="aic-tokens-filter">
+					<option value="all">All my tokens</option>
+					<option value="active">Active (in use)</option>
+					<option value="unused">Issued but unused</option>
+					<option value="inactive">Inactive 30+ days</option>
+					<option value="renewable">Access expired, refresh valid</option>
+					<option value="expired">Fully expired</option>
+					<option value="revoked">Revoked</option>
+				</select>
+			</div>
+			<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+				<button class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicLoadTokens()">&#128260; Refresh</button>
+				<button class="aic-prompt-copy-btn" style="background:#b91c1c;" onclick="aicRevokeAllTokens()">&#9888;&#65039; Revoke all</button>
+			</div>
+		</div>
+
+		<div id="aic-tokens-loading" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">Loading…</div>
+		<div id="aic-tokens-empty" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">No tokens match this filter.</div>
+		<div id="aic-tokens-list" style="margin-top:12px;"></div>
+		<div id="aic-tokens-error" style="margin-top:8px;color:#f87171;font-size:13px;display:none;"></div>
+	</div>
+	<style>
+		.aic-tokens-toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+		.aic-token-row { display:grid; grid-template-columns:1fr auto; gap:12px; padding:10px 12px; background:#1f2937; border:1px solid #374151; border-radius:6px; margin-bottom:8px; }
+		.aic-token-row.aic-token-revoked { opacity:0.55; }
+		.aic-token-row.aic-token-expired { opacity:0.7; }
+		.aic-token-info { display:flex; flex-direction:column; gap:4px; font-size:13px; color:#f3f4f6; }
+		.aic-token-info .aic-token-line { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+		.aic-token-info code { background:#0f172a; padding:2px 6px; border-radius:3px; font-size:12px; color:#cbd5e1; }
+		.aic-token-meta { color:#9ca3af; font-size:12px; }
+		.aic-state-badge { padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; text-transform:uppercase; }
+		.aic-state-active { background:#065f46; color:#a7f3d0; }
+		.aic-state-expired { background:#78350f; color:#fde68a; }
+		.aic-state-revoked { background:#7f1d1d; color:#fecaca; }
+		.aic-token-actions { display:flex; align-items:center; }
+		.aic-token-revoke-btn { padding:6px 12px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px; }
+		.aic-token-revoke-btn:hover { background:#b91c1c; }
+		.aic-token-revoke-btn:disabled { opacity:0.5; cursor:not-allowed; }
+	</style>
+	<?php endif; ?>
 
 	<!-- Section 2: Supported AI Platforms -->
 	<div class="aic-card">
@@ -338,66 +360,22 @@ class Info_Page {
 <script>
 (function(){
 	var GEN_URL  = '<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/generate-prompt' ) ); ?>';
-	var OPTS_URL = '<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/prompt-options' ) ); ?>';
 	var NONCE    = '<?php echo esc_js( wp_create_nonce( 'wp_rest' ) ); ?>';
-	var presetsCache = {};
 	var loggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
 	if (!loggedIn) return;
 
 	function el(id){ return document.getElementById(id); }
-
-	function loadOptions() {
-		fetch(OPTS_URL, { credentials: 'same-origin', headers: { 'X-WP-Nonce': NONCE } })
-			.then(function(r){ return r.json(); })
-			.then(function(data){
-				var agentSel = el('aic-gen-agent');
-				var scopeSel = el('aic-gen-scope');
-				if (!agentSel || !scopeSel) return;
-				agentSel.innerHTML = '';
-				(data.clients || []).forEach(function(c){
-					var o = document.createElement('option');
-					o.value = c.id; o.textContent = c.label;
-					o.dataset.template = c.default_template;
-					if (c.id === 'claude-ai') o.selected = true;
-					agentSel.appendChild(o);
-				});
-				scopeSel.innerHTML = '';
-				(data.presets || []).forEach(function(p){
-					var o = document.createElement('option');
-					o.value = p.key; o.textContent = p.label;
-					if (p.key === 'read_write') o.selected = true;
-					scopeSel.appendChild(o);
-					presetsCache[p.key] = p.description || '';
-				});
-				updateScopeHint();
-			})
-			.catch(function(){ /* leave UI as-is; generate still works with defaults */ });
-	}
-
-	function updateScopeHint() {
-		var scopeSel = el('aic-gen-scope');
-		var hint = el('aic-gen-scope-hint');
-		if (!scopeSel || !hint) return;
-		hint.textContent = presetsCache[scopeSel.value] || '';
-	}
 
 	window.aicGeneratePrompt = function(btn) {
 		btn.disabled = true;
 		btn.textContent = '⏳ Generating...';
 		var err = el('aic-gen-error'); err.style.display = 'none';
 
-		var payload = {
-			client_id:    el('aic-gen-agent') ? el('aic-gen-agent').value || 'claude-ai' : 'claude-ai',
-			scope_preset: el('aic-gen-scope') ? el('aic-gen-scope').value || 'read_write' : 'read_write'
-		};
-		var tpl = el('aic-gen-template') ? el('aic-gen-template').value : '';
-		if (tpl) payload.template = tpl;
-
 		fetch(GEN_URL, {
 			method: 'POST',
 			credentials: 'same-origin',
 			headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
-			body: JSON.stringify(payload)
+			body: '{}'
 		})
 		.then(function(r){ return r.json(); })
 		.then(function(data){
@@ -409,6 +387,8 @@ class Info_Page {
 				var genBtn = el('aic-gen-btn'); if (genBtn) genBtn.style.display = 'none';
 				var regenBtn = el('aic-regen-btn');
 				if (regenBtn) { regenBtn.style.display = ''; regenBtn.disabled = false; regenBtn.innerHTML = '&#128260; Regenerate (new token)'; }
+				// Refresh tokens list so the user sees the freshly issued token.
+				aicLoadTokens();
 			} else {
 				err.textContent = (data && data.message) ? data.message : 'Failed to generate prompt.';
 				err.style.display = 'block';
@@ -424,10 +404,132 @@ class Info_Page {
 		});
 	};
 
+	// ====== My AI Tokens ============================================
+	var TOKENS_URL = '<?php echo esc_js( rest_url( 'goldt-webmcp-bridge/v1/my-tokens' ) ); ?>';
+
+	function fmtTime(ts) {
+		if (!ts) return '—';
+		var d = new Date(ts * 1000);
+		return d.toLocaleString();
+	}
+	function escapeHtml(s) {
+		return (s || '').replace(/[&<>"']/g, function(c){
+			return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+		});
+	}
+
+	window.aicLoadTokens = function() {
+		var filterSel = el('aic-tokens-filter');
+		var status = filterSel ? filterSel.value : 'all';
+		var list = el('aic-tokens-list');
+		var empty = el('aic-tokens-empty');
+		var loading = el('aic-tokens-loading');
+		var errBox = el('aic-tokens-error');
+		if (!list) return;
+		errBox.style.display = 'none';
+		empty.style.display = 'none';
+		loading.style.display = '';
+		list.innerHTML = '';
+
+		fetch(TOKENS_URL + '?status=' + encodeURIComponent(status), {
+			credentials: 'same-origin',
+			headers: { 'X-WP-Nonce': NONCE }
+		})
+		.then(function(r){ return r.json(); })
+		.then(function(data){
+			loading.style.display = 'none';
+			var tokens = (data && data.tokens) || [];
+			if (!tokens.length) {
+				empty.style.display = '';
+				return;
+			}
+			var html = '';
+			tokens.forEach(function(t){
+				var stateClass = 'aic-state-' + t.state;
+				var rowClass = 'aic-token-' + t.state;
+				var disabled = (t.state === 'revoked') ? 'disabled' : '';
+				var btnLabel = (t.state === 'revoked') ? 'Revoked' : 'Revoke';
+				html += '<div class="aic-token-row ' + rowClass + '" data-id="' + t.id + '">';
+				html +=   '<div class="aic-token-info">';
+				html +=     '<div class="aic-token-line">';
+				html +=       '<span class="aic-state-badge ' + stateClass + '">' + escapeHtml(t.state) + '</span>';
+				html +=       '<strong>' + escapeHtml(t.client_label) + '</strong>';
+				html +=       '<code>' + escapeHtml(t.token_prefix) + '…</code>';
+				html +=       '<span class="aic-token-meta">scope: ' + escapeHtml(t.scope) + '</span>';
+				html +=     '</div>';
+				html +=     '<div class="aic-token-line aic-token-meta">';
+				html +=       '<span>Issued: ' + fmtTime(t.issued_at) + '</span>';
+				html +=       '<span>Expires: ' + fmtTime(t.expires_at) + '</span>';
+				html +=       '<span>Last used: ' + (t.last_used_at ? fmtTime(t.last_used_at) : 'never') + '</span>';
+				if (t.last_used_ip) html += '<span>IP: ' + escapeHtml(t.last_used_ip) + '</span>';
+				if (t.revoked_at) html += '<span>Revoked: ' + fmtTime(t.revoked_at) + '</span>';
+				html +=     '</div>';
+				html +=   '</div>';
+				html +=   '<div class="aic-token-actions">';
+				html +=     '<button class="aic-token-revoke-btn" ' + disabled + ' onclick="aicRevokeToken(' + t.id + ', this)">' + btnLabel + '</button>';
+				html +=   '</div>';
+				html += '</div>';
+			});
+			list.innerHTML = html;
+		})
+		.catch(function(e){
+			loading.style.display = 'none';
+			errBox.textContent = 'Error loading tokens: ' + e.message;
+			errBox.style.display = '';
+		});
+	};
+
+	window.aicRevokeToken = function(id, btn) {
+		if (!confirm('Revoke this token? Any AI agent currently using it will lose access immediately.')) return;
+		btn.disabled = true;
+		btn.textContent = '⏳';
+		fetch(TOKENS_URL + '/' + id, {
+			method: 'DELETE',
+			credentials: 'same-origin',
+			headers: { 'X-WP-Nonce': NONCE }
+		})
+		.then(function(r){ return r.json(); })
+		.then(function(data){
+			if (data && data.success) {
+				aicLoadTokens();
+			} else {
+				btn.disabled = false;
+				btn.textContent = 'Revoke';
+				alert((data && data.message) || 'Revoke failed.');
+			}
+		})
+		.catch(function(e){
+			btn.disabled = false;
+			btn.textContent = 'Revoke';
+			alert('Error: ' + e.message);
+		});
+	};
+
+	window.aicRevokeAllTokens = function() {
+		if (!confirm('Revoke ALL your active AI tokens? All connected AI agents will lose access immediately. This cannot be undone.')) return;
+		fetch(TOKENS_URL, {
+			method: 'DELETE',
+			credentials: 'same-origin',
+			headers: { 'X-WP-Nonce': NONCE }
+		})
+		.then(function(r){ return r.json(); })
+		.then(function(data){
+			if (data && data.success) {
+				alert('Revoked ' + (data.revoked || 0) + ' token(s).');
+				aicLoadTokens();
+			} else {
+				alert((data && data.message) || 'Revoke-all failed.');
+			}
+		})
+		.catch(function(e){
+			alert('Error: ' + e.message);
+		});
+	};
+
 	document.addEventListener('DOMContentLoaded', function(){
-		loadOptions();
-		var scopeSel = el('aic-gen-scope');
-		if (scopeSel) scopeSel.addEventListener('change', updateScopeHint);
+		var filterSel = el('aic-tokens-filter');
+		if (filterSel) filterSel.addEventListener('change', aicLoadTokens);
+		aicLoadTokens();
 	});
 })();
 </script>

@@ -87,10 +87,30 @@ class Tools_Endpoint {
 
 		\register_rest_route(
 			'goldt-webmcp-bridge/v1',
-			'/prompt-options',
+			'/my-tokens',
 			array(
 				'methods'             => 'GET',
-				'callback'            => array( $this, 'get_prompt_options' ),
+				'callback'            => array( $this, 'list_my_tokens' ),
+				'permission_callback' => array( $this, 'check_wp_session' ),
+			)
+		);
+
+		\register_rest_route(
+			'goldt-webmcp-bridge/v1',
+			'/my-tokens/(?P<id>\d+)',
+			array(
+				'methods'             => 'DELETE',
+				'callback'            => array( $this, 'revoke_my_token' ),
+				'permission_callback' => array( $this, 'check_wp_session' ),
+			)
+		);
+
+		\register_rest_route(
+			'goldt-webmcp-bridge/v1',
+			'/my-tokens',
+			array(
+				'methods'             => 'DELETE',
+				'callback'            => array( $this, 'revoke_all_my_tokens' ),
 				'permission_callback' => array( $this, 'check_wp_session' ),
 			)
 		);
@@ -260,113 +280,186 @@ class Tools_Endpoint {
 	}
 
 	/**
-	 * Available scope presets — keyed by preset slug.
+	 * List the current user's AI tokens (registry rows + agent labels).
 	 *
-	 * @return array<string,array{label:string,scopes:array<string>,description:string}>
+	 * @param \WP_REST_Request $request REST request object.
+	 * @return \WP_REST_Response
 	 */
-	public static function get_scope_presets() {
-		return array(
-			'read_only'  => array(
-				'label'       => 'Read only',
-				'scopes'      => array( 'read' ),
-				'description' => 'Safest. AI can read posts, pages, users — but cannot change anything.',
-			),
-			'read_write' => array(
-				'label'       => 'Read + Write',
-				'scopes'      => array( 'read', 'write' ),
-				'description' => 'AI can create/update content. Cannot delete. Recommended default.',
-			),
-			'full'       => array(
-				'label'       => 'Full access (read + write + delete)',
-				'scopes'      => array( 'read', 'write', 'delete' ),
-				'description' => 'AI can read, create, update, and delete. Use only for trusted automations.',
-			),
+	public function list_my_tokens( $request ) {
+		$user_id = (int) \get_current_user_id();
+		$status  = (string) ( $request->get_param( 'status' ) ?? 'all' );
+		$allowed = array( 'active', 'unused', 'inactive', 'renewable', 'expired', 'revoked', 'all' );
+		if ( ! in_array( $status, $allowed, true ) ) {
+			$status = 'all';
+		}
+
+		$rows = \GoldtWebMCP\OAuth\Token_Registry::list(
+			array(
+				'user_id' => $user_id,
+				'status'  => $status,
+				'limit'   => 200,
+			)
+		);
+
+		$agents = self::get_agent_clients();
+		$now    = time();
+		$tokens = array();
+		foreach ( $rows as $row ) {
+			$client       = (string) ( $row['client_id'] ?? '' );
+			$expires_at   = (int) ( $row['expires_at'] ?? 0 );
+			$last_used_at = isset( $row['last_used_at'] ) ? (int) $row['last_used_at'] : null;
+			$revoked_at   = isset( $row['revoked_at'] ) ? (int) $row['revoked_at'] : null;
+			$issued_at    = (int) ( $row['issued_at'] ?? 0 );
+			$is_revoked   = ! empty( $revoked_at );
+			$is_expired   = ! $is_revoked && $expires_at > 0 && $expires_at <= $now;
+			$state        = $is_revoked ? 'revoked' : ( $is_expired ? 'expired' : 'active' );
+
+			$tokens[] = array(
+				'id'           => (int) $row['id'],
+				'token_prefix' => (string) ( $row['token_prefix'] ?? '' ),
+				'client_id'    => $client,
+				'client_label' => $agents[ $client ]['label'] ?? $client,
+				'scope'        => (string) ( $row['scope'] ?? '' ),
+				'source'       => (string) ( $row['source'] ?? '' ),
+				'issued_at'    => $issued_at,
+				'expires_at'   => $expires_at,
+				'last_used_at' => $last_used_at,
+				'last_used_ip' => $row['last_used_ip'] ?? null,
+				'revoked_at'   => $revoked_at,
+				'state'        => $state,
+			);
+		}
+
+		return \rest_ensure_response(
+			array(
+				'tokens'  => $tokens,
+				'status'  => $status,
+				'user_id' => $user_id,
+			)
+		);
+	}
+
+	/**
+	 * Revoke one of the current user's tokens by registry ID.
+	 *
+	 * @param \WP_REST_Request $request REST request object.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function revoke_my_token( $request ) {
+		$user_id = (int) \get_current_user_id();
+		$id      = (int) $request->get_param( 'id' );
+		if ( $id <= 0 ) {
+			return new \WP_Error( 'invalid_id', 'Invalid token ID.', array( 'status' => 400 ) );
+		}
+
+		// Verify ownership before revoking — prevents user A from revoking user B's token.
+		global $wpdb;
+		$table = \GoldtWebMCP\OAuth\Token_Registry::table_name();
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Ownership check; table name from $wpdb->prefix; $id is bound via prepare().
+		$owner = (int) $wpdb->get_var(
+			$wpdb->prepare( "SELECT user_id FROM `{$table}` WHERE id = %d", $id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix.
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( $owner !== $user_id ) {
+			return new \WP_Error( 'forbidden', 'You can only revoke your own tokens.', array( 'status' => 403 ) );
+		}
+
+		$ok = \GoldtWebMCP\OAuth\Token_Registry::revoke_by_id( $id, $user_id );
+		return \rest_ensure_response(
+			array(
+				'success' => (bool) $ok,
+				'id'      => $id,
+			)
+		);
+	}
+
+	/**
+	 * Revoke ALL of the current user's active tokens.
+	 *
+	 * @param \WP_REST_Request $request REST request object.
+	 * @return \WP_REST_Response
+	 */
+	public function revoke_all_my_tokens( $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by WP REST callback.
+		$user_id = (int) \get_current_user_id();
+		$count   = \GoldtWebMCP\OAuth\Token_Registry::revoke_all_for_user( $user_id, $user_id );
+
+		return \rest_ensure_response(
+			array(
+				'success' => true,
+				'revoked' => (int) $count,
+			)
 		);
 	}
 
 	/**
 	 * Supported AI agent clients — keyed by client_id (OAuth client identifier).
 	 *
-	 * @return array<string,array{label:string,template:string}>
+	 * Used only for nicer labels when listing existing tokens (`/my-tokens`).
+	 * The prompt itself is universal (MCP + REST) so the user is not asked to
+	 * pick an agent at generation time.
+	 *
+	 * @return array<string,array{label:string}>
 	 */
 	public static function get_agent_clients() {
 		return array(
-			'claude-ai'     => array(
-				'label'    => 'Claude (Anthropic)',
-				'template' => 'mcp',
-			),
-			'chatgpt'       => array(
-				'label'    => 'ChatGPT (OpenAI)',
-				'template' => 'mcp',
-			),
-			'gemini'        => array(
-				'label'    => 'Gemini (Google)',
-				'template' => 'rest',
-			),
-			'copilot'       => array(
-				'label'    => 'Microsoft Copilot',
-				'template' => 'rest',
-			),
-			'grok'          => array(
-				'label'    => 'Grok (xAI)',
-				'template' => 'rest',
-			),
-			'deepseek'      => array(
-				'label'    => 'DeepSeek AI',
-				'template' => 'rest',
-			),
-			'perplexity'    => array(
-				'label'    => 'Perplexity AI',
-				'template' => 'rest',
-			),
-			'meta-ai'       => array(
-				'label'    => 'Meta AI',
-				'template' => 'rest',
-			),
-			'webmcp-master' => array(
-				'label'    => 'Goldnat (webmcp)',
-				'template' => 'mcp',
-			),
+			'claude-ai'     => array( 'label' => 'Claude (Anthropic)' ),
+			'chatgpt'       => array( 'label' => 'ChatGPT (OpenAI)' ),
+			'gemini'        => array( 'label' => 'Gemini (Google)' ),
+			'copilot'       => array( 'label' => 'Microsoft Copilot' ),
+			'grok'          => array( 'label' => 'Grok (xAI)' ),
+			'deepseek'      => array( 'label' => 'DeepSeek AI' ),
+			'perplexity'    => array( 'label' => 'Perplexity AI' ),
+			'meta-ai'       => array( 'label' => 'Meta AI' ),
+			'webmcp-master' => array( 'label' => 'Goldnat (webmcp)' ),
 		);
+	}
+
+	/**
+	 * Derive OAuth scopes from the current WordPress user's capabilities.
+	 *
+	 * Mirrors the XenForo addon model: the prompt grants access at the
+	 * intersection of the user's existing permissions, not at a level the
+	 * user chooses in a UI. A subscriber gets read-only; an editor adds
+	 * write; an admin adds delete + manage_users.
+	 *
+	 * @return array<int,string>
+	 */
+	private function derive_scopes_from_caps() {
+		$scopes = array( 'read' );
+
+		if ( \current_user_can( 'edit_posts' ) || \current_user_can( 'edit_pages' ) ) {
+			$scopes[] = 'write';
+		}
+		if ( \current_user_can( 'delete_posts' ) || \current_user_can( 'delete_pages' ) ) {
+			$scopes[] = 'delete';
+		}
+		if ( \current_user_can( 'list_users' ) || \current_user_can( 'edit_users' ) ) {
+			$scopes[] = 'manage_users';
+		}
+
+		return $scopes;
 	}
 
 	/**
 	 * Generate a personalized MCP connection prompt for the current WP user.
 	 *
-	 * Accepted POST body parameters:
-	 *  - client_id    : agent OAuth client (default: claude-ai). See get_agent_clients().
-	 *  - scope_preset : 'read_only' | 'read_write' | 'full' (default: read_write).
-	 *  - template     : 'mcp' | 'rest' (default: per-agent default).
-	 *  - scope        : LEGACY — space-separated raw scopes. Ignored if scope_preset provided.
+	 * Scopes are derived from the user's WordPress capabilities — there is no
+	 * UI knob to elevate beyond what the user can already do. The prompt is
+	 * universal (MCP + REST in one) so the user can paste it into Claude,
+	 * ChatGPT, Gemini, or any agent.
 	 *
 	 * @param \WP_REST_Request $request REST request object.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function generate_prompt( $request ) {
+	public function generate_prompt( $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by WP REST callback.
 		$user_id = \get_current_user_id();
+		$scopes  = $this->derive_scopes_from_caps();
 
-		// Resolve client_id (defaults to claude-ai for backwards compatibility).
-		$agents     = self::get_agent_clients();
-		$client_raw = (string) ( $request->get_param( 'client_id' ) ?? '' );
-		$client_id  = isset( $agents[ $client_raw ] ) ? $client_raw : 'claude-ai';
-
-		// Resolve scopes via preset (preferred) or legacy 'scope' param.
-		$presets    = self::get_scope_presets();
-		$preset_raw = (string) ( $request->get_param( 'scope_preset' ) ?? '' );
-		$preset_key = isset( $presets[ $preset_raw ] ) ? $preset_raw : '';
-		if ( '' !== $preset_key ) {
-			$scopes = $presets[ $preset_key ]['scopes'];
-		} else {
-			$scope_param = (string) ( $request->get_param( 'scope' ) ?? '' );
-			$scope_str   = sanitize_text_field( '' !== $scope_param ? $scope_param : 'read write' );
-			$scopes      = array_values( array_filter( explode( ' ', $scope_str ) ) );
-			$preset_key  = 'read_write';
-		}
-
-		// Resolve template ('mcp' = Claude Desktop / WebMCP style, 'rest' = direct HTTP).
-		$tpl_raw      = (string) ( $request->get_param( 'template' ) ?? '' );
-		$tpl_default  = $agents[ $client_id ]['template'];
-		$template_key = in_array( $tpl_raw, array( 'mcp', 'rest' ), true ) ? $tpl_raw : $tpl_default;
+		// Token is issued under the canonical 'claude-ai' OAuth client.
+		// The Bearer is agent-agnostic — any AI agent that supports MCP or REST
+		// can use it. The client_id only matters for OAuth bookkeeping.
+		$client_id = 'claude-ai';
 
 		$oauth      = new \GoldtWebMCP\OAuth\OAuth_Server();
 		$token_data = $oauth->create_access_token( $client_id, $user_id, $scopes, 'user-ui' );
@@ -379,49 +472,16 @@ class Tools_Endpoint {
 			$token_data['access_token'],
 			$token_data['refresh_token'],
 			$client_id,
-			$scopes,
-			$template_key
+			$scopes
 		);
 
 		return \rest_ensure_response(
 			array(
 				'prompt'        => $prompt,
-				'client_id'     => $client_id,
-				'scope_preset'  => $preset_key,
-				'template'      => $template_key,
+				'scopes'        => $scopes,
 				'access_token'  => $token_data['access_token'],
 				'refresh_token' => $token_data['refresh_token'],
 				'expires_in'    => $token_data['expires_in'],
-			)
-		);
-	}
-
-	/**
-	 * Return metadata for the prompt generator UI (clients + scope presets).
-	 *
-	 * @return \WP_REST_Response
-	 */
-	public function get_prompt_options() {
-		$clients = array();
-		foreach ( self::get_agent_clients() as $id => $info ) {
-			$clients[] = array(
-				'id'               => $id,
-				'label'            => $info['label'],
-				'default_template' => $info['template'],
-			);
-		}
-		$presets = array();
-		foreach ( self::get_scope_presets() as $key => $info ) {
-			$presets[] = array(
-				'key'         => $key,
-				'label'       => $info['label'],
-				'description' => $info['description'],
-			);
-		}
-		return \rest_ensure_response(
-			array(
-				'clients' => $clients,
-				'presets' => $presets,
 			)
 		);
 	}
@@ -489,47 +549,35 @@ class Tools_Endpoint {
 	}
 
 	/**
-	 * Build a personalized connection prompt.
+	 * Build the universal connection prompt — XenForo addon style.
+	 *
+	 * Single prompt that contains BOTH the MCP block (Claude Desktop / WebMCP)
+	 * AND the HTTP REST fallback. The user pastes it into whatever agent they
+	 * use; the agent picks the path it understands. Scopes shown are exactly
+	 * the user's WP capabilities — no over-grant.
 	 *
 	 * @param string $access_token  Bearer access token.
 	 * @param string $refresh_token Refresh token.
-	 * @param string $client_id     OAuth client identifier.
-	 * @param array  $scopes        Granted scope list.
-	 * @param string $template      'mcp' or 'rest'.
+	 * @param string $client_id     OAuth client_id used to issue the token.
+	 * @param array  $scopes        Granted scope list (derived from user caps).
 	 * @return string
 	 */
-	private function build_mcp_prompt( $access_token, $refresh_token, $client_id = 'claude-ai', array $scopes = array( 'read', 'write' ), $template = 'mcp' ) {
+	private function build_mcp_prompt( $access_token, $refresh_token, $client_id = 'claude-ai', array $scopes = array( 'read' ) ) {
 		$ctx           = $this->collect_prompt_context();
 		$granted_tools = $this->filter_tools_by_scopes( $ctx['all_tools'], $scopes );
-		$agents        = self::get_agent_clients();
-		$agent_label   = $agents[ $client_id ]['label'] ?? $client_id;
+		$read_tools    = array();
+		foreach ( $granted_tools as $tool ) {
+			if ( ( $tool['required_scope'] ?? 'read' ) === 'read' ) {
+				$read_tools[] = $tool['name'];
+			}
+		}
 		$scope_summary = implode( ' + ', $scopes );
 
-		if ( 'rest' === $template ) {
-			return $this->build_rest_prompt( $access_token, $refresh_token, $client_id, $agent_label, $scope_summary, $granted_tools, $ctx );
-		}
-
-		return $this->build_mcp_template_prompt( $access_token, $refresh_token, $client_id, $agent_label, $scope_summary, $granted_tools, $ctx );
-	}
-
-	/**
-	 * MCP-style template (Claude Desktop, WebMCP, ChatGPT MCP).
-	 *
-	 * @param string $access_token  Bearer access token.
-	 * @param string $refresh_token Refresh token.
-	 * @param string $client_id     OAuth client identifier.
-	 * @param string $agent_label   Human-readable agent label.
-	 * @param string $scope_summary Pretty scope summary (e.g. "read + write").
-	 * @param array  $granted_tools Tools matching the granted scopes.
-	 * @param array  $ctx           Prompt context from collect_prompt_context().
-	 * @return string
-	 */
-	private function build_mcp_template_prompt( $access_token, $refresh_token, $client_id, $agent_label, $scope_summary, array $granted_tools, array $ctx ) {
 		$lines   = array();
 		$lines[] = 'You have access to ' . $ctx['site_name'] . ' via AI Connect.';
-		$lines[] = 'Agent: ' . $agent_label . ' — Scope: ' . $scope_summary;
+		$lines[] = 'Granted scope: ' . $scope_summary . ' (matches your WordPress permissions)';
 		$lines[] = '';
-		$lines[] = '## MCP Setup (Claude Desktop / WebMCP-compatible)';
+		$lines[] = '## MCP (Recommended — Claude Desktop / WebMCP-compatible)';
 		$lines[] = 'Call webmcp_addSite with these parameters:';
 		$lines[] = '  name:          "' . $ctx['site_name_mcp'] . '"';
 		$lines[] = '  manifest_url:  "' . $ctx['manifest_url'] . '"';
@@ -538,17 +586,28 @@ class Tools_Endpoint {
 		$lines[] = '';
 		$lines[] = 'IMPORTANT: Paste BOTH token and refresh_token — otherwise the connection will stop working after 1 hour.';
 		$lines[] = '';
-		if ( empty( $granted_tools ) ) {
-			$lines[] = '(No tools available for the granted scope.)';
-		} else {
-			$lines[] = 'Available tools (call by EXACT name — do not search):';
+		if ( ! empty( $granted_tools ) ) {
+			$lines[] = 'After adding the site, call these tools by EXACT name (do not search — use directly):';
 			foreach ( $granted_tools as $tool ) {
 				$mcp_name = $ctx['site_key'] . '_' . str_replace( '.', '_', $tool['name'] );
 				$hint     = substr( $tool['description'] ?? '', 0, 70 );
 				$lines[]  = '  ' . str_pad( $mcp_name, 50 ) . '<- ' . $hint;
 			}
+		} else {
+			$lines[] = '(No tools available for your current permissions.)';
 		}
 		$lines[] = '';
+		if ( ! empty( $read_tools ) ) {
+			$lines[] = '## Direct URL Access (Fallback — read-only tools)';
+			$lines[] = 'If MCP is not available, read-only tools can be called via POST:';
+			$lines[] = '  Authorization: Bearer ' . $access_token;
+			$lines[] = '  Content-Type: application/json';
+			$lines[] = '';
+			foreach ( $read_tools as $tool_name ) {
+				$lines[] = '  POST ' . $ctx['tool_root'] . '/' . $tool_name . '  body: {}';
+			}
+			$lines[] = '';
+		}
 		$lines[] = '## Token Refresh (valid 30 days)';
 		$lines[] = 'When access_token expires (after 1 hour), refresh it:';
 		$lines[] = '  POST ' . $ctx['token_url'];
@@ -557,66 +616,7 @@ class Tools_Endpoint {
 		$lines[] = 'Response contains a new access_token + new refresh_token (old pair is revoked).';
 		$lines[] = '';
 		$lines[] = 'IMPORTANT: Do NOT use webmcp tool search — it may return tools from other sites.';
-		$lines[] = 'Call the tools listed above by their EXACT full name.';
-		$lines[] = 'Security note: This token acts on behalf of the user who generated it. Handle it with care.';
-		$lines[] = 'Documentation: https://ai-connect.gold-t.co.il/wordpress';
-
-		return implode( "\n", $lines );
-	}
-
-	/**
-	 * REST/HTTP-style template (Gemini, Copilot, Perplexity, anything without MCP).
-	 *
-	 * @param string $access_token  Bearer access token.
-	 * @param string $refresh_token Refresh token.
-	 * @param string $client_id     OAuth client identifier.
-	 * @param string $agent_label   Human-readable agent label.
-	 * @param string $scope_summary Pretty scope summary (e.g. "read + write").
-	 * @param array  $granted_tools Tools matching the granted scopes.
-	 * @param array  $ctx           Prompt context from collect_prompt_context().
-	 * @return string
-	 */
-	private function build_rest_prompt( $access_token, $refresh_token, $client_id, $agent_label, $scope_summary, array $granted_tools, array $ctx ) {
-		$lines   = array();
-		$lines[] = 'You have access to ' . $ctx['site_name'] . ' via AI Connect.';
-		$lines[] = 'Agent: ' . $agent_label . ' — Scope: ' . $scope_summary;
-		$lines[] = '';
-		$lines[] = '## HTTP API';
-		$lines[] = 'Manifest: ' . $ctx['manifest_url'];
-		$lines[] = 'Auth: Bearer ' . $access_token;
-		$lines[] = '';
-		$lines[] = '## Available Tools';
-		if ( empty( $granted_tools ) ) {
-			$lines[] = '(No tools available for the granted scope.)';
-		} else {
-			$lines[] = 'Each tool is invoked via POST with a JSON body.';
-			$lines[] = '';
-			foreach ( $granted_tools as $tool ) {
-				$lines[] = '### ' . $tool['name'];
-				if ( ! empty( $tool['description'] ) ) {
-					$lines[] = $tool['description'];
-				}
-				$lines[] = 'Endpoint: POST ' . $ctx['tool_root'] . '/' . $tool['name'];
-				$lines[] = 'Headers:  Authorization: Bearer ' . $access_token;
-				$lines[] = '          Content-Type: application/json';
-				$lines[] = '';
-			}
-		}
-		$lines[] = '## Example';
-		if ( ! empty( $granted_tools ) ) {
-			$first   = $granted_tools[0];
-			$lines[] = 'curl -X POST "' . $ctx['tool_root'] . '/' . $first['name'] . '" \\';
-			$lines[] = '  -H "Authorization: Bearer ' . $access_token . '" \\';
-			$lines[] = '  -H "Content-Type: application/json" \\';
-			$lines[] = '  -d "{}"';
-			$lines[] = '';
-		}
-		$lines[] = '## Token Refresh (valid 30 days)';
-		$lines[] = 'When access_token expires (after 1 hour):';
-		$lines[] = '  POST ' . $ctx['token_url'];
-		$lines[] = '  Content-Type: application/json';
-		$lines[] = '  {"grant_type":"refresh_token","refresh_token":"' . $refresh_token . '","client_id":"' . $client_id . '"}';
-		$lines[] = '';
+		$lines[] = 'Call the tools listed above by their EXACT full name. Start with getCurrentUser.';
 		$lines[] = 'Security note: This token acts on behalf of the user who generated it. Handle it with care.';
 		$lines[] = 'Documentation: https://ai-connect.gold-t.co.il/wordpress';
 
