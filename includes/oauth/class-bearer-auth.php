@@ -101,6 +101,12 @@ class Bearer_Auth {
 			return $result;
 		}
 
+		// Cookie-authenticated user-facing endpoints (generate-prompt, my-tokens).
+		// These use the WP REST nonce + same-origin session cookie; do not require Bearer.
+		if ( \is_user_logged_in() && $this->is_user_facing_endpoint() ) {
+			return $result;
+		}
+
 		$token = $this->get_bearer_token();
 
 		if ( ! $token ) {
@@ -196,6 +202,31 @@ class Bearer_Auth {
 		);
 
 		foreach ( $public_endpoints as $endpoint ) {
+			if ( strpos( $request_uri, $endpoint ) !== false ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Endpoints meant for the logged-in user's browser session (not for AI agents).
+	 *
+	 * Bypasses Bearer requirement when WordPress cookie auth resolves a user.
+	 * Each endpoint's own permission_callback still enforces login + nonce.
+	 *
+	 * @return bool
+	 */
+	private function is_user_facing_endpoint() {
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+
+		$user_endpoints = array(
+			'/wp-json/goldt-webmcp-bridge/v1/generate-prompt',
+			'/wp-json/goldt-webmcp-bridge/v1/my-tokens',
+		);
+
+		foreach ( $user_endpoints as $endpoint ) {
 			if ( strpos( $request_uri, $endpoint ) !== false ) {
 				return true;
 			}
