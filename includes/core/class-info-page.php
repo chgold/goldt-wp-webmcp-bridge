@@ -187,7 +187,12 @@ class Info_Page {
 	</div>
 	<div class="aic-header-sub"><?php echo esc_html( $site_name ); ?> &mdash; WebMCP Protocol Bridge</div>
 		<?php if ( $is_logged_in ) : ?>
-		<div class="aic-user-badge">Logged in as <?php echo esc_html( $display_name ); ?></div>
+		<div class="aic-header-meta">
+			<span class="aic-user-badge">Logged in as <?php echo esc_html( $display_name ); ?></span>
+			<button id="aic-tokens-toggle" type="button" class="aic-tokens-toggle" onclick="aicToggleTokens(this)" aria-expanded="false">
+				&#128274; My AI Tokens <span id="aic-tokens-count" class="aic-tokens-count"></span>
+			</button>
+		</div>
 	<?php else : ?>
 		<div class="aic-login-notice">Login required to use AI agent connections</div>
 	<?php endif; ?>
@@ -204,99 +209,107 @@ class Info_Page {
 	</div>
 	<?php endif; ?>
 
-	<!-- Section 1: Connect Your AI Agent -->
+		<?php if ( $is_logged_in ) : ?>
+	<!-- Section 1 (THE HERO): Generate AI Prompt -->
+	<div class="aic-card aic-hero-card">
+		<div class="aic-card-title">
+			<span>&#129302;</span> Connect your AI Agent
+		</div>
+		<p style="font-size:13px;color:#9ca3af;margin:0 0 16px;">
+			Click the button below to generate a complete connection prompt — Bearer token, refresh token, and the full list of tools you can call. Paste it into Claude, ChatGPT, Gemini, or any AI agent. <strong>Permissions automatically match your WordPress role.</strong>
+		</p>
+
+		<button id="aic-gen-btn" class="aic-prompt-copy-btn aic-gen-main-btn" onclick="aicGeneratePrompt(this)">&#9889; Generate AI Prompt</button>
+
+		<div id="aic-prompt-result" style="display:none;margin-top:16px;">
+			<textarea id="aic-generated-prompt" class="aic-prompt-textarea" readonly rows="22"></textarea>
+			<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+				<button class="aic-prompt-copy-btn" onclick="aicCopy('aic-generated-prompt',this)">&#128203; Copy full prompt</button>
+				<button id="aic-regen-btn" class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicGeneratePrompt(this)">&#128260; Regenerate (new token)</button>
+			</div>
+		</div>
+		<div id="aic-gen-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
+	</div>
+
+	<!-- Hidden tokens panel — opens from the header button -->
+	<div id="aic-tokens-body" class="aic-card aic-tokens-card" style="display:none;">
+		<div class="aic-card-title">
+			<span>&#128274;</span> My AI Tokens
+		</div>
+		<p style="font-size:13px;color:#9ca3af;margin:0 0 12px;">
+			Each prompt you generate creates a personal Bearer token. Revoke any token here to instantly cut off the AI agent that holds it.
+		</p>
+
+		<div class="aic-tokens-toolbar">
+			<div class="aic-tokens-filter-wrap">
+				<label for="aic-tokens-filter">Filter</label>
+				<select id="aic-tokens-filter">
+					<option value="all">All my tokens</option>
+					<option value="active">Active (in use)</option>
+					<option value="unused">Issued but unused</option>
+					<option value="inactive">Inactive 30+ days</option>
+					<option value="renewable">Access expired, refresh valid</option>
+					<option value="expired">Fully expired</option>
+					<option value="revoked">Revoked</option>
+				</select>
+			</div>
+			<div class="aic-tokens-actions">
+				<button class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicLoadTokens()">&#128260; Refresh</button>
+				<button class="aic-prompt-copy-btn" style="background:#b91c1c;" onclick="aicRevokeAllTokens()">&#9888;&#65039; Revoke all</button>
+			</div>
+		</div>
+
+		<div id="aic-tokens-loading" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">Loading…</div>
+		<div id="aic-tokens-empty" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">No tokens match this filter.</div>
+		<div id="aic-tokens-list" style="margin-top:12px;"></div>
+		<div id="aic-tokens-error" style="margin-top:8px;color:#f87171;font-size:13px;display:none;"></div>
+	</div>
+
+	<!-- Section 2: For advanced users (manifest URL only) -->
+	<div class="aic-card aic-advanced-card">
+		<details>
+			<summary>Manual setup (for AI agents that don't accept generated prompts)</summary>
+			<div style="margin-top:14px;">
+				<div class="aic-label">Manifest URL — give this to the AI if it asks for one</div>
+				<div class="aic-url-row">
+					<input id="aic-manifest-url" type="text" class="aic-url-input" value="<?php echo esc_attr( $manifest_url ); ?>" readonly>
+					<button class="aic-copy-btn" onclick="aicCopy('aic-manifest-url', this)">Copy</button>
+				</div>
+				<p style="font-size:12px;color:#9ca3af;margin-top:10px;">
+					The AI agent will read this manifest, then send you to an OAuth login page in your browser. Approve there, and the agent receives its own token automatically.
+				</p>
+			</div>
+		</details>
+	</div>
+		<?php else : ?>
+	<!-- Logged-out fallback: manifest URL only, no generator -->
 	<div class="aic-card">
 		<div class="aic-card-title">
 			<span>&#128279;</span> Connect Your AI Agent
 		</div>
-
 		<div class="aic-label">Manifest URL</div>
 		<div class="aic-url-row">
 			<input id="aic-manifest-url" type="text" class="aic-url-input" value="<?php echo esc_attr( $manifest_url ); ?>" readonly>
 			<button class="aic-copy-btn" onclick="aicCopy('aic-manifest-url', this)">Copy</button>
 		</div>
-
-		<div class="aic-label" style="margin-top: 16px;">OAuth Authorize URL</div>
-		<div class="aic-url-row">
-			<input id="aic-oauth-url" type="text" class="aic-url-input" value="<?php echo esc_attr( $oauth_url ); ?>" readonly>
-			<button class="aic-copy-btn" onclick="aicCopy('aic-oauth-url', this)">Copy</button>
-		</div>
-
-		<?php if ( $is_logged_in ) : ?>
-		<!-- Personalized prompt generator (logged-in users only) -->
-		<div style="margin-top:20px;">
-			<div class="aic-label">&#129302; AI Connection Prompt &mdash; one-click setup with your personal token</div>
-			<p style="font-size:13px;color:#9ca3af;margin:4px 0 12px;">
-				Generates a ready-to-paste prompt for Claude, ChatGPT, Gemini, or any WebMCP-compatible client. Includes your Bearer token so the AI connects instantly — no OAuth dance required. <strong>Permissions match your WordPress role</strong> — the AI can only do what you can do.
-			</p>
-
-			<button id="aic-gen-btn" class="aic-prompt-copy-btn" style="margin-bottom:12px;" onclick="aicGeneratePrompt(this)">&#9889; Generate AI Prompt</button>
-			<button id="aic-regen-btn" class="aic-prompt-copy-btn" style="margin-bottom:12px;display:none;background:#4b5563;" onclick="aicGeneratePrompt(this)">&#128260; Regenerate (new token)</button>
-
-			<div id="aic-prompt-result" style="display:none;">
-				<textarea id="aic-generated-prompt" class="aic-prompt-textarea" readonly rows="18"></textarea>
-				<button class="aic-prompt-copy-btn" style="margin-top:8px;" onclick="aicCopy('aic-generated-prompt',this)">&#128203; Copy Prompt</button>
-			</div>
-			<div id="aic-gen-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
-		</div>
-		<?php else : ?>
 		<div class="aic-label" style="margin-top: 16px;">Quick Prompt &mdash; paste this into your AI agent to get started</div>
 		<div class="aic-prompt-wrap">
 			<textarea id="aic-quick-prompt" class="aic-prompt-textarea" readonly><?php echo esc_textarea( $quick_prompt ); ?></textarea>
 			<button class="aic-prompt-copy-btn" onclick="aicCopy('aic-quick-prompt', this)">Copy</button>
 		</div>
-		<?php endif; ?>
-	</div>
-
-		<?php if ( $is_logged_in ) : ?>
-	<!-- Section 1b: My AI Tokens — collapsed by default so the prompt stays the hero -->
-	<div class="aic-card aic-tokens-card">
-		<button type="button" class="aic-tokens-toggle" onclick="aicToggleTokens(this)" aria-expanded="false">
-			<span class="aic-tokens-toggle-left">
-				<span>&#128274;</span> My AI Tokens
-				<span class="aic-tokens-count" id="aic-tokens-count"></span>
-			</span>
-			<span class="aic-tokens-toggle-chev">&#9656;</span>
-		</button>
-		<div id="aic-tokens-body" style="display:none;margin-top:14px;">
-			<p style="font-size:13px;color:#9ca3af;margin:0 0 12px;">
-				Each prompt you generate creates a personal Bearer token. Revoke any token to instantly cut off the AI agent that holds it.
-			</p>
-
-			<div class="aic-tokens-toolbar">
-				<div class="aic-tokens-filter-wrap">
-					<label for="aic-tokens-filter">Filter</label>
-					<select id="aic-tokens-filter">
-						<option value="all">All my tokens</option>
-						<option value="active">Active (in use)</option>
-						<option value="unused">Issued but unused</option>
-						<option value="inactive">Inactive 30+ days</option>
-						<option value="renewable">Access expired, refresh valid</option>
-						<option value="expired">Fully expired</option>
-						<option value="revoked">Revoked</option>
-					</select>
-				</div>
-				<div class="aic-tokens-actions">
-					<button class="aic-prompt-copy-btn" style="background:#4b5563;" onclick="aicLoadTokens()">&#128260; Refresh</button>
-					<button class="aic-prompt-copy-btn" style="background:#b91c1c;" onclick="aicRevokeAllTokens()">&#9888;&#65039; Revoke all</button>
-				</div>
-			</div>
-
-			<div id="aic-tokens-loading" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">Loading…</div>
-			<div id="aic-tokens-empty" style="margin-top:12px;color:#9ca3af;font-size:13px;display:none;">No tokens match this filter.</div>
-			<div id="aic-tokens-list" style="margin-top:12px;"></div>
-			<div id="aic-tokens-error" style="margin-top:8px;color:#f87171;font-size:13px;display:none;"></div>
-		</div>
 	</div>
 	<style>
-		.aic-tokens-card { padding:0; }
-		.aic-tokens-toggle { display:flex; justify-content:space-between; align-items:center; width:100%; padding:16px 20px; background:transparent; border:0; color:#f3f4f6; font-size:16px; font-weight:600; cursor:pointer; text-align:left; }
-		.aic-tokens-toggle:hover { background:rgba(255,255,255,0.03); }
-		.aic-tokens-toggle-left { display:flex; align-items:center; gap:8px; }
-		.aic-tokens-count { color:#9ca3af; font-size:13px; font-weight:400; }
-		.aic-tokens-toggle-chev { transition:transform 0.15s; color:#9ca3af; font-size:14px; }
-		.aic-tokens-toggle[aria-expanded="true"] .aic-tokens-toggle-chev { transform:rotate(90deg); }
-		#aic-tokens-body { padding:0 20px 20px; }
+		.aic-header-meta { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+		.aic-tokens-toggle { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#f3f4f6; font-size:13px; font-weight:500; border-radius:6px; cursor:pointer; }
+		.aic-tokens-toggle:hover { background:rgba(255,255,255,0.14); }
+		.aic-tokens-toggle[aria-expanded="true"] { background:#1f2937; border-color:#374151; }
+		.aic-tokens-count { color:#9ca3af; font-size:12px; font-weight:400; margin-left:2px; }
+		.aic-hero-card { border-left:4px solid #10b981; }
+		.aic-gen-main-btn { font-size:15px; padding:12px 24px; }
+		.aic-advanced-card details summary { cursor:pointer; color:#9ca3af; font-size:13px; padding:4px 0; }
+		.aic-advanced-card details summary:hover { color:#f3f4f6; }
+		.aic-advanced-card details[open] summary { color:#f3f4f6; }
+		.aic-tokens-card { border-left:4px solid #6366f1; }
 		.aic-tokens-toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
 		.aic-tokens-filter-wrap { display:flex; flex-direction:column; gap:4px; flex:1; min-width:160px; }
 		.aic-tokens-filter-wrap label { font-size:12px; font-weight:600; color:#9ca3af; }
@@ -445,17 +458,21 @@ class Info_Page {
 		.then(function(data){
 			var n = (data && data.tokens) ? data.tokens.length : 0;
 			var c = el('aic-tokens-count');
-			if (c) c.textContent = n > 0 ? '(' + n + ' active)' : '(none)';
+			if (c) c.textContent = n > 0 ? '(' + n + ')' : '';
 		})
 		.catch(function(){ /* silent */ });
 	}
 
 	window.aicToggleTokens = function(btn) {
 		var body = el('aic-tokens-body');
+		if (!body) return;
 		var open = body.style.display !== 'none';
-		body.style.display = open ? 'none' : '';
+		body.style.display = open ? 'none' : 'block';
 		btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-		if (!open) aicLoadTokens(); // lazy-load on first open + every re-open
+		if (!open) {
+			aicLoadTokens(); // lazy-load on open
+			body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
 	};
 
 	window.aicLoadTokens = function() {
