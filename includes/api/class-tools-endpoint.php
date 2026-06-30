@@ -93,12 +93,39 @@ class Tools_Endpoint {
 	/**
 	 * Register a module with the endpoint.
 	 *
+	 * Multiple module instances may share the same module_name (e.g. core +
+	 * Pro Posts/Pages/Media all under "wordpress"). Each module instance is
+	 * appended to a list so its tools remain reachable.
+	 *
 	 * @param \GoldtWebMCP\Modules\Module_Base $module Module instance.
 	 * @return void
 	 */
 	public function register_module( $module ) {
-		$module_name                   = $module->get_module_name();
-		$this->modules[ $module_name ] = $module;
+		$module_name = $module->get_module_name();
+		if ( ! isset( $this->modules[ $module_name ] ) ) {
+			$this->modules[ $module_name ] = array();
+		}
+		$this->modules[ $module_name ][] = $module;
+	}
+
+	/**
+	 * Find the module instance that owns a given tool method.
+	 *
+	 * @param string $module_name Module namespace (e.g. "wordpress").
+	 * @param string $tool_method Tool method name (e.g. "createPost").
+	 * @return \GoldtWebMCP\Modules\Module_Base|null
+	 */
+	private function find_module_for_tool( $module_name, $tool_method ) {
+		if ( ! isset( $this->modules[ $module_name ] ) ) {
+			return null;
+		}
+		foreach ( $this->modules[ $module_name ] as $module ) {
+			$tools = $module->get_tools();
+			if ( isset( $tools[ $tool_method ] ) ) {
+				return $module;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -118,12 +145,12 @@ class Tools_Endpoint {
 			return new \WP_Error( 'module_not_found', sprintf( 'Module %s not found', $module_name ), array( 'status' => 404 ) );
 		}
 
-		$module = $this->modules[ $module_name ];
-		$tools  = $module->get_tools();
-
-		if ( ! isset( $tools[ $tool_method ] ) ) {
+		$module = $this->find_module_for_tool( $module_name, $tool_method );
+		if ( ! $module ) {
 			return new \WP_Error( 'tool_not_found', sprintf( 'Tool %s not found', $tool_method ), array( 'status' => 404 ) );
 		}
+
+		$tools = $module->get_tools();
 
 		$tool           = $tools[ $tool_method ];
 		$required_scope = $tool['required_scope'] ?? 'read';
@@ -154,14 +181,16 @@ class Tools_Endpoint {
 	public function list_tools( $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by WP REST API callback signature.
 		$tools = array();
 
-		foreach ( $this->modules as $module_name => $module ) {
-			$module_tools = $module->get_tools();
-			foreach ( $module_tools as $tool ) {
-				$tools[] = array(
-					'name'         => $tool['name'],
-					'description'  => $tool['description'],
-					'input_schema' => $tool['input_schema'],
-				);
+		foreach ( $this->modules as $module_list ) {
+			foreach ( $module_list as $module ) {
+				$module_tools = $module->get_tools();
+				foreach ( $module_tools as $tool ) {
+					$tools[] = array(
+						'name'         => $tool['name'],
+						'description'  => $tool['description'],
+						'input_schema' => $tool['input_schema'],
+					);
+				}
 			}
 		}
 
@@ -272,11 +301,13 @@ class Tools_Endpoint {
 
 		$all_tools  = array();
 		$read_tools = array();
-		foreach ( $this->modules as $module ) {
-			foreach ( $module->get_tools() as $tool ) {
-				$all_tools[] = $tool;
-				if ( ( $tool['required_scope'] ?? 'read' ) === 'read' ) {
-					$read_tools[] = $tool['name'];
+		foreach ( $this->modules as $module_list ) {
+			foreach ( $module_list as $module ) {
+				foreach ( $module->get_tools() as $tool ) {
+					$all_tools[] = $tool;
+					if ( ( $tool['required_scope'] ?? 'read' ) === 'read' ) {
+						$read_tools[] = $tool['name'];
+					}
 				}
 			}
 		}

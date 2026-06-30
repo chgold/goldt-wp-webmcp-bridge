@@ -139,7 +139,7 @@ class Core_Module extends Module_Base {
 				'required_scope' => 'read',
 				'input_schema'   => array(
 					'type'       => 'object',
-					'properties' => array(),
+					'properties' => new \stdClass(),
 				),
 			)
 		);
