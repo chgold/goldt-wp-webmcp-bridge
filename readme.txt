@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.3
+Stable tag: 0.5.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,13 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 0.5.4 - 2026-06-30 =
+* Fixed: OAuth Authorize URL field restored on /ai-connect/ info page (was defined but not rendered).
+* Fixed: `register_module()` now supports multiple module instances under the same module_name (was overwriting). Required for Pro plugin compatibility.
+* Fixed: `getCurrentUser` / `getSupportedLanguages` input_schema now uses `\stdClass` instead of empty `array()` to ensure JSON Schema 2020-12 compliance (`properties: {}` not `properties: []`).
+* Fixed: PHPCS compliance — short ternary + Yoda condition in tools endpoint.
+* Internal: Capability tester (plugins-manager) rebranded to goldnat.ai.
 
 = 0.5.3 - 2026-06-01 =
 * Fixed: Admin status page was displaying version 0.4.0 instead of the actual plugin version. Changed hardcoded `$version = '0.4.0'` class property to use `GOLDTWMCP_VERSION` constant.
