@@ -216,6 +216,35 @@ abstract class Module_Base {
 	}
 
 	/**
+	 * Verify that the current request satisfies the given OAuth scope.
+	 *
+	 * Defense in depth: the router already validates scope before dispatching,
+	 * but individual tool handlers (especially write/delete ops) SHOULD call
+	 * this too to keep the security check local and auditable per-handler.
+	 *
+	 * The scope name is mapped to a WordPress capability so the check honors
+	 * the actual user role, not just an OAuth scope string.
+	 *
+	 * @param string $scope Required scope: 'read' | 'write' | 'delete' | 'admin' | 'manage_users'.
+	 * @return bool True if the current user has the capability for this scope.
+	 */
+	protected function check_scope( $scope ) {
+		static $scope_to_cap = array(
+			'read'         => 'read',
+			'write'        => 'edit_posts',
+			'delete'       => 'delete_posts',
+			'admin'        => 'manage_options',
+			'manage_users' => 'list_users',
+		);
+
+		if ( ! isset( $scope_to_cap[ $scope ] ) ) {
+			return true;
+		}
+
+		return \current_user_can( $scope_to_cap[ $scope ] );
+	}
+
+	/**
 	 * Build a success response array.
 	 *
 	 * @param mixed  $data Response data.

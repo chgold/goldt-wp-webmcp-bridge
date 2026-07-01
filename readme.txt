@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.5
+Stable tag: 0.5.6
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 0.5.6 - 2026-07-01 =
+* New: `Module_Base::check_scope()` helper method — maps OAuth scopes (`read` / `write` / `delete` / `admin` / `manage_users`) to WordPress capabilities and returns whether the current user has the required capability. Used by Pro plugin's write handlers as a defense-in-depth check on top of the router's scope validation.
 
 = 0.5.5 - 2026-07-01 =
 * New: Complete visual redesign of the `/ai-connect/` page — Console Hero UI with Space Grotesk, Inter and JetBrains Mono fonts, all styles scoped under `.aiconnect-app` so they cannot leak into WP admin or other plugins.
