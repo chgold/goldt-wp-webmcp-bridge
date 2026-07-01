@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.4
+Stable tag: 0.5.5
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,18 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 0.5.5 - 2026-07-01 =
+* New: Complete visual redesign of the `/ai-connect/` page — Console Hero UI with Space Grotesk, Inter and JetBrains Mono fonts, all styles scoped under `.aiconnect-app` so they cannot leak into WP admin or other plugins.
+* New: Simplified prompt generator — single "Generate AI prompt" button. Scopes are derived automatically from the logged-in user's WordPress capabilities (edit_posts, delete_posts, list_users, etc.), no scope / agent / template pickers.
+* New: Universal prompt format — a single prompt body that contains both the MCP block (Claude Desktop / WebMCP-compatible) and the Direct HTTP block (curl / Gemini / Copilot / any REST client). One tool listing per tool, showing MCP name + HTTP path + description side by side.
+* New: "My AI tokens" panel (modal) — shows every token you generated with prefix, scope, issued/expires/last-used timestamps and IP. Header pill shows the current active count.
+* New: Personal token hard-delete. Delete removes both the registry row AND the underlying OAuth token — the AI agent that held it immediately loses access, and the record disappears from your history.
+* New: REST endpoints `GET/DELETE /goldt-webmcp-bridge/v1/my-tokens` and `DELETE /goldt-webmcp-bridge/v1/my-tokens/{id}`, protected by WP cookie + REST nonce.
+* Changed: Header now shows the user's WordPress role label (e.g. "Administrator", "Editor") instead of the display name.
+* Fixed: The Bearer-auth REST filter was returning 401 for user-facing endpoints even when the user was logged in via cookie — now `/generate-prompt` and `/my-tokens` bypass the Bearer requirement when the WP session is valid.
+* Fixed: OAuth Authorize URL field is no longer surfaced on the main info page — it confused end users. It's now hidden inside a "Manual setup" disclosure at the bottom.
+* Fixed: PHPCS compliance across all changed files.
 
 = 0.5.4 - 2026-06-30 =
 * Fixed: OAuth Authorize URL field restored on /ai-connect/ info page (was defined but not rendered).
