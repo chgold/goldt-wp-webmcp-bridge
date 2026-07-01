@@ -300,19 +300,21 @@ body.aiconnect-page {
 .aiconnect-app .miniact:disabled { opacity: .6; cursor: wait; }
 .aiconnect-app .miniact svg { width: 13px; height: 13px; }
 .aiconnect-app .output pre {
-	margin: 0;
-	padding: 18px 18px 20px;
+	margin: 12px;
+	padding: 18px 20px 20px;
 	overflow: auto;
 	font-family: var(--font-mono);
 	font-size: 12.5px;
 	line-height: 1.7;
-	color: #9FB0C4;
-	background: #050912;
+	color: #C7D2E0;
+	background: #182236;
+	border: 1px solid #23324B;
+	border-radius: 8px;
 	white-space: pre-wrap;
 	word-break: break-all;
 	max-height: 520px;
 }
-.aiconnect-app .output pre.is-placeholder { color: var(--console-mute); font-style: italic; }
+.aiconnect-app .output pre.is-placeholder { color: var(--console-mute); font-style: italic; background: #101827; }
 .aiconnect-app .output .c-key { color: #FF8A82; }
 .aiconnect-app .output .c-val { color: #8EE9C4; }
 .aiconnect-app .output .c-note { color: #6B7B92; }
