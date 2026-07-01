@@ -31,10 +31,17 @@ class Core_Module extends Module_Base {
 	 * @return void
 	 */
 	protected function register_tools() {
+		$render_prop = array(
+			'type'        => 'string',
+			'enum'        => array( 'raw', 'full', 'excerpt' ),
+			'default'     => 'raw',
+			'description' => 'How to return the post content. "raw" (default, safe) returns the stored post_content verbatim so dynamic blocks (WooCommerce, page-builder widgets, shortcodes) are NOT executed and cannot leak product/user/order data. "full" runs the_content filter and executes blocks/shortcodes — use only when you explicitly need the rendered HTML. "excerpt" returns just the excerpt.',
+		);
+
 		$this->register_tool(
 			'searchPosts',
 			array(
-				'description'    => 'Search WordPress posts with filters',
+				'description'    => 'Search WordPress posts with filters. Returns raw post_content by default; use render=full only when you specifically need blocks and shortcodes executed.',
 				'required_scope' => 'read',
 				'input_schema'   => array(
 					'type'       => 'object',
@@ -65,6 +72,7 @@ class Core_Module extends Module_Base {
 							'description' => 'Number of posts to skip',
 							'default'     => 0,
 						),
+						'render'   => $render_prop,
 					),
 				),
 			)
@@ -73,7 +81,7 @@ class Core_Module extends Module_Base {
 		$this->register_tool(
 			'getPost',
 			array(
-				'description'    => 'Get a single WordPress post by ID or slug',
+				'description'    => 'Get a single WordPress post by ID or slug. Returns raw post_content by default; use render=full only when you specifically need blocks and shortcodes executed.',
 				'required_scope' => 'read',
 				'input_schema'   => array(
 					'type'       => 'object',
@@ -83,6 +91,7 @@ class Core_Module extends Module_Base {
 							'type'        => array( 'integer', 'string' ),
 							'description' => 'Post ID or slug',
 						),
+						'render'     => $render_prop,
 					),
 				),
 			)
@@ -91,7 +100,7 @@ class Core_Module extends Module_Base {
 		$this->register_tool(
 			'searchPages',
 			array(
-				'description'    => 'Search WordPress pages',
+				'description'    => 'Search WordPress pages. Returns raw post_content by default; use render=full only when you specifically need blocks and shortcodes executed.',
 				'required_scope' => 'read',
 				'input_schema'   => array(
 					'type'       => 'object',
@@ -109,6 +118,7 @@ class Core_Module extends Module_Base {
 							'description' => 'Maximum number of pages',
 							'default'     => 10,
 						),
+						'render' => $render_prop,
 					),
 				),
 			)
@@ -117,7 +127,7 @@ class Core_Module extends Module_Base {
 		$this->register_tool(
 			'getPage',
 			array(
-				'description'    => 'Get a single WordPress page by ID or slug',
+				'description'    => 'Get a single WordPress page by ID or slug. Returns raw post_content by default; use render=full only when you specifically need blocks and shortcodes executed.',
 				'required_scope' => 'read',
 				'input_schema'   => array(
 					'type'       => 'object',
@@ -127,6 +137,7 @@ class Core_Module extends Module_Base {
 							'type'        => array( 'integer', 'string' ),
 							'description' => 'Page ID or slug',
 						),
+						'render'     => $render_prop,
 					),
 				),
 			)
@@ -193,10 +204,12 @@ class Core_Module extends Module_Base {
 			return $this->success_response( array(), 'No posts found' );
 		}
 
+		$render = $this->resolve_render( $params );
+
 		$posts = array();
 		while ( $query->have_posts() ) {
 			$query->the_post();
-			$posts[] = $this->format_post( \get_post() );
+			$posts[] = $this->format_post( \get_post(), $render );
 		}
 		\wp_reset_postdata();
 
@@ -241,7 +254,7 @@ class Core_Module extends Module_Base {
 			return new \WP_Error( 'post_not_found', 'Post not found', array( 'status' => 404 ) );
 		}
 
-		return $this->success_response( $this->format_post( $post ) );
+		return $this->success_response( $this->format_post( $post, $this->resolve_render( $params ) ) );
 	}
 
 	/**
@@ -280,10 +293,12 @@ class Core_Module extends Module_Base {
 			return $this->success_response( array(), 'No pages found' );
 		}
 
+		$render = $this->resolve_render( $params );
+
 		$pages = array();
 		while ( $query->have_posts() ) {
 			$query->the_post();
-			$pages[] = $this->format_post( \get_post() );
+			$pages[] = $this->format_post( \get_post(), $render );
 		}
 		\wp_reset_postdata();
 
@@ -328,7 +343,7 @@ class Core_Module extends Module_Base {
 			return new \WP_Error( 'page_not_found', 'Page not found', array( 'status' => 404 ) );
 		}
 
-		return $this->success_response( $this->format_post( $page ) );
+		return $this->success_response( $this->format_post( $page, $this->resolve_render( $params ) ) );
 	}
 
 	/**
@@ -359,19 +374,41 @@ class Core_Module extends Module_Base {
 	/**
 	 * Format a post object into a structured array.
 	 *
-	 * @param \WP_Post $post Post object.
+	 * The 'render' argument controls how the post content is returned:
+	 *   - 'raw'  (default): the raw `post_content` string, WITHOUT running
+	 *     the `the_content` filter. This means dynamic blocks (WooCommerce
+	 *     cart, product grids, page-builder widgets, …) stay as their
+	 *     block-comment markers instead of being executed. This is the
+	 *     correct behaviour for an AI-agent tool: it exposes what the page
+	 *     *is*, not what a shopper visiting the page would see, and prevents
+	 *     leaking product/user/order data through page/post tools.
+	 *   - 'full': the fully rendered HTML (block markup executed, shortcodes
+	 *     expanded). Only for consumers that explicitly want the visible
+	 *     output.
+	 *   - 'excerpt': only the post excerpt (auto-generated if not set).
+	 *
+	 * @param \WP_Post $post   Post object.
+	 * @param string   $render One of 'raw' | 'full' | 'excerpt'. Defaults to 'raw'.
 	 * @return array
 	 */
-	private function format_post( $post ) {
-		\setup_postdata( $post );
-		$content = \get_the_content( null, false, $post );
-		$content = \apply_filters( 'the_content', $content ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
-		\wp_reset_postdata();
+	private function format_post( $post, $render = 'raw' ) {
+		if ( 'full' === $render ) {
+			\setup_postdata( $post );
+			$content = \get_the_content( null, false, $post );
+			$content = \apply_filters( 'the_content', $content ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+			\wp_reset_postdata();
+		} elseif ( 'excerpt' === $render ) {
+			$content = \get_the_excerpt( $post );
+		} else {
+			// 'raw' (default): return post_content verbatim, no filters, no rendering.
+			$content = $post->post_content;
+		}
 
 		return array(
 			'id'             => $post->ID,
 			'title'          => \get_the_title( $post ),
 			'content'        => $content,
+			'render'         => $render,
 			'excerpt'        => \get_the_excerpt( $post ),
 			'slug'           => $post->post_name,
 			'status'         => $post->post_status,
@@ -387,5 +424,19 @@ class Core_Module extends Module_Base {
 			'categories'     => \wp_get_post_categories( $post->ID, array( 'fields' => 'names' ) ),
 			'tags'           => \wp_get_post_tags( $post->ID, array( 'fields' => 'names' ) ),
 		);
+	}
+
+	/**
+	 * Normalize the caller-supplied render argument to a supported value.
+	 *
+	 * @param array $params Tool parameters.
+	 * @return string One of 'raw' | 'full' | 'excerpt'.
+	 */
+	private function resolve_render( $params ) {
+		$render = isset( $params['render'] ) ? sanitize_key( (string) $params['render'] ) : 'raw';
+		if ( ! in_array( $render, array( 'raw', 'full', 'excerpt' ), true ) ) {
+			$render = 'raw';
+		}
+		return $render;
 	}
 }

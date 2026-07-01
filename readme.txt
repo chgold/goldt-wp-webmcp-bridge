@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.6
+Stable tag: 0.5.7
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,14 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 0.5.7 - 2026-07-01 =
+* Security: Fixed dynamic content leak in `wordpress.searchPosts`, `wordpress.searchPages`, `wordpress.getPost`, `wordpress.getPage`. Previously the tools ran WordPress's `the_content` filter, which executed dynamic blocks and shortcodes — so a Cart page could accidentally return the rendered "New in store" WooCommerce grid (product names, prices, SKUs) even though it was called through a page tool. The four tools now return the raw `post_content` by default, so dynamic blocks stay as `<!-- wp:… -->` markers.
+* New: `render` parameter on the four read tools with three modes:
+  * `raw` (default, safe) — returns `post_content` verbatim; no block/shortcode execution.
+  * `full` — runs `the_content` filter and executes blocks/shortcodes (only for callers that specifically need rendered HTML).
+  * `excerpt` — returns just the post excerpt.
+  Any unrecognized value falls back to `raw`. The chosen mode is echoed back in the response as the `render` field so the caller can verify it.
 
 = 0.5.6 - 2026-07-01 =
 * New: `Module_Base::check_scope()` helper method — maps OAuth scopes (`read` / `write` / `delete` / `admin` / `manage_users`) to WordPress capabilities and returns whether the current user has the required capability. Used by Pro plugin's write handlers as a defense-in-depth check on top of the router's scope validation.
