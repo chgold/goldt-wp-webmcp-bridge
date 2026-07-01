@@ -167,7 +167,6 @@ body.aiconnect-page {
 	align-items: center;
 	gap: 10px;
 	padding: 14px 20px;
-	background: #060B16;
 	border-bottom: 1px solid var(--console-line);
 }
 .aiconnect-app .traffic { display: flex; gap: 7px; }
@@ -308,6 +307,7 @@ body.aiconnect-page {
 	font-size: 12.5px;
 	line-height: 1.7;
 	color: #9FB0C4;
+	background: #050912;
 	white-space: pre-wrap;
 	word-break: break-all;
 	max-height: 520px;
