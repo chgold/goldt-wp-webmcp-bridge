@@ -561,64 +561,62 @@ class Tools_Endpoint {
 	private function build_mcp_prompt( $access_token, $refresh_token, $client_id = 'claude-ai', array $scopes = array( 'read' ) ) {
 		$ctx           = $this->collect_prompt_context();
 		$granted_tools = $this->filter_tools_by_scopes( $ctx['all_tools'], $scopes );
-		$scope_summary = implode( ' + ', $scopes );
+		$read_tools    = array();
+		foreach ( $granted_tools as $tool ) {
+			if ( ( $tool['required_scope'] ?? 'read' ) === 'read' ) {
+				$read_tools[] = $tool;
+			}
+		}
 
 		$lines   = array();
 		$lines[] = 'You have access to ' . $ctx['site_name'] . ' via AI Connect.';
-		$lines[] = 'Granted scope: ' . $scope_summary . ' (matches the user\'s WordPress permissions).';
 		$lines[] = '';
-		$lines[] = '## Setup — pick the path your client supports';
-		$lines[] = '';
-		$lines[] = '### Option A — MCP (Claude Desktop / WebMCP-compatible)';
-		$lines[] = 'Call webmcp_addSite with:';
+		$lines[] = '## MCP (Recommended — Claude Desktop)';
+		$lines[] = 'Call webmcp_addSite with these parameters:';
 		$lines[] = '  name:          "' . $ctx['site_name_mcp'] . '"';
 		$lines[] = '  manifest_url:  "' . $ctx['manifest_url'] . '"';
 		$lines[] = '  token:         "Bearer ' . $access_token . '"';
 		$lines[] = '  refresh_token: "' . $refresh_token . '"';
 		$lines[] = '';
-		$lines[] = '### Option B — Direct HTTP (any client that can POST JSON)';
-		$lines[] = '  Endpoint base: ' . $ctx['tool_root'];
-		$lines[] = '  Authorization: Bearer ' . $access_token;
-		$lines[] = '  Content-Type:  application/json';
-		$lines[] = '  Method:        POST   (body is the tool arguments JSON, "{}" if none)';
-		$lines[] = '';
-		$lines[] = 'IMPORTANT: Store BOTH the token and the refresh_token. The access token';
-		$lines[] = 'expires after 1 hour; the refresh token is valid 30 days (see "Token Refresh"';
-		$lines[] = 'at the end of this prompt).';
+		$lines[] = 'IMPORTANT: Paste BOTH token and refresh_token — otherwise the connection will stop working after 1 hour.';
 		$lines[] = '';
 
 		if ( ! empty( $granted_tools ) ) {
-			$lines[] = '## Available tools';
-			$lines[] = 'Call each tool by its EXACT name. Do not use any "search tools" function —';
-			$lines[] = 'it may return tools from other sites. Start with getCurrentUser to verify.';
-			$lines[] = '';
-			$lines[] = '  ' . str_pad( 'MCP tool name', 50 ) . '  HTTP path                                        Description';
+			$lines[] = 'After adding the site, call these tools by EXACT name (do not search — use directly):';
 			foreach ( $granted_tools as $tool ) {
-				$mcp_name  = $ctx['site_key'] . '_' . str_replace( '.', '_', $tool['name'] );
-				$http_path = '/' . $tool['name'];
-				$hint      = $tool['description'] ?? '';
-				if ( strlen( $hint ) > 60 ) {
-					$hint = substr( $hint, 0, 57 ) . '...';
-				}
-				$lines[] = '  ' . str_pad( $mcp_name, 50 ) . '  ' . str_pad( $http_path, 48 ) . ' ' . $hint;
+				$mcp_name = $ctx['site_key'] . '_' . str_replace( '.', '_', $tool['name'] );
+				$hint     = substr( $tool['description'] ?? '', 0, 70 );
+				$lines[]  = '  ' . str_pad( $mcp_name, 50 ) . '<- ' . $hint;
 			}
-			$lines[] = '';
 		} else {
-			$lines[] = '## Available tools';
-			$lines[] = '(No tools available for the current scope.)';
+			$lines[] = '(No tools available for your current permissions.)';
+		}
+		$lines[] = '';
+
+		if ( ! empty( $read_tools ) ) {
+			$lines[] = '## Direct URL Access (Fallback — read-only tools)';
+			$lines[] = 'If MCP is not available, read-only tools can be called via POST:';
 			$lines[] = '';
+			foreach ( $read_tools as $tool ) {
+				$lines[] = '  POST ' . $ctx['tool_root'] . '/' . $tool['name'];
+				$lines[] = '  Authorization: Bearer ' . $access_token;
+				$lines[] = '  Content-Type: application/json';
+				$lines[] = '  Body: {}';
+				$lines[] = '';
+			}
 		}
 
-		$lines[] = '## Token Refresh (when the 1-hour access token expires)';
+		$lines[] = '## Token Refresh (valid 30 days)';
+		$lines[] = 'When access_token expires (after 1 hour), refresh it:';
 		$lines[] = '  POST ' . $ctx['token_url'];
 		$lines[] = '  Content-Type: application/json';
 		$lines[] = '  {"grant_type":"refresh_token","refresh_token":"' . $refresh_token . '","client_id":"' . $client_id . '"}';
-		$lines[] = 'The response contains a NEW access_token and a NEW refresh_token.';
-		$lines[] = 'The old pair is immediately revoked — replace both in your storage.';
+		$lines[] = 'Response contains a new access_token + new refresh_token (old pair is revoked).';
 		$lines[] = '';
-		$lines[] = '## Notes';
-		$lines[] = '- The token acts on behalf of the user who generated it. Treat it as a secret.';
-		$lines[] = '- Documentation: https://ai-connect.gold-t.co.il/wordpress';
+		$lines[] = 'IMPORTANT: Do NOT use webmcp tool search — it may return tools from other sites.';
+		$lines[] = 'Call the tools listed above by their EXACT full name. Start with getCurrentUser.';
+		$lines[] = "\xE2\x9A\xA0\xEF\xB8\x8F Security note: This token acts on behalf of the user who generated it. Handle it with care.";
+		$lines[] = 'Documentation: https://ai-connect.gold-t.co.il/wordpress';
 
 		return implode( "\n", $lines );
 	}
