@@ -272,6 +272,7 @@ class GoldtWebMCP_Plugin {
 	 * @return void
 	 */
 	private function serve_manifest() {
+		status_header( 200 );
 		$manifest_data = $this->manifest->generate();
 		echo wp_json_encode( $manifest_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
 	}
@@ -360,6 +361,7 @@ class GoldtWebMCP_Plugin {
 		}
 
 		$data = ( $result instanceof \WP_REST_Response ) ? $result->get_data() : $result;
+		status_header( 200 );
 		echo wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 	}
 
@@ -432,6 +434,7 @@ class GoldtWebMCP_Plugin {
 			return;
 		}
 
+		status_header( 200 );
 		echo wp_json_encode( $result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 	}
 
