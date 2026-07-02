@@ -273,8 +273,8 @@ class Manifest {
 
 		// Add server info.
 		$manifest['server'] = array(
-			'url'         => \rest_url( 'goldt-webmcp-bridge/v1' ),
-			'description' => 'GoldT WebMCP Bridge API',
+			'url'         => \home_url( '/api/aiconnect-tools' ),
+			'description' => 'Goldnat for WordPress — Servio Protocol API',
 		);
 
 		// Add authentication info.
@@ -304,8 +304,8 @@ class Manifest {
 			'type'                  => 'oauth2',
 			'flow'                  => 'authorization_code',
 			'authorization_url'     => $site_url . '/?goldtwmcp_oauth_authorize',
-			'token_url'             => \rest_url( 'goldt-webmcp-bridge/v1/oauth/token' ),
-			'revoke_url'            => \rest_url( 'goldt-webmcp-bridge/v1/oauth/revoke' ),
+			'token_url'             => \home_url( '/api/aiconnect-oauth' ),
+			'revoke_url'            => \home_url( '/api/aiconnect-oauth' ),
 			'pkce_required'         => true,
 			'code_challenge_method' => 'S256',
 			'redirect_uri'          => 'urn:ietf:wg:oauth:2.0:oob',
@@ -315,8 +315,8 @@ class Manifest {
 
 		// Add usage instructions.
 		$manifest['usage'] = array(
-			'tools_endpoint' => \rest_url( 'goldt-webmcp-bridge/v1/tools/{tool_name}' ),
-			'example'        => \rest_url( 'goldt-webmcp-bridge/v1/tools/wordpress.searchPosts' ),
+			'tools_endpoint' => \home_url( '/api/aiconnect-tools?name={tool_name}' ),
+			'example'        => \home_url( '/api/aiconnect-tools?name=wordpress.searchPosts' ),
 			'method'         => 'POST',
 			'headers'        => array(
 				'Authorization' => 'Bearer {access_token}',

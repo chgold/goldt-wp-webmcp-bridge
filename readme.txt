@@ -4,7 +4,7 @@ Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.7
+Stable tag: 0.5.8
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,16 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 0.5.8 - 2026-07-02 =
+* Breaking: Servio Protocol alignment — all endpoints moved from `/wp-json/goldt-webmcp-bridge/v1/*` to `/api/aiconnect-*` to match the unified Servio protocol used across all Goldnat plugins (WordPress, XenForo, and future platforms). This enables goldnat.ai's `detectWebMCPConnect` to recognize WordPress prompts the same way it recognizes XenForo prompts.
+* Breaking: Token prefixes changed from `wpc_`/`wpr_` to `xfa_`/`xfr_` (Servio standard). Existing tokens will stop working — users need to generate a new prompt from the `/ai-connect/` page.
+* New: `/api/aiconnect-manifest` — serves the Servio manifest (was `/wp-json/goldt-webmcp-bridge/v1/manifest`).
+* New: `/api/aiconnect-tools` — serves tool calls with `?name=toolName` (was `/wp-json/goldt-webmcp-bridge/v1/tools/{toolName}`).
+* New: `/api/aiconnect-oauth` — handles token exchange and refresh (was `/wp-json/goldt-webmcp-bridge/v1/oauth/token`).
+* New: `Bearer_Auth::authenticate_request()` — public method for authenticating requests outside the WP REST infrastructure (used by the Servio `/api/` handlers).
+* Changed: Prompt format simplified to match XenForo addon — single MCP section with `webmcp_addSite`, no "Option A / Option B", direct URL fallback for read-only tools only.
+* Internal: User-facing endpoints (`generate-prompt`, `my-tokens`) remain as WP REST routes with cookie auth — unaffected by this change.
 
 = 0.5.7 - 2026-07-01 =
 * Security: Fixed dynamic content leak in `wordpress.searchPosts`, `wordpress.searchPages`, `wordpress.getPost`, `wordpress.getPage`. Previously the tools ran WordPress's `the_content` filter, which executed dynamic blocks and shortcodes — so a Cart page could accidentally return the rendered "New in store" WooCommerce grid (product names, prices, SKUs) even though it was called through a page tool. The four tools now return the raw `post_content` by default, so dynamic blocks stay as `<!-- wp:… -->` markers.

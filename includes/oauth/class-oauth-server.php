@@ -154,8 +154,8 @@ class OAuth_Server {
 		global $wpdb;
 
 		$now                            = time();
-		$token                          = 'wpc_' . $this->generate_token( 64 );
-		$refresh_token                  = 'wpr_' . $this->generate_token( 64 );
+		$token                          = 'xfa_' . $this->generate_token( 64 );
+		$refresh_token                  = 'xfr_' . $this->generate_token( 64 );
 		$expires_at_ts                  = $now + $this->default_token_lifetime;
 		$refresh_token_expires_at_ts    = $now + $this->default_refresh_token_lifetime;
 		$expires_at                     = gmdate( 'Y-m-d H:i:s', $expires_at_ts );

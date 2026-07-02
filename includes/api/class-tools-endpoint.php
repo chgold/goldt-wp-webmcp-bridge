@@ -517,9 +517,9 @@ class Tools_Endpoint {
 			'site_name'      => $site_name,
 			'site_name_mcp'  => $site_name_mcp,
 			'site_key'       => $site_key,
-			'manifest_url'   => \rest_url( 'goldt-webmcp-bridge/v1/manifest' ),
-			'tool_root'      => \rest_url( 'goldt-webmcp-bridge/v1/tools' ),
-			'token_url'      => \rest_url( 'goldt-webmcp-bridge/v1/oauth/token' ),
+			'manifest_url'   => \home_url( '/api/aiconnect-manifest' ),
+			'tool_root'      => \home_url( '/api/aiconnect-tools' ),
+			'token_url'      => \home_url( '/api/aiconnect-oauth' ),
 			'all_tools'      => $all_tools,
 			'tools_by_scope' => $tools_by_scope,
 		);

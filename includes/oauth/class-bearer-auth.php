@@ -251,6 +251,48 @@ class Bearer_Auth {
 	}
 
 	/**
+	 * Authenticate the current request via Bearer token.
+	 *
+	 * Used by the Servio /api/aiconnect-tools handler which runs outside
+	 * the WP REST infrastructure (so the rest_authentication_errors filter
+	 * never fires). Validates the token and sets the WordPress user context
+	 * so that current_user_can() works in tool handlers.
+	 *
+	 * @return true|\WP_Error True on success, WP_Error on failure.
+	 */
+	public function authenticate_request() {
+		$token = $this->get_bearer_token();
+
+		if ( ! $token ) {
+			return new \WP_Error(
+				'rest_not_logged_in',
+				'Bearer token required.',
+				array( 'status' => 401 )
+			);
+		}
+
+		$token_data = $this->oauth_server->validate_token( $token );
+
+		if ( \is_wp_error( $token_data ) ) {
+			return new \WP_Error(
+				'rest_invalid_token',
+				$token_data->get_error_message(),
+				array( 'status' => 401 )
+			);
+		}
+
+		// Set the WordPress user context so current_user_can() works.
+		\wp_set_current_user( $token_data['user_id'] );
+
+		// Record token usage for the registry.
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : null;
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : null;
+		Token_Registry::touch( $token, $ip, $ua );
+
+		return true;
+	}
+
+	/**
 	 * Check whether the current token has the required scope.
 	 *
 	 * @param string $required_scope Required scope name.

@@ -144,7 +144,7 @@ class Info_Page {
 	 */
 	private function render() {
 		$site_name    = get_bloginfo( 'name' );
-		$manifest_url = rest_url( 'goldt-webmcp-bridge/v1/manifest' );
+		$manifest_url = home_url( '/api/aiconnect-manifest' );
 		$oauth_url    = home_url( '/?goldtwmcp_oauth_authorize=1&response_type=code&client_id=claude-ai&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=read+write&code_challenge=PASTE_YOUR_CODE_CHALLENGE&code_challenge_method=S256' );
 
 		$is_logged_in = is_user_logged_in();

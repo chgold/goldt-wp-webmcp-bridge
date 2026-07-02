@@ -156,6 +156,7 @@ class GoldtWebMCP_Plugin {
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 		add_action( 'init', array( $this, 'add_rewrite_rules' ) );
 		add_filter( 'query_vars', array( $this, 'register_query_vars' ) );
+		add_action( 'template_redirect', array( $this, 'handle_aiconnect_api' ), 1 );
 
 		// Initialize OAuth components.
 		$authorize_endpoint = new \GoldtWebMCP\OAuth\Authorize_Endpoint();
@@ -196,6 +197,13 @@ class GoldtWebMCP_Plugin {
 	 */
 	public function add_rewrite_rules() {
 		add_rewrite_tag( '%goldtwmcp_oauth_authorize%', '([^&]+)' );
+
+		// Servio protocol endpoints — /api/aiconnect-*
+		// These replicate the XenForo AI Connect URL structure so goldnat.ai's
+		// detectWebMCPConnect regex recognizes the manifest, token, and tool URLs.
+		add_rewrite_rule( '^api/aiconnect-manifest/?$', 'index.php?aiconnect_endpoint=manifest', 'top' );
+		add_rewrite_rule( '^api/aiconnect-tools/?$', 'index.php?aiconnect_endpoint=tools', 'top' );
+		add_rewrite_rule( '^api/aiconnect-oauth/?$', 'index.php?aiconnect_endpoint=oauth', 'top' );
 	}
 
 	/**
@@ -206,7 +214,225 @@ class GoldtWebMCP_Plugin {
 	 */
 	public function register_query_vars( $vars ) {
 		$vars[] = 'goldtwmcp_oauth_authorize';
+		$vars[] = 'aiconnect_endpoint';
 		return $vars;
+	}
+
+	/**
+	 * Handle /api/aiconnect-* requests.
+	 *
+	 * Routes Servio protocol requests to the existing handler logic without
+	 * going through the WP REST infrastructure. This makes the URL structure
+	 * identical to the XenForo AI Connect addon, so goldnat.ai's
+	 * detectWebMCPConnect middleware recognizes the prompts.
+	 *
+	 * @return void
+	 */
+	public function handle_aiconnect_api() {
+		$endpoint = get_query_var( 'aiconnect_endpoint', '' );
+		if ( '' === $endpoint ) {
+			return;
+		}
+
+		// Set JSON content type for all API responses.
+		header( 'Content-Type: application/json; charset=utf-8' );
+
+		// CORS headers for cross-origin tool calls.
+		header( 'Access-Control-Allow-Origin: *' );
+		header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS' );
+		header( 'Access-Control-Allow-Headers: Authorization, Content-Type' );
+
+		// Handle preflight.
+		if ( isset( $_SERVER['REQUEST_METHOD'] ) && 'OPTIONS' === $_SERVER['REQUEST_METHOD'] ) {
+			status_header( 204 );
+			exit;
+		}
+
+		switch ( $endpoint ) {
+			case 'manifest':
+				$this->serve_manifest();
+				break;
+			case 'tools':
+				$this->serve_tools();
+				break;
+			case 'oauth':
+				$this->serve_oauth();
+				break;
+			default:
+				status_header( 404 );
+				echo wp_json_encode( array( 'error' => 'Unknown endpoint' ) );
+				break;
+		}
+		exit;
+	}
+
+	/**
+	 * Serve the Servio manifest (GET /api/aiconnect-manifest).
+	 *
+	 * @return void
+	 */
+	private function serve_manifest() {
+		$manifest_data = $this->manifest->generate();
+		echo wp_json_encode( $manifest_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
+	}
+
+	/**
+	 * Serve tool calls (POST /api/aiconnect-tools).
+	 *
+	 * Accepts either:
+	 *   - GET with ?name=toolName&param1=val1... (read-only tools)
+	 *   - POST with JSON body {"name":"toolName", ...params} or ?name=toolName + JSON body
+	 *
+	 * @return void
+	 */
+	private function serve_tools() {
+		// Authenticate via Bearer token.
+		$bearer_auth = new \GoldtWebMCP\OAuth\Bearer_Auth();
+		$auth_result = $bearer_auth->authenticate_request();
+		if ( \is_wp_error( $auth_result ) ) {
+			status_header( 401 );
+			echo wp_json_encode(
+				array(
+					'code'    => $auth_result->get_error_code(),
+					'message' => $auth_result->get_error_message(),
+					'data'    => array( 'status' => 401 ),
+				)
+			);
+			return;
+		}
+
+		// Resolve tool name from query string or POST body.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Bearer token auth, not cookie.
+		$tool_name = isset( $_GET['name'] ) ? sanitize_text_field( wp_unslash( $_GET['name'] ) ) : '';
+		$method    = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : 'GET';
+
+		// Parse parameters from GET query string or POST JSON body.
+		if ( 'POST' === $method ) {
+			$raw_body = file_get_contents( 'php://input' );
+			$json     = json_decode( $raw_body, true );
+			if ( is_array( $json ) ) {
+				if ( '' === $tool_name && isset( $json['name'] ) ) {
+					$tool_name = sanitize_text_field( $json['name'] );
+					unset( $json['name'] );
+				}
+				// Also extract token from POST body if provided (for non-header auth).
+				if ( isset( $json['token'] ) ) {
+					unset( $json['token'] );
+				}
+				$params = $json;
+			} else {
+				$params = array();
+			}
+		} else {
+			// GET: all query params except name/token are tool arguments.
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Bearer token auth.
+			$params = array_map( 'sanitize_text_field', wp_unslash( $_GET ) );
+			unset( $params['name'], $params['token'], $params['aiconnect_endpoint'] );
+		}
+
+		if ( '' === $tool_name ) {
+			status_header( 400 );
+			echo wp_json_encode( array( 'error' => 'Missing tool name. Use ?name=toolName' ) );
+			return;
+		}
+
+		// Execute via the tools endpoint.
+		// Must set the raw JSON body + Content-Type so that execute_tool()'s
+		// $request->get_json_params() returns the tool arguments correctly.
+		$request = new \WP_REST_Request( 'POST', '/goldt-webmcp-bridge/v1/tools/' . $tool_name );
+		$request->set_body( wp_json_encode( $params ) );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_param( 'tool', $tool_name );
+
+		$result = $this->tools_endpoint->execute_tool( $request );
+
+		if ( \is_wp_error( $result ) ) {
+			$status = $result->get_error_data()['status'] ?? 500;
+			status_header( $status );
+			echo wp_json_encode(
+				array(
+					'code'    => $result->get_error_code(),
+					'message' => $result->get_error_message(),
+					'data'    => $result->get_error_data(),
+				)
+			);
+			return;
+		}
+
+		$data = ( $result instanceof \WP_REST_Response ) ? $result->get_data() : $result;
+		echo wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+	}
+
+	/**
+	 * Serve OAuth operations (POST /api/aiconnect-oauth).
+	 *
+	 * Handles token exchange (grant_type=authorization_code / refresh_token)
+	 * and token revocation.
+	 *
+	 * @return void
+	 */
+	private function serve_oauth() {
+		$method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : 'GET';
+
+		if ( 'POST' !== $method ) {
+			status_header( 405 );
+			echo wp_json_encode( array( 'error' => 'Method not allowed. Use POST.' ) );
+			return;
+		}
+
+		$raw_body   = file_get_contents( 'php://input' );
+		$json_body  = json_decode( $raw_body, true );
+		$grant_type = '';
+
+		// Accept both JSON body and form-encoded (standard OAuth).
+		if ( is_array( $json_body ) && isset( $json_body['grant_type'] ) ) {
+			$grant_type = sanitize_text_field( $json_body['grant_type'] );
+			$params     = $json_body;
+		} else {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- OAuth endpoint, no nonce.
+			$grant_type = isset( $_POST['grant_type'] ) ? sanitize_text_field( wp_unslash( $_POST['grant_type'] ) ) : '';
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- OAuth endpoint.
+			$params = array_map( 'sanitize_text_field', wp_unslash( $_POST ) );
+		}
+
+		if ( '' === $grant_type ) {
+			status_header( 400 );
+			echo wp_json_encode( array( 'error' => 'Missing grant_type' ) );
+			return;
+		}
+
+		// Route to the existing OAuth server.
+		$oauth = new \GoldtWebMCP\OAuth\OAuth_Server();
+
+		if ( 'refresh_token' === $grant_type ) {
+			$refresh_token = $params['refresh_token'] ?? '';
+			$client_id     = $params['client_id'] ?? '';
+			$result        = $oauth->exchange_refresh_token( $refresh_token, $client_id );
+		} elseif ( 'authorization_code' === $grant_type ) {
+			$code          = $params['code'] ?? '';
+			$client_id     = $params['client_id'] ?? '';
+			$redirect_uri  = $params['redirect_uri'] ?? '';
+			$code_verifier = $params['code_verifier'] ?? '';
+			$result        = $oauth->exchange_code_for_token( $code, $client_id, $code_verifier, $redirect_uri );
+		} else {
+			status_header( 400 );
+			echo wp_json_encode( array( 'error' => 'Unsupported grant_type: ' . $grant_type ) );
+			return;
+		}
+
+		if ( \is_wp_error( $result ) ) {
+			$status = $result->get_error_data()['status'] ?? 400;
+			status_header( $status );
+			echo wp_json_encode(
+				array(
+					'error'             => $result->get_error_code(),
+					'error_description' => $result->get_error_message(),
+				)
+			);
+			return;
+		}
+
+		echo wp_json_encode( $result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 	}
 
 	/**
