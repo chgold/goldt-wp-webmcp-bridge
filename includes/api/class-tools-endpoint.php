@@ -571,7 +571,7 @@ class Tools_Endpoint {
 		$lines   = array();
 		$lines[] = 'You have access to ' . $ctx['site_name'] . ' via AI Connect.';
 		$lines[] = '';
-		$lines[] = '## MCP (Recommended — Claude Desktop)';
+		$lines[] = '## Add site (goldnat.ai recommended)';
 		$lines[] = 'Call servio_addSite (or webmcp_addSite for backward compat) with these parameters:';
 		$lines[] = '  name:          "' . $ctx['site_name_mcp'] . '"';
 		$lines[] = '  manifest_url:  "' . $ctx['manifest_url'] . '"';
@@ -617,7 +617,7 @@ class Tools_Endpoint {
 		$lines[] = 'IMPORTANT: Do NOT use webmcp tool search — it may return tools from other sites.';
 		$lines[] = 'Call the tools listed above by their EXACT full name. Start with getCurrentUser.';
 		$lines[] = "\xE2\x9A\xA0\xEF\xB8\x8F Security note: This token acts on behalf of the user who generated it. Handle it with care.";
-		$lines[] = 'Documentation: https://ai-connect.gold-t.co.il/wordpress';
+		$lines[] = 'Documentation: https://plugins.goldnat.ai/wordpress/guide';
 
 		return implode( "\n", $lines );
 	}
