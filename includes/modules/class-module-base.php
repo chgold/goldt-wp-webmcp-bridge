@@ -146,7 +146,7 @@ abstract class Module_Base {
 			$required = isset( $schema['required'] ) && in_array( $key, $schema['required'], true );
 
 			if ( $required && ! isset( $params[ $key ] ) ) {
-				return new \WP_Error( 'missing_parameter', sprintf( 'Required parameter %s is missing', $key ) );
+				return new \WP_Error( 'missing_parameter', sprintf( 'Required parameter %s is missing', $key ), array( 'status' => 400 ) );
 			}
 
 			if ( isset( $params[ $key ] ) ) {
@@ -157,7 +157,8 @@ abstract class Module_Base {
 					if ( ! $type_valid ) {
 						return new \WP_Error(
 							'invalid_type',
-							sprintf( 'Parameter %s must be of type %s', $key, $prop['type'] )
+							sprintf( 'Parameter %s must be of type %s', $key, $prop['type'] ),
+							array( 'status' => 400 )
 						);
 					}
 				}
@@ -268,6 +269,12 @@ abstract class Module_Base {
 	 * @return \WP_Error
 	 */
 	protected function error_response( $message, $code = 'error', $data = null ) {
+		if ( ! is_array( $data ) ) {
+			$data = array();
+		}
+		if ( ! isset( $data['status'] ) ) {
+			$data['status'] = 400;
+		}
 		return new \WP_Error( $code, $message, $data );
 	}
 }
