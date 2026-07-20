@@ -46,11 +46,27 @@ class GoldtWebMCP_Plugin {
 
 	/**
 	 * Constructor.
+	 *
+	 * NOTE: register_modules() is DELIBERATELY not called here. It's deferred
+	 * to plugins_loaded priority 9999 (see the init helper below) so that
+	 * every third-party extension has a full opportunity to add its
+	 * `goldtwmcp_register_modules` callback BEFORE we fire the action.
+	 *
+	 * History: the constructor used to call register_modules() directly, which
+	 * meant do_action('goldtwmcp_register_modules') fired at whatever priority
+	 * `goldtwmcp_init()` runs (currently plugins_loaded priority 10). Any
+	 * extension that hooked in at a later priority (e.g. goldt-webmcp-woocommerce
+	 * at priority 20) would register its callback AFTER the action had already
+	 * fired, and its module would silently never load.
+	 *
+	 * Using priority 9999 gives extensions a huge headroom — they can hook in
+	 * anywhere from priority 1 to priority 9998 and be guaranteed to run before
+	 * modules are registered. New extensions never need to think about this.
 	 */
 	public function __construct() {
 		$this->load_dependencies();
 		$this->init_components();
-		$this->register_modules();
+		add_action( 'plugins_loaded', array( $this, 'register_modules' ), 9999 );
 	}
 
 	/**
@@ -100,7 +116,13 @@ class GoldtWebMCP_Plugin {
 	 *
 	 * @return void
 	 */
-	private function register_modules() {
+	public function register_modules() {
+		// Idempotency guard: WordPress may fire plugins_loaded more than once
+		// in unusual scenarios (test doubles, plugin reactivation on shutdown).
+		if ( ! empty( $this->modules ) ) {
+			return;
+		}
+
 		// Register WordPress Core module (Free).
 		$core_module                = new \GoldtWebMCP\Modules\Core_Module( $this->manifest );
 		$this->modules['wordpress'] = $core_module;
@@ -113,6 +135,8 @@ class GoldtWebMCP_Plugin {
 
 		// Allow external plugins (Pro) to register additional modules.
 		// Pro plugin hooks here via: add_action('goldtwmcp_register_modules', ...).
+		// This fires at plugins_loaded priority 9999, so extensions can safely
+		// register their callback at any priority up to 9998.
 		do_action( 'goldtwmcp_register_modules', $this );
 	}
 
