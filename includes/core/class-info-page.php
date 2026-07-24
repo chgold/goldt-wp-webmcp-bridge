@@ -207,12 +207,12 @@ class Info_Page {
 				'name' => 'Meta AI',
 			),
 			array(
-				'id'   => 'webmcp-master',
-				'name' => 'WebMCP Master (webmcp-master.ai)',
+				'id'   => 'goldnat',
+				'name' => 'Goldnat (goldnat.ai)',
 			),
 		);
 
-		// Mark up the platform list with the featured webmcp-master row.
+		// Mark up the platform list with the featured goldnat row.
 		?>
 <!DOCTYPE html>
 <html lang="en">
@@ -392,7 +392,7 @@ class Info_Page {
 				<div class="plat-grid">
 					<?php
 					foreach ( $clients as $client ) :
-						$is_feat = ( 'webmcp-master' === $client['id'] );
+						$is_feat = ( 'goldnat' === $client['id'] );
 						$parts   = explode( '(', $client['name'], 2 );
 						$main    = trim( $parts[0] );
 						$sub     = isset( $parts[1] ) ? rtrim( $parts[1], ')' ) : '';
