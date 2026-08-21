@@ -154,6 +154,163 @@ class Core_Module extends Module_Base {
 				),
 			)
 		);
+
+		$this->register_tool(
+			'listCategories',
+			array(
+				'description'    => 'List post categories. Use search (matches name OR slug, case-insensitive substring) to resolve a category id from its name/slug — the common pre-step for createPost.',
+				'required_scope' => 'read',
+				'input_schema'   => array(
+					'type'       => 'object',
+					'properties' => array(
+						'search'  => array(
+							'type'        => 'string',
+							'description' => 'Optional — filter categories whose name OR slug contains this string (case-insensitive). Omit for all.',
+						),
+						'parent'  => array(
+							'type'        => 'integer',
+							'description' => 'Optional — only return direct children of this parent category id.',
+						),
+						'orderby' => array(
+							'type'        => 'string',
+							'enum'        => array( 'name', 'slug', 'count', 'id' ),
+							'default'     => 'name',
+							'description' => 'Sort field.',
+						),
+						'limit'   => array(
+							'type'        => 'integer',
+							'default'     => 100,
+							'description' => 'Max categories to return (1-500).',
+						),
+					),
+				),
+			)
+		);
+
+		$this->register_tool(
+			'listTags',
+			array(
+				'description'    => 'List post tags. Use search (matches name OR slug, case-insensitive substring) to resolve a tag id from its name/slug — the common pre-step for createPost.',
+				'required_scope' => 'read',
+				'input_schema'   => array(
+					'type'       => 'object',
+					'properties' => array(
+						'search'  => array(
+							'type'        => 'string',
+							'description' => 'Optional — filter tags whose name OR slug contains this string (case-insensitive). Omit for all.',
+						),
+						'orderby' => array(
+							'type'        => 'string',
+							'enum'        => array( 'name', 'slug', 'count', 'id' ),
+							'default'     => 'name',
+							'description' => 'Sort field.',
+						),
+						'limit'   => array(
+							'type'        => 'integer',
+							'default'     => 100,
+							'description' => 'Max tags to return (1-500).',
+						),
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Execute the listCategories tool.
+	 *
+	 * @param array $params Tool parameters.
+	 * @return array
+	 */
+	public function execute_listCategories( $params ) {
+		return $this->list_taxonomy_terms( 'category', $params, true );
+	}
+
+	/**
+	 * Execute the listTags tool.
+	 *
+	 * @param array $params Tool parameters.
+	 * @return array
+	 */
+	public function execute_listTags( $params ) {
+		return $this->list_taxonomy_terms( 'post_tag', $params, false );
+	}
+
+	/**
+	 * Shared implementation for taxonomy-term list tools.
+	 *
+	 * @param string $taxonomy      WP taxonomy name (category | post_tag).
+	 * @param array  $params        Tool parameters.
+	 * @param bool   $supports_parent Whether to expose the parent filter.
+	 * @return array
+	 */
+	private function list_taxonomy_terms( $taxonomy, $params, $supports_parent ) {
+		$search = isset( $params['search'] ) ? sanitize_text_field( (string) $params['search'] ) : '';
+		$limit  = isset( $params['limit'] ) ? absint( $params['limit'] ) : 100;
+		if ( $limit < 1 ) {
+			$limit = 100;
+		}
+		if ( $limit > 500 ) {
+			$limit = 500;
+		}
+		$orderby       = isset( $params['orderby'] ) ? sanitize_key( (string) $params['orderby'] ) : 'name';
+		$valid_orderby = array( 'name', 'slug', 'count', 'id' );
+		if ( ! in_array( $orderby, $valid_orderby, true ) ) {
+			$orderby = 'name';
+		}
+
+		$args = array(
+			'taxonomy'   => $taxonomy,
+			'hide_empty' => false,
+			'orderby'    => $orderby,
+			'order'      => 'ASC',
+			'number'     => $limit,
+		);
+		if ( $supports_parent && isset( $params['parent'] ) ) {
+			$args['parent'] = absint( $params['parent'] );
+		}
+
+		$terms = \get_terms( $args );
+		if ( \is_wp_error( $terms ) ) {
+			return array(
+				'error'   => 'query_failed',
+				'message' => $terms->get_error_message(),
+			);
+		}
+
+		if ( '' !== $search ) {
+			$needle = mb_strtolower( $search );
+			$terms  = array_values(
+				array_filter(
+					$terms,
+					function ( $term ) use ( $needle ) {
+						return false !== mb_stripos( $term->name, $needle )
+							|| false !== mb_stripos( $term->slug, $needle );
+					}
+				)
+			);
+		}
+
+		$out = array();
+		foreach ( $terms as $t ) {
+			$row = array(
+				'id'          => (int) $t->term_id,
+				'name'        => $t->name,
+				'slug'        => $t->slug,
+				'count'       => (int) $t->count,
+				'description' => $t->description,
+			);
+			if ( $supports_parent ) {
+				$row['parent'] = (int) $t->parent;
+			}
+			$out[] = $row;
+		}
+
+		return array(
+			'taxonomy' => $taxonomy,
+			'count'    => count( $out ),
+			'terms'    => $out,
+		);
 	}
 
 	/**

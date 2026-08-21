@@ -586,8 +586,12 @@ class Tools_Endpoint {
 			$lines[] = 'After adding the site, call these tools by EXACT name (do not search — use directly):';
 			foreach ( $granted_tools as $tool ) {
 				$mcp_name = $ctx['site_key'] . '_' . str_replace( '.', '_', $tool['name'] );
-				$hint     = substr( $tool['description'] ?? '', 0, 70 );
-				$lines[]  = '  ' . str_pad( $mcp_name, 50 ) . '<- ' . $hint;
+				$hint     = substr( $tool['description'] ?? '', 0, 60 );
+				$params   = $this->build_schema_hint( $tool );
+				if ( '' !== $params ) {
+					$hint .= ' — ' . $params;
+				}
+				$lines[] = '  ' . str_pad( $mcp_name, 50 ) . '<- ' . $hint;
 			}
 		} else {
 			$lines[] = '(No tools available for your current permissions.)';
@@ -621,6 +625,59 @@ class Tools_Endpoint {
 
 		return implode( "\n", $lines );
 	}
+
+	/**
+	 * Derives a parameter summary from a tool's input schema.
+	 *
+	 * The prompt previously showed only each tool's description, so an agent was
+	 * told what a tool does but never what arguments it takes.
+	 *
+	 * @param array $tool         Tool definition carrying an input_schema.
+	 * @param int   $max_optional Cap on optional params before summarising.
+	 * @return string
+	 */
+	private function build_schema_hint( array $tool, $max_optional = 3 ) {
+		$schema     = $tool['input_schema'] ?? array();
+		$properties = $schema['properties'] ?? array();
+		if ( ! is_array( $properties ) || empty( $properties ) ) {
+			return 'no arguments';
+		}
+
+		$required = array_flip( (array) ( $schema['required'] ?? array() ) );
+		$req      = array();
+		$opt      = array();
+
+		foreach ( $properties as $name => $spec ) {
+			$type = is_array( $spec ) ? ( $spec['type'] ?? 'string' ) : 'string';
+			$part = $name . '=' . $type;
+
+			if ( isset( $required[ $name ] ) ) {
+				$req[] = $part;
+				continue;
+			}
+			if ( is_array( $spec ) && isset( $spec['default'] ) ) {
+				$default = $spec['default'];
+				$part   .= ' (default ' . ( is_bool( $default ) ? ( $default ? 'true' : 'false' ) : (string) $default ) . ')';
+			}
+			$opt[] = $part;
+		}
+
+		$parts = $req;
+		if ( ! empty( $req ) ) {
+			$parts[ count( $parts ) - 1 ] .= ' [required]';
+		}
+
+		$shown = array_slice( $opt, 0, $max_optional );
+		$parts = array_merge( $parts, $shown );
+
+		$hint = implode( ', ', $parts );
+		if ( count( $opt ) > count( $shown ) ) {
+			$hint .= ', +' . ( count( $opt ) - count( $shown ) ) . ' more';
+		}
+
+		return $hint;
+	}
+
 
 	/**
 	 * Parse tool name into module and method parts.

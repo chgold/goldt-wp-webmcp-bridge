@@ -2,9 +2,9 @@
 Contributors: chagold
 Tags: ai, webmcp, rest-api, oauth, ai-agent
 Requires at least: 6.0
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.8
+Stable tag: 1.1.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,15 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 1.1.0 - 2026-08-21 =
+* New: `wordpress.listCategories` tool — resolve category id from name or slug via case-insensitive substring search. Supports `parent`, `orderby`, and `limit` parameters. Fixes the gap where AI agents had to guess category IDs before calling createPost.
+* New: `wordpress.listTags` tool — same interface for post tags.
+* Compliance: readme headers refreshed (Stable tag + Tested up to 7.1) to satisfy WordPress Plugin Check.
+* Version numbering: internal dev branch (0.5.x) resynced to public release track (1.x). No breaking changes vs 1.0.0 — pure additions.
+
+= 1.0.0 - 2026-06-28 =
+* First public release on WordPress.org (see prior 0.5.x internal changelog entries below).
 
 = 0.5.8 - 2026-07-02 =
 * Breaking: Servio Protocol alignment — all endpoints moved from `/wp-json/goldt-webmcp-bridge/v1/*` to `/api/aiconnect-*` to match the unified Servio protocol used across all Goldnat plugins (WordPress, XenForo, and future platforms). This enables goldnat.ai's `detectWebMCPConnect` to recognize WordPress prompts the same way it recognizes XenForo prompts.
