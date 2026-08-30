@@ -168,7 +168,7 @@ class Info_Page {
 			}
 		}
 
-		$quick_prompt = 'Connect to ' . $site_name . ' using the WebMCP protocol.' . "\n"
+		$quick_prompt = 'Connect to ' . $site_name . ' using the Servio Protocol.' . "\n"
 			. 'Manifest URL: ' . $manifest_url . "\n"
 			. 'For authentication, go to the OAuth authorize URL and follow the instructions.' . "\n"
 			. 'After authorization you will receive a Bearer token to use with all API calls.';
@@ -234,10 +234,10 @@ class Info_Page {
 			</div>
 			<div class="titles">
 				<h1>AI Connect</h1>
-				<p><?php echo esc_html( $site_name ); ?> &middot; WebMCP Protocol Bridge</p>
+				<p><?php echo esc_html( $site_name ); ?> &middot; Goldnat AI Connect &middot; Servio Protocol</p>
 			</div>
 			<span class="spacer"></span>
-			<a class="docslink" href="https://ai-connect.gold-t.co.il/wordpress" target="_blank" rel="noopener">
+			<a class="docslink" href="https://plugins.goldnat.ai/wordpress" target="_blank" rel="noopener">
 				<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
 				Documentation
 			</a>

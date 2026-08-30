@@ -57,7 +57,7 @@ class Manifest {
 			'schema_version' => '1.0',
 			'name'           => 'goldt-webmcp-bridge',
 			'version'        => GOLDTWMCP_VERSION,
-			'description'    => 'WebMCP bridge for WordPress - manage content, users, and e-commerce',
+			'description'    => 'Goldnat AI Connect bridge for WordPress (Servio Protocol) — manage content, users, and e-commerce.',
 			'api_version'    => 'v1',
 			'capabilities'   => array(
 				'tools'     => true,
