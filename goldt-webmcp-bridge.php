@@ -3,7 +3,7 @@
  * Plugin Name: Goldnat AI Connect for WordPress
  * Plugin URI: https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via the Servio Protocol with OAuth 2.0
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '1.2.0' );
+define( 'GOLDTWMCP_VERSION', '1.2.1' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
 
@@ -65,6 +65,39 @@ function goldtwmcp_deactivate() {
 	}
 	flush_rewrite_rules();
 }
+
+/**
+ * Detect a plugin upgrade and force a rewrite-rules flush on next wp_loaded.
+ *
+ * WordPress caches the compiled rewrite-rules array in the `rewrite_rules`
+ * option. The activation hook flushes that cache — but activation does NOT
+ * run when a plugin is updated via wp-admin, wp-cli, or an auto-update.
+ * Result: the site keeps serving old cache and any new/renamed route (like
+ * /api/aiconnect-manifest) returns the homepage instead of our handler.
+ *
+ * Fix: compare the stored `goldtwmcp_version` option to the constant on
+ * every init. If they differ (installed → new code loaded → new constant),
+ * schedule a flush for the current request and persist the new version so
+ * we don't loop. First request after an upgrade will be marginally slower
+ * (rebuild of rewrite cache), all subsequent requests hit the fresh cache.
+ *
+ * @return void
+ */
+function goldtwmcp_maybe_flush_on_upgrade() {
+	$stored = (string) get_option( 'goldtwmcp_version', '0.0.0' );
+	if ( version_compare( $stored, GOLDTWMCP_VERSION, '<' ) ) {
+		update_option( 'goldtwmcp_version', GOLDTWMCP_VERSION );
+		// Run at wp_loaded so all init-time rules (ours + third-party) are in place.
+		add_action(
+			'wp_loaded',
+			static function () {
+				flush_rewrite_rules( false ); // false = don't rewrite .htaccess if we can't.
+			},
+			999
+		);
+	}
+}
+add_action( 'init', 'goldtwmcp_maybe_flush_on_upgrade', 20 );
 
 add_action( 'plugins_loaded', 'goldtwmcp_init' );
 /**
