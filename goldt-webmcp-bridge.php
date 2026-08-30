@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: GoldT WebMCP Bridge
- * Plugin URI: https://goldt-webmcp-bridge.gold-t.co.il/
- * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
- * Version: 1.1.0
+ * Plugin Name: Goldnat AI Connect for WordPress
+ * Plugin URI: https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge
+ * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via the Servio Protocol with OAuth 2.0
+ * Version: 1.2.0
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '1.1.0' );
+define( 'GOLDTWMCP_VERSION', '1.2.0' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
 
@@ -82,7 +82,7 @@ function goldtwmcp_init() {
 				$github_url       = 'https://github.com/chgold/goldt-wp-webmcp-bridge/releases';
 
 				echo '<div class="notice notice-error" style="padding: 15px;">';
-				echo '<h3 style="margin-top: 0;">' . esc_html__( 'GoldT WebMCP Bridge: Missing Dependencies', 'goldt-webmcp-bridge' ) . '</h3>';
+				echo '<h3 style="margin-top: 0;">' . esc_html__( 'Goldnat AI Connect for WordPress: Missing Dependencies', 'goldt-webmcp-bridge' ) . '</h3>';
 				echo '<p><strong>' . esc_html__( 'The plugin cannot run because vendor/ directory is missing.', 'goldt-webmcp-bridge' ) . '</strong></p>';
 
 				if ( $activation_error ) {
@@ -122,7 +122,7 @@ function goldtwmcp_init() {
 			'admin_notices',
 			function () {
 				echo '<div class="notice notice-error" style="padding: 15px;">';
-				echo '<h3 style="margin-top: 0;">' . esc_html__( 'GoldT WebMCP Bridge: Database Tables Missing', 'goldt-webmcp-bridge' ) . '</h3>';
+				echo '<h3 style="margin-top: 0;">' . esc_html__( 'Goldnat AI Connect for WordPress: Database Tables Missing', 'goldt-webmcp-bridge' ) . '</h3>';
 				echo '<p>' . esc_html__( 'The OAuth database tables were not created during activation.', 'goldt-webmcp-bridge' ) . '</p>';
 				echo '<p><strong>' . esc_html__( 'To fix this:', 'goldt-webmcp-bridge' ) . '</strong></p>';
 				echo '<ol style="margin-left: 20px;">';

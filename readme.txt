@@ -1,24 +1,24 @@
-=== GoldT WebMCP Bridge ===
+=== Goldnat AI Connect for WordPress ===
 Contributors: chagold
-Tags: ai, webmcp, rest-api, oauth, ai-agent
+Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0
+Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via the Servio Protocol with OAuth 2.0
 
 == Description ==
 
-**GoldT WebMCP Bridge** enables AI agents to interact with your WordPress content through secure OAuth 2.0 authentication using the WebMCP protocol.
+**Goldnat AI Connect for WordPress** enables AI agents to interact with your WordPress content through secure OAuth 2.0 authentication using the Servio Protocol.
 
 Perfect for AI-powered customer support, automated content analysis, intelligent search, and custom AI integrations.
 
 = ✨ Features =
 
-* **WebMCP Protocol Support** - Industry-standard AI integration
+* **Servio Protocol Support** - Industry-standard AI integration
 * **Secure OAuth 2.0** - Same security standard as Google, Facebook, GitHub - your passwords stay safe
 * **8 Pre-registered AI Clients** - Claude, ChatGPT, Gemini, Grok, Perplexity, Copilot, Meta AI, DeepSeek
 * **7 Tools** - WordPress content tools plus optional translation via MyMemory API
@@ -34,7 +34,7 @@ Perfect for AI-powered customer support, automated content analysis, intelligent
 **Using ChatGPT or Claude?**
 
 Tell your AI agent:
-> "I want to connect you to my WordPress site at https://mysite.com using GoldT WebMCP Bridge plugin. The manifest is at /wp-json/goldt-webmcp-bridge/v1/manifest. Use OAuth 2.0 with client_id: claude-ai"
+> "I want to connect you to my WordPress site at https://mysite.com using the Goldnat AI Connect for WordPress plugin. The manifest is at /api/aiconnect-manifest. Use OAuth 2.0 with client_id: claude-ai"
 
 The AI will guide you through OAuth authorization - you'll approve access in your browser.
 
@@ -94,7 +94,7 @@ Uses the same security standard trusted by Google, Facebook, and GitHub:
 
 = ⚙️ Admin Settings =
 
-Configure the plugin at **GoldT WebMCP → Settings**:
+Configure the plugin at **AI Connect → Settings**:
 
 **Translation Provider:**
 
@@ -105,7 +105,7 @@ Configure the plugin at **GoldT WebMCP → Settings**:
 **Rate Limiting:**
 
 * Default: 50 requests per minute, 1,000 per hour (per user)
-* Adjust both values in **GoldT WebMCP → Settings**
+* Adjust both values in **AI Connect → Settings**
 
 = 🔐 Admin Controls =
 
@@ -113,9 +113,9 @@ Configure the plugin at **GoldT WebMCP → Settings**:
 
 Manage security from the WordPress admin panel:
 
-* **Revoke OAuth Tokens** - Go to **GoldT WebMCP → OAuth Tokens** to view and revoke active tokens
-* **Block Users** - Go to **GoldT WebMCP → Settings** → scroll to "Manage User Access" section
-* **Rate Limits** - Configure request limits in **GoldT WebMCP → Settings** (default: 50/min, 1000/hour)
+* **Revoke OAuth Tokens** - Go to **AI Connect → OAuth Tokens** to view and revoke active tokens
+* **Block Users** - Go to **AI Connect → Settings** → scroll to "Manage User Access" section
+* **Rate Limits** - Configure request limits in **AI Connect → Settings** (default: 50/min, 1000/hour)
 
 = 💬 We Need Your Feedback! =
 
@@ -136,7 +136,7 @@ Your feedback directly shapes the future of this plugin!
 = Automatic Installation =
 
 1. Go to **Plugins → Add New** in WordPress admin
-2. Search for "GoldT WebMCP Bridge"
+2. Search for "Goldnat AI Connect for WordPress"
 3. Click **Install Now** and then **Activate**
 
 = Manual Installation =
@@ -152,7 +152,7 @@ Your feedback directly shapes the future of this plugin!
 
 **No setup required!** The plugin works immediately after activation.
 
-**Optional:** Configure rate limits in **GoldT WebMCP → Settings**
+**Optional:** Configure rate limits in **AI Connect → Settings**
 
 **For detailed setup and testing examples**, see the [plugin documentation on GitHub](https://github.com/chgold/goldt-wp-webmcp-bridge).
 
@@ -225,7 +225,7 @@ Your feedback directly shapes the future of this plugin!
 = REST API Returns 404 =
 
 **Symptoms:**
-* `/wp-json/goldt-webmcp-bridge/v1/manifest` returns 404
+* `/api/aiconnect-manifest` returns 404
 * Tools API calls fail with 404
 
 **Solutions:**
@@ -236,7 +236,7 @@ Your feedback directly shapes the future of this plugin!
 
 2. **Reactivate plugin:**
    * Go to **Plugins** page
-   * Deactivate and reactivate "GoldT WebMCP Bridge"
+   * Deactivate and reactivate "Goldnat AI Connect for WordPress"
 
 3. **Check WordPress REST API:**
    * Visit: `http://yoursite.com/wp-json/`
@@ -259,13 +259,13 @@ Your feedback directly shapes the future of this plugin!
 
 == Frequently Asked Questions ==
 
-= What is WebMCP? =
+= What is the Servio Protocol? =
 
-WebMCP (Web Model Context Protocol) is a standardized protocol for connecting AI agents to web services. It defines how AI assistants discover, authenticate with, and execute tools on web platforms.
+The Servio Protocol is a standardized protocol for connecting AI agents to web services. It defines how AI assistants discover, authenticate with, and execute tools on web platforms. Goldnat AI Connect implements Servio across every supported platform (WordPress, XenForo, Drupal, Shopify, and more) so the same AI agent can talk to any of them with identical semantics.
 
 = Does this work with ChatGPT and Claude? =
 
-Yes! GoldT WebMCP Bridge works with any AI platform that supports REST APIs. This includes ChatGPT (OpenAI), Claude (Anthropic), Make.com, Zapier, and custom applications.
+Yes! Goldnat AI Connect for WordPress works with any AI platform that supports REST APIs. This includes ChatGPT (OpenAI), Claude (Anthropic), Make.com, Zapier, and custom applications.
 
 = Why does reading public content require authentication? =
 
@@ -299,7 +299,7 @@ No, Redis is optional. The plugin works perfectly with WordPress transients. How
 
 = Can I add custom tools? =
 
-Yes! GoldT WebMCP Bridge is extensible. Use WordPress hooks to add custom tools:
+Yes! Goldnat AI Connect for WordPress is extensible. Use WordPress hooks to add custom tools:
 
 ```php
 add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
@@ -324,11 +324,11 @@ Use the refresh token to get a new access token without re-authentication.
 Yes! Multiple options:
 
 **Revoke specific OAuth token:**
-* Go to **GoldT WebMCP → OAuth Tokens**
+* Go to **AI Connect → OAuth Tokens**
 * Find the token and click "Revoke"
 
 **Block specific user:**
-* Go to **GoldT WebMCP → Settings**
+* Go to **AI Connect → Settings**
 * Enter user ID in "Block User" section
 * User cannot authenticate or use existing tokens
 
@@ -338,7 +338,7 @@ Yes! Multiple options:
 
 * **"invalid_client"** - Check client_id (use: claude-ai, chatgpt, or gemini)
 * **"invalid_grant"** - Authorization code expired or already used (codes are one-time, 10 min expiry)
-* **"access_denied"** - User is blocked (check GoldT WebMCP → Settings → Manage User Access)
+* **"access_denied"** - User is blocked (check AI Connect → Settings → Manage User Access)
 * **"Token expired"** - Access token expired after 1 hour, use refresh token to get new access token
 * **"Rate limit exceeded"** - Wait for retry period or increase limits in Settings
 
@@ -356,6 +356,12 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 1.2.0 - 2026-08-30 =
+* Rebrand: user-facing name changed from "GoldT WebMCP Bridge" to "Goldnat AI Connect for WordPress" to match the rest of the Goldnat AI Connect plugin family (XenForo, Drupal, Ghost, Moodle, NodeBB, PrestaShop, Shopify, Discourse). The underlying protocol is now called "Servio Protocol" (was: "WebMCP protocol").
+* Rebrand: readme description, features, FAQ, troubleshooting and installation copy updated to reflect the new name and protocol. Plugin URI updated to https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge.
+* Rebrand: admin menu already reads "AI Connect" (since 0.4.0); readme now matches. All documentation references corrected to `/api/aiconnect-manifest`, `/api/aiconnect-tools`, `/api/aiconnect-oauth` — the old `/wp-json/goldt-webmcp-bridge/v1/*` paths were removed in 0.5.8 but the readme still showed them.
+* Compat: plugin folder slug (`goldt-webmcp-bridge`), text domain (`goldt-webmcp-bridge`), PHP namespace (`GoldtWebMCP\`), option keys (`goldtwmcp_*`), database tables, PHP constants (`GOLDTWMCP_VERSION`) and every REST endpoint are UNCHANGED. Existing OAuth tokens, custom tools registered via `goldtwmcp_register_modules`, and AI agent integrations continue to work with no reconfiguration.
 
 = 1.1.0 - 2026-08-21 =
 * New: `wordpress.listCategories` tool — resolve category id from name or slug via case-insensitive substring search. Supports `parent`, `orderby`, and `limit` parameters. Fixes the gap where AI agents had to guess category IDs before calling createPost.
@@ -493,6 +499,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Upgrade Notice ==
 
+= 1.2.0 =
+Cosmetic rebrand only: renamed to "Goldnat AI Connect for WordPress" (was: "GoldT WebMCP Bridge") and protocol renamed to "Servio" (was: "WebMCP"). No code changes, no reconfiguration required — existing tokens, custom tools and AI integrations keep working.
+
 = 0.3.2 =
 Security fix: "Revoke All Tokens" button now works correctly. WordPress.org compliance improvements. Upgrade recommended.
 
@@ -524,7 +533,7 @@ If "MyMemory API" is not selected, no data is sent to any external service.
 
 == Privacy Policy ==
 
-GoldT WebMCP Bridge does not collect, store, or transmit any personal data to external services. All API requests are handled locally on your WordPress installation.
+Goldnat AI Connect for WordPress does not collect, store, or transmit any personal data to external services. All API requests are handled locally on your WordPress installation.
 
 **Data stored locally:**
 * OAuth clients (pre-registered: claude-ai, chatgpt, gemini)
@@ -548,6 +557,6 @@ No data leaves your WordPress installation. This applies when using the default 
 == Credits ==
 
 * Optional [predis/predis](https://github.com/predis/predis) support for rate limiting
-* Compliant with WebMCP protocol specification
+* Compliant with the Servio Protocol specification
 
 **Made with ❤️ for the WordPress & AI community**
