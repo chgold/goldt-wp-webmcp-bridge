@@ -172,6 +172,11 @@ function goldtwmcp_init() {
 	require_once GOLDTWMCP_PATH . 'includes/class-goldtwmcp.php';
 	$plugin = new GoldtWebMCP_Plugin();
 	$plugin->run();
+
+	// Load the shared Plugin Updater — each Pro plugin registers itself
+	// with it during its own plugins_loaded (priority > 10 so this file
+	// runs first). Cheap: hooks only wire on first register() call.
+	require_once GOLDTWMCP_PATH . 'includes/core/class-plugin-updater.php';
 }
 
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'goldtwmcp_action_links' );

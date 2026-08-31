@@ -9,24 +9,24 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-04-12T10:07:29+00:00\n"
+"POT-Creation-Date: 2026-08-31T12:15:12+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: goldt-webmcp-bridge\n"
 
 #. Plugin Name of the plugin
 #: goldt-webmcp-bridge.php
-msgid "GoldT WebMCP Bridge"
+msgid "Goldnat AI Connect for WordPress"
 msgstr ""
 
 #. Plugin URI of the plugin
 #: goldt-webmcp-bridge.php
-msgid "https://goldt-webmcp-bridge.gold-t.co.il/"
+msgid "https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge"
 msgstr ""
 
 #. Description of the plugin
 #: goldt-webmcp-bridge.php
-msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via WebMCP with OAuth 2.0"
+msgid "Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via the Servio Protocol with OAuth 2.0"
 msgstr ""
 
 #. Author of the plugin
@@ -39,292 +39,517 @@ msgstr ""
 msgid "https://github.com/chgold"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:77
-msgid "GoldT WebMCP Bridge: Missing Dependencies"
+#: goldt-webmcp-bridge.php:118
+msgid "Goldnat AI Connect for WordPress: Missing Dependencies"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:78
+#: goldt-webmcp-bridge.php:119
 msgid "The plugin cannot run because vendor/ directory is missing."
 msgstr ""
 
-#: goldt-webmcp-bridge.php:81
+#: goldt-webmcp-bridge.php:122
 msgid "Error during activation:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:84
+#: goldt-webmcp-bridge.php:125
 msgid "How to fix this:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:86
+#: goldt-webmcp-bridge.php:127
 msgid "Option 1 (Recommended):"
 msgstr ""
 
 #. translators: %s: GitHub Releases link
-#: goldt-webmcp-bridge.php:90
+#: goldt-webmcp-bridge.php:131
 #, php-format
 msgid "Download the complete plugin with vendor/ included from %s"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:91
+#: goldt-webmcp-bridge.php:132
 msgid "GitHub Releases"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:94
+#: goldt-webmcp-bridge.php:135
 msgid "Option 2 (Advanced):"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:95
+#: goldt-webmcp-bridge.php:136
 msgid "Run this command in the plugin directory:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:100
+#: goldt-webmcp-bridge.php:141
 msgid "After fixing, deactivate and reactivate the plugin."
 msgstr ""
 
-#: goldt-webmcp-bridge.php:117
-msgid "GoldT WebMCP Bridge: Database Tables Missing"
+#: goldt-webmcp-bridge.php:158
+msgid "Goldnat AI Connect for WordPress: Database Tables Missing"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:118
+#: goldt-webmcp-bridge.php:159
 msgid "The OAuth database tables were not created during activation."
 msgstr ""
 
-#: goldt-webmcp-bridge.php:119
+#: goldt-webmcp-bridge.php:160
 msgid "To fix this:"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:121
+#: goldt-webmcp-bridge.php:162
 msgid "Deactivate the plugin"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:122
+#: goldt-webmcp-bridge.php:163
 msgid "Reactivate the plugin"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:123
+#: goldt-webmcp-bridge.php:164
 msgid "If the problem persists, check that your database user has CREATE TABLE permissions"
 msgstr ""
 
-#: goldt-webmcp-bridge.php:136
-msgid "GoldT WebMCP Bridge: WooCommerce is recommended for full functionality."
-msgstr ""
-
-#: goldt-webmcp-bridge.php:155
-#: includes/class-goldtwmcp.php:215
-#: includes/class-goldtwmcp.php:216
+#: goldt-webmcp-bridge.php:190
+#: includes/class-goldtwmcp.php:483
+#: includes/class-goldtwmcp.php:484
 msgid "Settings"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:204
-#: includes/class-goldtwmcp.php:205
+#: includes/admin/class-token-registry-admin.php:66
+#: includes/admin/class-token-registry-admin.php:67
+msgid "Token Registry"
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:81
+msgid "You do not have permission to view this page."
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:94
+#: includes/oauth/class-admin-ui.php:91
+msgid "Token revoked successfully."
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:96
+#: includes/user/class-my-tokens-page.php:119
+msgid "Token could not be revoked (already revoked or not found)."
+msgstr ""
+
+#. translators: %d: number of tokens revoked
+#: includes/admin/class-token-registry-admin.php:108
+#, php-format
+msgid "%d unused token revoked."
+msgid_plural "%d unused tokens revoked."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of tokens revoked
+#: includes/admin/class-token-registry-admin.php:119
+#, php-format
+msgid "%d inactive token revoked."
+msgid_plural "%d inactive tokens revoked."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of tokens revoked
+#: includes/admin/class-token-registry-admin.php:178
+#: includes/user/class-my-tokens-page.php:157
+#, php-format
+msgid "%d token revoked."
+msgid_plural "%d tokens revoked."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-token-registry-admin.php:271
+msgid "Sorry, you are not allowed to manage AI Connect tokens."
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:316
+msgid "Token registry row not found."
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:325
+msgid "Token was already revoked."
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:356
+#: includes/admin/views/admin-token-registry.php:26
+#: includes/admin/views/admin-token-registry.php:110
+#: includes/admin/views/admin-token-registry.php:208
+#: includes/user/views/my-tokens-list.php:27
+#: includes/user/views/my-tokens-list.php:167
+msgid "Revoked"
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:362
+#: includes/admin/views/admin-token-registry.php:24
+#: includes/user/views/my-tokens-list.php:25
+msgid "Renewable"
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:365
+#: includes/admin/views/admin-token-registry.php:25
+#: includes/oauth/views/admin-tokens.php:52
+#: includes/oauth/views/admin-tokens.php:63
+#: includes/user/views/my-tokens-list.php:26
+msgid "Expired"
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:369
+#: includes/admin/views/admin-token-registry.php:22
+#: includes/user/views/my-tokens-list.php:23
+msgid "Unused"
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:373
+#: includes/admin/views/admin-token-registry.php:23
+#: includes/user/views/my-tokens-list.php:24
+msgid "Inactive"
+msgstr ""
+
+#: includes/admin/class-token-registry-admin.php:376
+#: includes/admin/views/admin-token-registry.php:21
+#: includes/user/views/my-tokens-list.php:22
+msgid "Active"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:27
+#: includes/user/views/my-tokens-list.php:28
+msgid "All"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:33
+msgid "AI Connect — Token Registry"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:37
+msgid "Inventory of every access token issued by the OAuth server. Only the first 16 characters (token prefix) are stored so this list is safe to expose to administrators. Revoking a token here also blocks any further bearer-auth lookups AND invalidates the refresh token."
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:76
+msgid "Bulk Actions:"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:77
+msgid "Revoke all unused tokens (never used, >30 days old)?"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:80
+msgid "Revoke Unused (30d)"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:83
+msgid "Revoke all inactive tokens (not used in 180 days)?"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:86
+msgid "Revoke Inactive (180d)"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:89
+msgid "DANGER: Revoke ALL active tokens? All AI agents will be disconnected."
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:92
+msgid "Revoke ALL (Danger)"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:100
+msgid "Prefix"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:101
+#: includes/oauth/views/admin-tokens.php:20
+msgid "User"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:102
+#: includes/oauth/views/admin-tokens.php:19
+#: includes/user/views/my-tokens-list.php:103
+#: includes/user/views/my-tokens-revoke.php:34
+msgid "Client"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:103
+#: includes/user/views/my-tokens-list.php:104
+#: includes/user/views/my-tokens-revoke.php:38
+msgid "Source"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:104
+#: includes/user/views/my-tokens-list.php:105
+#: includes/user/views/my-tokens-revoke.php:42
+msgid "Issued"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:105
+msgid "Expires"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:106
+#: includes/user/views/my-tokens-list.php:106
+#: includes/user/views/my-tokens-revoke.php:46
+msgid "Last used"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:107
+#: includes/user/views/my-tokens-list.php:107
+#: includes/user/views/my-tokens-revoke.php:59
+msgid "Last IP"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:108
+msgid "Last UA"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:109
+#: includes/user/views/my-tokens-list.php:109
+msgid "State"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:111
+#: includes/oauth/views/admin-tokens.php:25
+#: includes/user/views/my-tokens-list.php:110
+msgid "Actions"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:118
+#: includes/user/views/my-tokens-list.php:117
+msgid "No tokens found for this filter."
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:149
+msgid "(expired)"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:187
+msgid "by"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:189
+msgid "system"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:204
+msgid "Revoke this token? The AI agent using it will be disconnected."
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:205
+#: includes/oauth/views/admin-tokens.php:78
+#: includes/user/views/my-tokens-list.php:165
+msgid "Revoke"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:217
+msgid "REST API"
+msgstr ""
+
+#: includes/admin/views/admin-token-registry.php:218
+msgid "Admins (manage_options) can manage tokens via these endpoints:"
+msgstr ""
+
+#: includes/class-goldtwmcp.php:472
+#: includes/class-goldtwmcp.php:473
 msgid "AI Connect"
 msgstr ""
 
 #. translators: %s: version number
-#: includes/class-goldtwmcp.php:237
+#: includes/class-goldtwmcp.php:505
 #, php-format
 msgid "✅ AI Connect v%s is active and ready!"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:243
+#: includes/class-goldtwmcp.php:511
 msgid "Environment Status"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:306
+#: includes/class-goldtwmcp.php:574
 msgid "Dependencies Missing"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:307
+#: includes/class-goldtwmcp.php:575
 msgid "Run the following command in the plugin directory:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:373
+#: includes/class-goldtwmcp.php:641
 msgid "User access revoked successfully."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:388
+#: includes/class-goldtwmcp.php:656
 msgid "User access restored successfully."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:406
+#: includes/class-goldtwmcp.php:674
 msgid "All active tokens have been revoked. Connected AI agents will need to re-authorize."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:423
+#: includes/class-goldtwmcp.php:691
 msgid "Settings saved!"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:437
+#: includes/class-goldtwmcp.php:705
 msgid "API Rate Limiting"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:440
+#: includes/class-goldtwmcp.php:708
 msgid "Rate Limit (per minute)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:443
+#: includes/class-goldtwmcp.php:711
 msgid "Maximum API requests per minute per user"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:447
+#: includes/class-goldtwmcp.php:715
 msgid "Rate Limit (per hour)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:450
+#: includes/class-goldtwmcp.php:718
 msgid "Maximum API requests per hour per user"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:455
+#: includes/class-goldtwmcp.php:723
 msgid "Translation"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:458
+#: includes/class-goldtwmcp.php:726
 msgid "Translation Provider"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:463
+#: includes/class-goldtwmcp.php:731
 msgid "AI Self-Translate"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:464
+#: includes/class-goldtwmcp.php:732
 msgid "AI agent translates using its own built-in language abilities (no external API, no limits)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:468
+#: includes/class-goldtwmcp.php:736
 msgid "MyMemory API"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:469
+#: includes/class-goldtwmcp.php:737
 msgid "Uses MyMemory free translation API (~5,000 chars/day limit)"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:473
+#: includes/class-goldtwmcp.php:741
 msgid "Disabled"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:474
+#: includes/class-goldtwmcp.php:742
 msgid "No translation capability exposed to AI agents"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:481
+#: includes/class-goldtwmcp.php:749
 msgid "Data Management"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:484
+#: includes/class-goldtwmcp.php:752
 msgid "Uninstall Cleanup"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:489
+#: includes/class-goldtwmcp.php:757
 msgid "Delete all plugin data when uninstalling"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:492
+#: includes/class-goldtwmcp.php:760
 msgid "When enabled, all OAuth clients, tokens, and settings will be permanently deleted when you uninstall this plugin. Leave unchecked to preserve data for reinstallation."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:494
+#: includes/class-goldtwmcp.php:762
 msgid "Note:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:494
+#: includes/class-goldtwmcp.php:762
 msgid "Sensitive security data (OAuth tokens, refresh tokens) will always be deleted regardless of this setting."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:501
+#: includes/class-goldtwmcp.php:769
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:506
+#: includes/class-goldtwmcp.php:774
 msgid "Security"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:508
+#: includes/class-goldtwmcp.php:776
 msgid "Revoke All Active Tokens"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:509
+#: includes/class-goldtwmcp.php:777
 msgid "This will immediately revoke all active access tokens and refresh tokens."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:510
+#: includes/class-goldtwmcp.php:778
 msgid "All AI agents currently connected will be disconnected. Users will need to authorize again to get new tokens."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:513
+#: includes/class-goldtwmcp.php:781
 msgid "Warning:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:513
+#: includes/class-goldtwmcp.php:781
 msgid "This action cannot be undone."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:516
+#: includes/class-goldtwmcp.php:784
 msgid "Are you sure you want to revoke all active tokens? All connected AI agents will be disconnected."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:518
+#: includes/class-goldtwmcp.php:786
+#: includes/user/views/my-tokens-revoke-all.php:30
 msgid "Revoke All Tokens"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:523
+#: includes/class-goldtwmcp.php:791
 msgid "Manage User Access"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:524
+#: includes/class-goldtwmcp.php:792
 msgid "Block specific users from accessing AI Connect. Blocked users cannot authenticate or use existing tokens."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:529
+#: includes/class-goldtwmcp.php:797
 msgid "Blocked Users"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:531
+#: includes/class-goldtwmcp.php:799
 msgid "User ID"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:531
+#: includes/class-goldtwmcp.php:799
 msgid "Username"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:531
+#: includes/class-goldtwmcp.php:799
 msgid "Email"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:531
+#: includes/class-goldtwmcp.php:799
 msgid "Action"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:544
+#: includes/class-goldtwmcp.php:812
 msgid "Restore Access"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:552
+#: includes/class-goldtwmcp.php:820
 msgid "No users are currently blocked."
 msgstr ""
 
-#: includes/class-goldtwmcp.php:558
+#: includes/class-goldtwmcp.php:826
 msgid "Block a User"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:562
+#: includes/class-goldtwmcp.php:830
 msgid "User ID:"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:564
+#: includes/class-goldtwmcp.php:832
 msgid "Enter the WordPress user ID to block"
 msgstr ""
 
-#: includes/class-goldtwmcp.php:566
+#: includes/class-goldtwmcp.php:834
 msgid "Block User"
 msgstr ""
 
 #: includes/oauth/class-admin-ui.php:38
 #: includes/oauth/class-admin-ui.php:39
 msgid "OAuth Tokens"
-msgstr ""
-
-#: includes/oauth/class-admin-ui.php:91
-msgid "Token revoked successfully."
 msgstr ""
 
 #: includes/oauth/class-scopes.php:29
@@ -368,14 +593,6 @@ msgstr ""
 msgid "Manage OAuth access tokens that have been granted to AI applications."
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:19
-msgid "Client"
-msgstr ""
-
-#: includes/oauth/views/admin-tokens.php:20
-msgid "User"
-msgstr ""
-
 #: includes/oauth/views/admin-tokens.php:21
 msgid "Scopes"
 msgstr ""
@@ -392,17 +609,8 @@ msgstr ""
 msgid "Refresh Token Expires"
 msgstr ""
 
-#: includes/oauth/views/admin-tokens.php:25
-msgid "Actions"
-msgstr ""
-
 #: includes/oauth/views/admin-tokens.php:32
 msgid "No active tokens found."
-msgstr ""
-
-#: includes/oauth/views/admin-tokens.php:52
-#: includes/oauth/views/admin-tokens.php:63
-msgid "Expired"
 msgstr ""
 
 #: includes/oauth/views/admin-tokens.php:68
@@ -410,11 +618,8 @@ msgid "N/A"
 msgstr ""
 
 #: includes/oauth/views/admin-tokens.php:77
+#: includes/user/views/my-tokens-revoke.php:23
 msgid "Are you sure you want to revoke this token?"
-msgstr ""
-
-#: includes/oauth/views/admin-tokens.php:78
-msgid "Revoke"
 msgstr ""
 
 #: includes/oauth/views/consent-screen.php:17
@@ -481,4 +686,83 @@ msgstr ""
 
 #: includes/oauth/views/oob-code.php:44
 msgid "This code expires in 10 minutes and can only be used once."
+msgstr ""
+
+#: includes/user/class-my-tokens-page.php:68
+#: includes/user/class-my-tokens-page.php:69
+#: includes/user/views/my-tokens-list.php:34
+msgid "My AI Tokens"
+msgstr ""
+
+#: includes/user/class-my-tokens-page.php:83
+msgid "You must be logged in to view this page."
+msgstr ""
+
+#: includes/user/class-my-tokens-page.php:117
+msgid "Token revoked. The AI agent using it has been disconnected."
+msgstr ""
+
+#: includes/user/class-my-tokens-page.php:123
+msgid "Permission denied."
+msgstr ""
+
+#: includes/user/views/my-tokens-list.php:37
+msgid "These are the access tokens issued to AI agents on your behalf. Revoking a token immediately disconnects the agent — it will need to re-authorize to regain access."
+msgstr ""
+
+#: includes/user/views/my-tokens-list.php:89
+msgid "Revoke all my tokens"
+msgstr ""
+
+#. translators: %s: filter label
+#: includes/user/views/my-tokens-list.php:92
+#, php-format
+msgid "Revoke all %s tokens"
+msgstr ""
+
+#: includes/user/views/my-tokens-list.php:102
+#: includes/user/views/my-tokens-revoke.php:30
+msgid "Token prefix"
+msgstr ""
+
+#: includes/user/views/my-tokens-list.php:108
+msgid "Last agent"
+msgstr ""
+
+#: includes/user/views/my-tokens-list.php:136
+#: includes/user/views/my-tokens-revoke.php:50
+msgid "Never"
+msgstr ""
+
+#: includes/user/views/my-tokens-revoke-all.php:34
+msgid "⚠️ This action cannot be undone."
+msgstr ""
+
+#. translators: %d: number of tokens that will be revoked
+#: includes/user/views/my-tokens-revoke-all.php:39
+#, php-format
+msgid "You are about to revoke %d token. All AI agents using these tokens will be immediately disconnected."
+msgid_plural "You are about to revoke %d tokens. All AI agents using these tokens will be immediately disconnected."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/user/views/my-tokens-revoke-all.php:56
+msgid "Yes, revoke all matching tokens"
+msgstr ""
+
+#: includes/user/views/my-tokens-revoke-all.php:60
+#: includes/user/views/my-tokens-revoke.php:75
+msgid "Cancel"
+msgstr ""
+
+#: includes/user/views/my-tokens-revoke.php:19
+msgid "Revoke AI Token"
+msgstr ""
+
+#: includes/user/views/my-tokens-revoke.php:24
+msgid "The AI agent using it will be immediately disconnected and will need to re-authorize."
+msgstr ""
+
+#: includes/user/views/my-tokens-revoke.php:71
+msgid "Yes, revoke this token"
 msgstr ""
