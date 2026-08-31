@@ -218,15 +218,18 @@ class Database {
 	private static function upgrade_to_2_0_6() {
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time OAuth client display rename on upgrade.
+		$clients_table = $wpdb->prefix . 'goldtwmcp_oauth_clients';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$wpdb->update(
-			"{$wpdb->prefix}goldtwmcp_oauth_clients",
+			$clients_table,
 			array( 'client_name' => 'Goldnat' ),
 			array(
 				'client_id'   => 'goldnat-master',
 				'client_name' => 'Goldnat Master',
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		self::set_version( '2.0.6' );
 	}
@@ -281,13 +284,12 @@ class Database {
 		$registry_table = $wpdb->prefix . 'aiconnect_token_registry';
 
 		// Step 1: ensure 'goldnat-master' exists in oauth_clients.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$new_exists = $wpdb->get_var(
 			$wpdb->prepare( "SELECT id FROM {$clients_table} WHERE client_id = %s", 'goldnat-master' )
 		);
 
 		if ( ! $new_exists ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
 			$old = $wpdb->get_row(
 				$wpdb->prepare( "SELECT * FROM {$clients_table} WHERE client_id = %s", 'webmcp-master' ),
 				ARRAY_A
@@ -321,7 +323,6 @@ class Database {
 		}
 
 		// Step 2: migrate access + refresh tokens.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
 		$wpdb->update(
 			$tokens_table,
 			array( 'client_id' => 'goldnat-master' ),
@@ -329,7 +330,6 @@ class Database {
 		);
 
 		// Step 3: migrate audit registry.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
 		$wpdb->update(
 			$registry_table,
 			array( 'client_id' => 'goldnat-master' ),
@@ -338,11 +338,11 @@ class Database {
 
 		// Step 4: remove the legacy client row (now orphaned — every token
 		// that referenced it has been repointed above).
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
 		$wpdb->delete(
 			$clients_table,
 			array( 'client_id' => 'webmcp-master' )
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		self::set_version( '2.0.5' );
 	}

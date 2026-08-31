@@ -1,18 +1,18 @@
-=== Goldnat AI Connect for WordPress ===
+=== GoldT WebMCP Bridge ===
 Contributors: chagold
 Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via the Servio Protocol with OAuth 2.0
+Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) — powered by the Servio Protocol (aka WebMCP) with OAuth 2.0
 
 == Description ==
 
-**Goldnat AI Connect for WordPress** enables AI agents to interact with your WordPress content through secure OAuth 2.0 authentication using the Servio Protocol.
+**GoldT WebMCP Bridge** (also branded as **Goldnat AI Connect**) enables AI agents to interact with your site through secure OAuth 2.0 authentication using the Servio Protocol.
 
 Perfect for AI-powered customer support, automated content analysis, intelligent search, and custom AI integrations.
 
@@ -357,6 +357,13 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.4 - 2026-08-31 =
+* Fixed: reverted plugin display name back to the original **GoldT WebMCP Bridge** (matches the plugin slug `goldt-webmcp-bridge`). 1.2.0 renamed it to a longer form that included the term "WordPress"; the wp.org Plugin Check flags that as a restricted term and it also no longer matched the slug. The Goldnat / Servio Protocol rebrand still lives everywhere it makes sense — description tagline, manifest, admin subtitle, quick-prompt template, OAuth client display — but the Plugin Name header stays stable.
+* Removed: `includes/core/class-plugin-updater.php`. WordPress.org's Plugin Check rejects custom update systems (`Plugin Updater detected`), and the Free plugin was already served via wp.org's built-in updater; the custom checker was only used by external Pro plugins that must ship their own update code from here on.
+* Fixed: SQL warnings in `upgrade_to_2_0_5` and `upgrade_to_2_0_6` (interpolated table names) suppressed with the same `phpcs:disable/enable` block the older migrations use — behaviour unchanged.
+* Fixed: `parse_url()` → `wp_parse_url()` (only usage was inside the removed updater).
+* Fixed: 1.2.1 upgrade notice trimmed under the 300-character wp.org limit.
+
 = 1.2.3 - 2026-08-31 =
 * Rebrand completion (OAuth client identifier): the built-in master OAuth client's `client_id` is renamed from `webmcp-master` to `goldnat-master`, so the plugin no longer exposes any "webmcp" string to AI agents via the OAuth authorize/token flows. New DB schema upgrade `2.0.5` performs the rename in three tables atomically: `oauth_clients` gets a new `goldnat-master` row (config copied from the legacy row), then `oauth_tokens` and `aiconnect_token_registry` are re-pointed at the new identifier, then the legacy `webmcp-master` row is deleted. **Existing agents keep working** — their tokens now reference `goldnat-master` (which exists), so bearer-auth continues to succeed without any user action. **New authorize requests that hard-code the legacy identifier will get `invalid_client`** and need to reconnect using `goldnat-master`. Idempotent — re-running the migration is a no-op on already-migrated sites.
 * Rebrand follow-up (prompt generator UI): the master client's label in `get_agent_clients()` no longer reads "Goldnat (webmcp)"; it now reads "Goldnat Master", matching the display name in the DB and on the OAuth consent screen.
@@ -511,6 +518,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Upgrade Notice ==
 
+= 1.2.4 =
+Reverts the plugin display name back to the original "GoldT WebMCP Bridge" (the 1.2.0 rename triggered a wp.org trademark warning). Removes the custom plugin updater (wp.org disallows self-updaters) and cleans up minor code warnings.
+
 = 1.2.3 =
 Renames the built-in master OAuth client's identifier from `webmcp-master` to `goldnat-master`. Existing tokens are migrated automatically and keep working. Only agents that hard-coded the legacy identifier in new authorize requests need to reconnect using `goldnat-master`.
 
@@ -518,7 +528,7 @@ Renames the built-in master OAuth client's identifier from `webmcp-master` to `g
 Renames the built-in "WebMCP Master" OAuth client to "Goldnat Master" on the consent screen. Existing tokens keep working — only the display name changes. Automatic DB migration, zero-config.
 
 = 1.2.1 =
-Auto-flush rewrite rules on plugin upgrade so /api/aiconnect-* routes stop returning the homepage after a bridge update. Also completes the 1.2.0 rebrand: three remaining "WebMCP" strings (manifest description, Connect-page subtitle, quick-prompt template) now say "Servio Protocol" / "Goldnat AI Connect", and a broken Documentation link is fixed.
+Auto-flushes rewrite rules on plugin upgrade so /api/aiconnect-* routes stop returning the homepage after a bridge update. Also rebrands three lingering WebMCP strings to Servio Protocol and fixes a broken Documentation link.
 
 = 1.2.0 =
 Cosmetic rebrand only: renamed to "Goldnat AI Connect for WordPress" (was: "GoldT WebMCP Bridge") and protocol renamed to "Servio" (was: "WebMCP"). No code changes, no reconfiguration required — existing tokens, custom tools and AI integrations keep working.

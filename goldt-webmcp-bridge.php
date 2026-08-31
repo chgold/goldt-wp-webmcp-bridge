@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Goldnat AI Connect for WordPress
+ * Plugin Name: GoldT WebMCP Bridge
  * Plugin URI: https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge
- * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) via the Servio Protocol with OAuth 2.0
- * Version: 1.2.3
+ * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) — powered by the Servio Protocol (aka WebMCP) with OAuth 2.0
+ * Version: 1.2.4
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '1.2.3' );
+define( 'GOLDTWMCP_VERSION', '1.2.4' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
 
@@ -172,11 +172,6 @@ function goldtwmcp_init() {
 	require_once GOLDTWMCP_PATH . 'includes/class-goldtwmcp.php';
 	$plugin = new GoldtWebMCP_Plugin();
 	$plugin->run();
-
-	// Load the shared Plugin Updater — each Pro plugin registers itself
-	// with it during its own plugins_loaded (priority > 10 so this file
-	// runs first). Cheap: hooks only wire on first register() call.
-	require_once GOLDTWMCP_PATH . 'includes/core/class-plugin-updater.php';
 }
 
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'goldtwmcp_action_links' );
