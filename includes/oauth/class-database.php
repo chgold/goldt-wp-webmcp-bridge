@@ -184,6 +184,46 @@ class Database {
 		if ( version_compare( $current_version, '2.0.3', '<' ) ) {
 			self::upgrade_to_2_0_3();
 		}
+
+		if ( version_compare( $current_version, '2.0.4', '<' ) ) {
+			self::upgrade_to_2_0_4();
+		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.4 — rebrand OAuth client display name.
+	 *
+	 * The 'webmcp-master' OAuth client was seeded (in 1.4.0 and again in
+	 * insert_default_clients()) with client_name 'WebMCP Master'. That name
+	 * is shown on the consent screen every time a user authorises this
+	 * client, so it needed to move to the current 'Goldnat AI Connect /
+	 * Servio Protocol' branding.
+	 *
+	 * The client_id itself stays 'webmcp-master' — it's referenced by
+	 * existing OAuth authorization codes, access tokens, and refresh
+	 * tokens, so renaming it would invalidate every active integration.
+	 * Only the human-readable display name changes.
+	 *
+	 * Idempotent: the WHERE clause matches only rows still holding the
+	 * legacy display name, so re-running the migration (or running it on
+	 * a site an admin already patched by hand) is a no-op.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_4() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time OAuth client rename on upgrade.
+		$wpdb->update(
+			"{$wpdb->prefix}goldtwmcp_oauth_clients",
+			array( 'client_name' => 'Goldnat Master' ),
+			array(
+				'client_id'   => 'webmcp-master',
+				'client_name' => 'WebMCP Master',
+			)
+		);
+
+		self::set_version( '2.0.4' );
 	}
 
 	/**
@@ -208,11 +248,13 @@ class Database {
 
 		if ( ! $exists ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth setup, inserting webmcp-master client.
+			// NOTE: client_id stays 'webmcp-master' for backward compat — existing OAuth
+			// tokens reference this identifier. Only the display name reflects the rebrand.
 			$wpdb->insert(
 				"{$wpdb->prefix}goldtwmcp_oauth_clients",
 				array(
 					'client_id'      => 'webmcp-master',
-					'client_name'    => 'WebMCP Master',
+					'client_name'    => 'Goldnat Master',
 					'client_type'    => 'public',
 					'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
 					'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
@@ -409,8 +451,10 @@ class Database {
 
 		$clients = array(
 			array(
+				// client_id stays 'webmcp-master' for backward compat — existing OAuth
+				// tokens reference this identifier. Only the display name is rebranded.
 				'client_id'      => 'webmcp-master',
-				'client_name'    => 'WebMCP Master',
+				'client_name'    => 'Goldnat Master',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
 				'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),

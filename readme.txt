@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.2 - 2026-08-31 =
+* Rebrand follow-up (OAuth consent screen): the built-in `webmcp-master` OAuth client had `client_name = 'WebMCP Master'` in the database, which is the name users saw on the "Authorize this application?" consent screen every time they connected an AI agent with full-access scope. New DB schema upgrade `2.0.4` renames the display name to `Goldnat Master` on existing sites. The `client_id` itself stays `webmcp-master` — active tokens and integrations reference that identifier and would break if it changed. Fresh installs also get the new display name via `insert_default_clients()`.
+
 = 1.2.1 - 2026-08-30 =
 * Fixed: rewrite rules are now auto-flushed on plugin upgrade. WordPress caches compiled rewrite rules in `wp_options.rewrite_rules`. The activation hook flushes that cache — but activation doesn't run on plugin update, wp-cli update, or auto-update, so any new or renamed route (like `/api/aiconnect-manifest`) returned the homepage instead of the handler until someone manually visited Settings → Permalinks. The plugin now checks `goldtwmcp_version` on every init; when it lags `GOLDTWMCP_VERSION` the flush is scheduled on `wp_loaded` (priority 999) and the version option is bumped. Zero-config for site admins — the first request after an upgrade repairs the cache. (See gold-t.co.il thread #700.)
 * Rebrand follow-up: three user-facing strings that 1.2.0 missed are now updated too. The Servio manifest now advertises "Goldnat AI Connect bridge for WordPress (Servio Protocol)" as its description (was: "WebMCP bridge for WordPress"). The `/ai-connect/` info-page subtitle reads "Goldnat AI Connect · Servio Protocol" (was: "WebMCP Protocol Bridge"). The manual quick-prompt template opens with "Connect to <site> using the Servio Protocol" (was: "using the WebMCP protocol"), so users no longer paste stale branding into their AI agent.
@@ -503,6 +506,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.2 =
+Renames the built-in "WebMCP Master" OAuth client to "Goldnat Master" on the consent screen. Existing tokens keep working — only the display name changes. Automatic DB migration, zero-config.
 
 = 1.2.1 =
 Auto-flush rewrite rules on plugin upgrade so /api/aiconnect-* routes stop returning the homepage after a bridge update. Also completes the 1.2.0 rebrand: three remaining "WebMCP" strings (manifest description, Connect-page subtitle, quick-prompt template) now say "Servio Protocol" / "Goldnat AI Connect", and a broken Documentation link is fixed.
