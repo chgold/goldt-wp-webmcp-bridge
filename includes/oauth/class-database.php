@@ -192,6 +192,43 @@ class Database {
 		if ( version_compare( $current_version, '2.0.5', '<' ) ) {
 			self::upgrade_to_2_0_5();
 		}
+
+		if ( version_compare( $current_version, '2.0.6', '<' ) ) {
+			self::upgrade_to_2_0_6();
+		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.6 — drop the "Master" suffix from the OAuth
+	 * client display name.
+	 *
+	 * 2.0.4 renamed the display name from 'WebMCP Master' to 'Goldnat Master'
+	 * to mirror the client_id. 2.0.5 then renamed the client_id itself
+	 * (webmcp-master → goldnat-master), which made the trailing 'Master' in
+	 * the display name redundant with the identifier. This migration strips
+	 * it so the consent screen simply reads 'Goldnat' — matching the label
+	 * used elsewhere in the plugin (get_agent_clients()).
+	 *
+	 * Idempotent: the WHERE clause matches only rows still holding the
+	 * interim display name, so re-running or running on a site an admin
+	 * already renamed manually is a no-op.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_6() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time OAuth client display rename on upgrade.
+		$wpdb->update(
+			"{$wpdb->prefix}goldtwmcp_oauth_clients",
+			array( 'client_name' => 'Goldnat' ),
+			array(
+				'client_id'   => 'goldnat-master',
+				'client_name' => 'Goldnat Master',
+			)
+		);
+
+		self::set_version( '2.0.6' );
 	}
 
 	/**
@@ -258,10 +295,13 @@ class Database {
 
 			if ( $old ) {
 				// Reuse the existing row's config (scopes, redirect_uris, etc.),
-				// just rebrand the identifier and display name.
+				// just rebrand the identifier and display name. The display
+				// name landed on 'Goldnat' — the trailing 'Master' from the
+				// interim rebrand is intentionally dropped here; 2.0.6 will
+				// also strip it from sites that already migrated via 2.0.5.
 				unset( $old['id'] );
 				$old['client_id']   = 'goldnat-master';
-				$old['client_name'] = 'Goldnat Master';
+				$old['client_name'] = 'Goldnat';
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- One-time migration.
 				$wpdb->insert( $clients_table, $old );
 			} else {
@@ -271,7 +311,7 @@ class Database {
 					$clients_table,
 					array(
 						'client_id'      => 'goldnat-master',
-						'client_name'    => 'Goldnat Master',
+						'client_name'    => 'Goldnat',
 						'client_type'    => 'public',
 						'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
 						'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
@@ -349,13 +389,14 @@ class Database {
 	 * Historical: this used to seed client_id 'webmcp-master' with client_name
 	 * 'WebMCP Master'. Sites that arrived at this upgrade path AFTER the
 	 * rebrand pipeline (2.0.4 renamed the display name, 2.0.5 renamed the
-	 * client_id itself) get the current name directly, so the identifier
-	 * created here now is 'goldnat-master' / 'Goldnat Master'.
+	 * client_id itself, 2.0.6 dropped the interim 'Master' suffix) get the
+	 * current identifier directly: 'goldnat-master' with display name
+	 * 'Goldnat'.
 	 *
 	 * Idempotent: only inserts when neither identifier is present, so sites
 	 * that already have either 'goldnat-master' (post-migration) or
-	 * 'webmcp-master' (pre-migration) are not touched. The 2.0.5 migration
-	 * will consolidate them regardless.
+	 * 'webmcp-master' (pre-migration) are not touched. The 2.0.5 + 2.0.6
+	 * migrations consolidate them regardless.
 	 *
 	 * @return void
 	 */
@@ -377,7 +418,7 @@ class Database {
 				"{$wpdb->prefix}goldtwmcp_oauth_clients",
 				array(
 					'client_id'      => 'goldnat-master',
-					'client_name'    => 'Goldnat Master',
+					'client_name'    => 'Goldnat',
 					'client_type'    => 'public',
 					'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
 					'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
@@ -575,7 +616,7 @@ class Database {
 		$clients = array(
 			array(
 				'client_id'      => 'goldnat-master',
-				'client_name'    => 'Goldnat Master',
+				'client_name'    => 'Goldnat',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
 				'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),

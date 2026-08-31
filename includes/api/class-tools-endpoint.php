@@ -407,7 +407,7 @@ class Tools_Endpoint {
 			'deepseek'      => array( 'label' => 'DeepSeek AI' ),
 			'perplexity'    => array( 'label' => 'Perplexity AI' ),
 			'meta-ai'       => array( 'label' => 'Meta AI' ),
-			'goldnat-master' => array( 'label' => 'Goldnat Master' ),
+			'goldnat-master' => array( 'label' => 'Goldnat' ),
 		);
 	}
 
