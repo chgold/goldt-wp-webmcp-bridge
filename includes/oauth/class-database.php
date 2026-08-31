@@ -188,6 +188,123 @@ class Database {
 		if ( version_compare( $current_version, '2.0.4', '<' ) ) {
 			self::upgrade_to_2_0_4();
 		}
+
+		if ( version_compare( $current_version, '2.0.5', '<' ) ) {
+			self::upgrade_to_2_0_5();
+		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.5 — rename OAuth client_id webmcp-master to goldnat-master.
+	 *
+	 * The 2.0.4 migration renamed the display name only. This one renames the
+	 * identifier itself so the plugin exposes no "webmcp" string to AI agents,
+	 * neither in the manifest nor in the OAuth authorize/token flows.
+	 *
+	 * Data touched:
+	 *   1. oauth_clients               — the 'webmcp-master' row becomes 'goldnat-master'.
+	 *   2. oauth_tokens                — every issued/refreshed token that referenced
+	 *                                    the old client_id is re-pointed at the new one.
+	 *   3. aiconnect_token_registry    — same re-point in the audit registry.
+	 *
+	 * Ordering matters. We insert the new 'goldnat-master' row BEFORE moving
+	 * tokens so bearer-auth requests in flight always find a valid client.
+	 * The old 'webmcp-master' row is deleted LAST, only after every token has
+	 * been migrated away from it.
+	 *
+	 *   1. INSERT-IF-MISSING new client 'goldnat-master' (uses existing row's
+	 *      data if the 2.0.4 migration already renamed the display name).
+	 *   2. UPDATE oauth_tokens SET client_id='goldnat-master' WHERE
+	 *      client_id='webmcp-master'.
+	 *   3. UPDATE aiconnect_token_registry SET client_id='goldnat-master'
+	 *      WHERE client_id='webmcp-master'.
+	 *   4. DELETE FROM oauth_clients WHERE client_id='webmcp-master'.
+	 *
+	 * User impact: existing agents keep working — their tokens continue to
+	 * validate because the client they reference (now 'goldnat-master')
+	 * exists. Only agents that hard-coded the legacy client_id in NEW
+	 * authorize requests get 'invalid_client' — they need to reconnect
+	 * using 'goldnat-master'. Per the release note this is accepted
+	 * behaviour; the alternative (permanent alias) leaks the legacy
+	 * identifier forever.
+	 *
+	 * Idempotent:
+	 *   - Step 1 no-ops when 'goldnat-master' already exists.
+	 *   - Step 2/3 no-op when no rows still reference 'webmcp-master'.
+	 *   - Step 4 no-ops when 'webmcp-master' row is gone.
+	 * Re-running the migration on a fully-migrated site is safe.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_5() {
+		global $wpdb;
+
+		$clients_table  = $wpdb->prefix . 'goldtwmcp_oauth_clients';
+		$tokens_table   = $wpdb->prefix . 'goldtwmcp_oauth_tokens';
+		$registry_table = $wpdb->prefix . 'aiconnect_token_registry';
+
+		// Step 1: ensure 'goldnat-master' exists in oauth_clients.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
+		$new_exists = $wpdb->get_var(
+			$wpdb->prepare( "SELECT id FROM {$clients_table} WHERE client_id = %s", 'goldnat-master' )
+		);
+
+		if ( ! $new_exists ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
+			$old = $wpdb->get_row(
+				$wpdb->prepare( "SELECT * FROM {$clients_table} WHERE client_id = %s", 'webmcp-master' ),
+				ARRAY_A
+			);
+
+			if ( $old ) {
+				// Reuse the existing row's config (scopes, redirect_uris, etc.),
+				// just rebrand the identifier and display name.
+				unset( $old['id'] );
+				$old['client_id']   = 'goldnat-master';
+				$old['client_name'] = 'Goldnat Master';
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- One-time migration.
+				$wpdb->insert( $clients_table, $old );
+			} else {
+				// Neither identifier present — seed a fresh master client.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- One-time migration.
+				$wpdb->insert(
+					$clients_table,
+					array(
+						'client_id'      => 'goldnat-master',
+						'client_name'    => 'Goldnat Master',
+						'client_type'    => 'public',
+						'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
+						'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
+					)
+				);
+			}
+		}
+
+		// Step 2: migrate access + refresh tokens.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
+		$wpdb->update(
+			$tokens_table,
+			array( 'client_id' => 'goldnat-master' ),
+			array( 'client_id' => 'webmcp-master' )
+		);
+
+		// Step 3: migrate audit registry.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
+		$wpdb->update(
+			$registry_table,
+			array( 'client_id' => 'goldnat-master' ),
+			array( 'client_id' => 'webmcp-master' )
+		);
+
+		// Step 4: remove the legacy client row (now orphaned — every token
+		// that referenced it has been repointed above).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time migration.
+		$wpdb->delete(
+			$clients_table,
+			array( 'client_id' => 'webmcp-master' )
+		);
+
+		self::set_version( '2.0.5' );
 	}
 
 	/**
@@ -227,11 +344,18 @@ class Database {
 	}
 
 	/**
-	 * Upgrade to version 1.4.0 - Seed the webmcp-master default OAuth client.
+	 * Upgrade to version 1.4.0 - Seed the master default OAuth client.
 	 *
-	 * Idempotent: only inserts the row when client_id 'webmcp-master' is not
-	 * already present, so existing sites that activate the new version get the
-	 * new client without duplicates.
+	 * Historical: this used to seed client_id 'webmcp-master' with client_name
+	 * 'WebMCP Master'. Sites that arrived at this upgrade path AFTER the
+	 * rebrand pipeline (2.0.4 renamed the display name, 2.0.5 renamed the
+	 * client_id itself) get the current name directly, so the identifier
+	 * created here now is 'goldnat-master' / 'Goldnat Master'.
+	 *
+	 * Idempotent: only inserts when neither identifier is present, so sites
+	 * that already have either 'goldnat-master' (post-migration) or
+	 * 'webmcp-master' (pre-migration) are not touched. The 2.0.5 migration
+	 * will consolidate them regardless.
 	 *
 	 * @return void
 	 */
@@ -241,19 +365,18 @@ class Database {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth setup, runs once on upgrade.
 		$exists = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id = %s",
+				"SELECT id FROM {$wpdb->prefix}goldtwmcp_oauth_clients WHERE client_id IN ( %s, %s )",
+				'goldnat-master',
 				'webmcp-master'
 			)
 		);
 
 		if ( ! $exists ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth setup, inserting webmcp-master client.
-			// NOTE: client_id stays 'webmcp-master' for backward compat — existing OAuth
-			// tokens reference this identifier. Only the display name reflects the rebrand.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- OAuth setup, inserting master client.
 			$wpdb->insert(
 				"{$wpdb->prefix}goldtwmcp_oauth_clients",
 				array(
-					'client_id'      => 'webmcp-master',
+					'client_id'      => 'goldnat-master',
 					'client_name'    => 'Goldnat Master',
 					'client_type'    => 'public',
 					'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
@@ -451,9 +574,7 @@ class Database {
 
 		$clients = array(
 			array(
-				// client_id stays 'webmcp-master' for backward compat — existing OAuth
-				// tokens reference this identifier. Only the display name is rebranded.
-				'client_id'      => 'webmcp-master',
+				'client_id'      => 'goldnat-master',
 				'client_name'    => 'Goldnat Master',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),

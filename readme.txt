@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,10 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.3 - 2026-08-31 =
+* Rebrand completion (OAuth client identifier): the built-in master OAuth client's `client_id` is renamed from `webmcp-master` to `goldnat-master`, so the plugin no longer exposes any "webmcp" string to AI agents via the OAuth authorize/token flows. New DB schema upgrade `2.0.5` performs the rename in three tables atomically: `oauth_clients` gets a new `goldnat-master` row (config copied from the legacy row), then `oauth_tokens` and `aiconnect_token_registry` are re-pointed at the new identifier, then the legacy `webmcp-master` row is deleted. **Existing agents keep working** — their tokens now reference `goldnat-master` (which exists), so bearer-auth continues to succeed without any user action. **New authorize requests that hard-code the legacy identifier will get `invalid_client`** and need to reconnect using `goldnat-master`. Idempotent — re-running the migration is a no-op on already-migrated sites.
+* Rebrand follow-up (prompt generator UI): the master client's label in `get_agent_clients()` no longer reads "Goldnat (webmcp)"; it now reads "Goldnat Master", matching the display name in the DB and on the OAuth consent screen.
+
 = 1.2.2 - 2026-08-31 =
 * Rebrand follow-up (OAuth consent screen): the built-in `webmcp-master` OAuth client had `client_name = 'WebMCP Master'` in the database, which is the name users saw on the "Authorize this application?" consent screen every time they connected an AI agent with full-access scope. New DB schema upgrade `2.0.4` renames the display name to `Goldnat Master` on existing sites. The `client_id` itself stays `webmcp-master` — active tokens and integrations reference that identifier and would break if it changed. Fresh installs also get the new display name via `insert_default_clients()`.
 
@@ -506,6 +510,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.3 =
+Renames the built-in master OAuth client's identifier from `webmcp-master` to `goldnat-master`. Existing tokens are migrated automatically and keep working. Only agents that hard-coded the legacy identifier in new authorize requests need to reconnect using `goldnat-master`.
 
 = 1.2.2 =
 Renames the built-in "WebMCP Master" OAuth client to "Goldnat Master" on the consent screen. Existing tokens keep working — only the display name changes. Automatic DB migration, zero-config.
