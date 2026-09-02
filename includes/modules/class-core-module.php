@@ -214,6 +214,245 @@ class Core_Module extends Module_Base {
 				),
 			)
 		);
+
+		// Cheap read-only stats tool. Powers the declarative brief metric
+		// `content.published.daily` (see register_brief_metrics below). Safe
+		// to call on a schedule — one indexed COUNT(*) over wp_posts.
+		$this->register_tool(
+			'getContentStats',
+			array(
+				'description'    => 'Count published posts within a calendar day range. Accepts explicit local dates + IANA timezone so the collector can pin the window unambiguously (no local-time guessing). Counts post_type=post AND post_status=publish, with post_date_gmt inside the UTC bounds derived from the given local dates. Read-only.',
+				'required_scope' => 'read',
+				'input_schema'   => array(
+					'type'       => 'object',
+					'properties' => array(
+						'from'     => array(
+							'type'        => 'string',
+							'description' => 'Local start date YYYY-MM-DD (inclusive). Default: today in site timezone.',
+						),
+						'to'       => array(
+							'type'        => 'string',
+							'description' => 'Local end date YYYY-MM-DD (inclusive). Default: same as from.',
+						),
+						'timezone' => array(
+							'type'        => 'string',
+							'description' => 'IANA timezone name (e.g. Asia/Jerusalem). Default: site timezone.',
+						),
+					),
+				),
+			)
+		);
+
+		// v1.2.6 additions — 15 planned tools per Deep Research v1 approve flow.
+
+		$this->register_tool( 'listPosts', array(
+			'description'    => 'List WordPress posts with filters (status, category, date, author, per_page). Cursor-agnostic — use offset for pagination.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'status'     => array( 'type' => 'string', 'description' => 'publish | draft | pending | private | any' ),
+					'category'   => array( 'type' => 'string', 'description' => 'Category slug' ),
+					'author'     => array( 'type' => 'integer' ),
+					'after'      => array( 'type' => 'string', 'description' => 'ISO date; posts after' ),
+					'before'     => array( 'type' => 'string' ),
+					'per_page'   => array( 'type' => 'integer', 'default' => 10 ),
+					'offset'     => array( 'type' => 'integer', 'default' => 0 ),
+					'render'     => $render_prop,
+				),
+			),
+		) );
+
+		$this->register_tool( 'listPages', array(
+			'description'    => 'List WordPress pages with filters (status, parent hierarchy, date, per_page).',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'status'   => array( 'type' => 'string' ),
+					'parent'   => array( 'type' => 'integer', 'description' => 'Parent page ID (0 = top-level)' ),
+					'per_page' => array( 'type' => 'integer', 'default' => 10 ),
+					'offset'   => array( 'type' => 'integer', 'default' => 0 ),
+					'render'   => $render_prop,
+				),
+			),
+		) );
+
+		$this->register_tool( 'getCategories', array(
+			'description'    => 'Fetch all category taxonomies with names, descriptions, post counts and hierarchy. Cheaper than listCategories when you need the full tree.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'hide_empty' => array( 'type' => 'boolean', 'default' => false ),
+					'parent'     => array( 'type' => 'integer' ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'getTags', array(
+			'description'    => 'Fetch all tag taxonomies with names, descriptions and post counts.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'hide_empty' => array( 'type' => 'boolean', 'default' => false ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'getMedia', array(
+			'description'    => 'Get details of a media item (image, video, PDF) by ID: URL, title, description, alt text, size, MIME type, image sizes.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'required'   => array( 'id' ),
+				'properties' => array( 'id' => array( 'type' => 'integer' ) ),
+			),
+		) );
+
+		$this->register_tool( 'listMedia', array(
+			'description'    => 'List media library items with filters (mime_type, upload date, author).',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'mime_type' => array( 'type' => 'string', 'description' => 'e.g. image/jpeg, application/pdf' ),
+					'author'    => array( 'type' => 'integer' ),
+					'per_page'  => array( 'type' => 'integer', 'default' => 20 ),
+					'offset'    => array( 'type' => 'integer', 'default' => 0 ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'searchMedia', array(
+			'description'    => 'Search media items by name, title, description or MIME type. Returns files with URLs + sizes.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'required'   => array( 'search' ),
+				'properties' => array(
+					'search'    => array( 'type' => 'string' ),
+					'mime_type' => array( 'type' => 'string' ),
+					'per_page'  => array( 'type' => 'integer', 'default' => 20 ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'getComments', array(
+			'description'    => 'Fetch comments filtered by post, status, or author. Returns content, date, author, approval state.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'post_id'  => array( 'type' => 'integer' ),
+					'status'   => array( 'type' => 'string', 'description' => 'approve | hold | spam | trash | all' ),
+					'author'   => array( 'type' => 'integer' ),
+					'per_page' => array( 'type' => 'integer', 'default' => 20 ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'listComments', array(
+			'description'    => 'Alias for getComments — enumerate all comments across the site with filters.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'post_id'  => array( 'type' => 'integer' ),
+					'status'   => array( 'type' => 'string' ),
+					'per_page' => array( 'type' => 'integer', 'default' => 20 ),
+					'offset'   => array( 'type' => 'integer', 'default' => 0 ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'getUsers', array(
+			'description'    => 'List users by role or name search. Returns id/name/role/post_count only (no email — that requires admin scope).',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'role'     => array( 'type' => 'string', 'description' => 'administrator | editor | author | contributor | subscriber' ),
+					'search'   => array( 'type' => 'string' ),
+					'per_page' => array( 'type' => 'integer', 'default' => 20 ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'getSiteInfo', array(
+			'description'    => 'Get general site info: name, tagline, URL, admin URL, language, timezone, WordPress version, PHP version. Helps AI understand the site context.',
+			'required_scope' => 'read',
+			'input_schema'   => array( 'type' => 'object', 'properties' => new \stdClass() ),
+		) );
+
+		$this->register_tool( 'getSiteSettings', array(
+			'description'    => 'Get safe subset of site settings: date format, time format, default category, comments enabled, comment moderation, permalink structure. Excludes sensitive settings (email, admin_email).',
+			'required_scope' => 'read',
+			'input_schema'   => array( 'type' => 'object', 'properties' => new \stdClass() ),
+		) );
+
+		$this->register_tool( 'getMenus', array(
+			'description'    => 'Fetch all site nav menus with items (labels, URLs, parent hierarchy) and their theme locations.',
+			'required_scope' => 'read',
+			'input_schema'   => array( 'type' => 'object', 'properties' => new \stdClass() ),
+		) );
+
+		$this->register_tool( 'getPostTypes', array(
+			'description'    => 'List all registered post types (built-in + custom): name, label, hierarchical, supports_thumbnail, taxonomies.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'public_only' => array( 'type' => 'boolean', 'default' => true ),
+				),
+			),
+		) );
+
+		$this->register_tool( 'getTaxonomies', array(
+			'description'    => 'List all registered taxonomies (built-in + custom): name, label, hierarchical, associated post types.',
+			'required_scope' => 'read',
+			'input_schema'   => array(
+				'type'       => 'object',
+				'properties' => array(
+					'public_only' => array( 'type' => 'boolean', 'default' => true ),
+				),
+			),
+		) );
+
+		// Register declarative brief metrics for goldnat.ai. Constants only:
+		// no local-time math (which would guess on the wrong clock — see the
+		// UTC-vs-user-timezone trap in manifest-format.md). {{periodStart}},
+		// {{periodEnd}} and {{timezone}} are substituted by the collector.
+		$this->register_brief_metrics();
+	}
+
+	/**
+	 * Register the declarative brief metrics exposed by this module.
+	 *
+	 * Kept separate so subclasses / Pro modules can override without touching
+	 * the tool-registration flow above.
+	 *
+	 * @return void
+	 */
+	protected function register_brief_metrics() {
+		if ( ! $this->manifest || ! method_exists( $this->manifest, 'register_brief_metric' ) ) {
+			return;
+		}
+
+		$this->manifest->register_brief_metric(
+			array(
+				'key'         => 'content.published.daily',
+				'tool'        => $this->module_name . '.getContentStats',
+				'args'        => array(
+					'from'     => '{{periodStart}}',
+					'to'       => '{{periodEnd}}',
+					'timezone' => '{{timezone}}',
+				),
+				'valuePath'   => 'data.published_count',
+				'granularity' => 'day',
+			)
+		);
 	}
 
 	/**
@@ -529,6 +768,88 @@ class Core_Module extends Module_Base {
 	}
 
 	/**
+	 * Execute the getContentStats tool.
+	 *
+	 * Returns the count of published posts whose `post_date_gmt` falls inside the
+	 * UTC window derived from the caller-supplied LOCAL dates + IANA timezone.
+	 * Everything else about "which day" is decided by the caller — this handler
+	 * never invents "today" or "yesterday" of its own.
+	 *
+	 * Definition (documented in the returned payload for auditability):
+	 *   - post_type  = 'post'    (custom post types are not counted)
+	 *   - post_status = 'publish' (drafts / scheduled / private do NOT count)
+	 *
+	 * @param array $params Tool parameters.
+	 * @return array|\WP_Error
+	 */
+	public function execute_getContentStats( $params ) {
+		$default_tz = \wp_timezone_string();
+		$tz_name    = isset( $params['timezone'] ) && '' !== $params['timezone']
+			? (string) $params['timezone']
+			: $default_tz;
+
+		try {
+			$tz = new \DateTimeZone( $tz_name );
+		} catch ( \Exception $e ) {
+			return $this->error_response( sprintf( 'Invalid timezone "%s"', $tz_name ), 'invalid_timezone' );
+		}
+
+		$today_local = ( new \DateTimeImmutable( 'now', $tz ) )->format( 'Y-m-d' );
+		$from_local  = isset( $params['from'] ) && '' !== $params['from']
+			? (string) $params['from']
+			: $today_local;
+		$to_local    = isset( $params['to'] ) && '' !== $params['to']
+			? (string) $params['to']
+			: $from_local;
+
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $from_local )
+			|| ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $to_local ) ) {
+			return $this->error_response( 'from/to must be YYYY-MM-DD', 'invalid_date' );
+		}
+
+		try {
+			$start_local = new \DateTimeImmutable( $from_local . ' 00:00:00', $tz );
+			$end_local   = new \DateTimeImmutable( $to_local . ' 23:59:59', $tz );
+		} catch ( \Exception $e ) {
+			return $this->error_response( 'Failed to parse date range', 'invalid_date' );
+		}
+
+		if ( $end_local < $start_local ) {
+			return $this->error_response( '"to" must be >= "from"', 'invalid_range' );
+		}
+
+		$utc         = new \DateTimeZone( 'UTC' );
+		$start_utc   = $start_local->setTimezone( $utc )->format( 'Y-m-d H:i:s' );
+		$end_utc     = $end_local->setTimezone( $utc )->format( 'Y-m-d H:i:s' );
+
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Single indexed COUNT, cache would be stale-by-design for a scheduled metric.
+		$count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->posts}
+				WHERE post_type = 'post'
+				  AND post_status = 'publish'
+				  AND post_date_gmt BETWEEN %s AND %s",
+				$start_utc,
+				$end_utc
+			)
+		);
+
+		return $this->success_response(
+			array(
+				'from'             => $from_local,
+				'to'               => $to_local,
+				'timezone'         => $tz_name,
+				'window_utc_start' => $start_utc,
+				'window_utc_end'   => $end_utc,
+				'published_count'  => $count,
+				'included_status'  => 'publish',
+				'included_types'   => array( 'post' ),
+			)
+		);
+	}
+
+	/**
 	 * Format a post object into a structured array.
 	 *
 	 * The 'render' argument controls how the post content is returned:
@@ -595,5 +916,345 @@ class Core_Module extends Module_Base {
 			$render = 'raw';
 		}
 		return $render;
+	}
+
+	// ─────────────────────────────────────────────────────────────────────
+	// v1.2.6 tool executors — 15 planned tools from Deep Research v1
+	// ─────────────────────────────────────────────────────────────────────
+
+	public function execute_listPosts( $params ) {
+		$args = array(
+			'post_type'      => 'post',
+			'post_status'    => $this->sanitize_status( $params['status'] ?? 'publish' ),
+			'posts_per_page' => absint( $params['per_page'] ?? 10 ),
+			'offset'         => absint( $params['offset'] ?? 0 ),
+		);
+		if ( isset( $params['category'] ) ) {
+			$args['category_name'] = sanitize_title( (string) $params['category'] );
+		}
+		if ( isset( $params['author'] ) ) {
+			$args['author'] = absint( $params['author'] );
+		}
+		if ( isset( $params['after'] ) || isset( $params['before'] ) ) {
+			$args['date_query'] = array_filter( array(
+				'after'  => isset( $params['after'] )  ? sanitize_text_field( (string) $params['after'] )  : null,
+				'before' => isset( $params['before'] ) ? sanitize_text_field( (string) $params['before'] ) : null,
+			) );
+		}
+		$render = $this->resolve_render( $params );
+		$posts  = \get_posts( $args );
+		return array(
+			'success' => true,
+			'data'    => array(
+				'posts' => array_map( fn( $p ) => $this->format_post( $p, $render ), $posts ),
+				'count' => count( $posts ),
+			),
+		);
+	}
+
+	public function execute_listPages( $params ) {
+		$args = array(
+			'post_type'      => 'page',
+			'post_status'    => $this->sanitize_status( $params['status'] ?? 'publish' ),
+			'posts_per_page' => absint( $params['per_page'] ?? 10 ),
+			'offset'         => absint( $params['offset'] ?? 0 ),
+		);
+		if ( isset( $params['parent'] ) ) {
+			$args['post_parent'] = absint( $params['parent'] );
+		}
+		$render = $this->resolve_render( $params );
+		$pages  = \get_posts( $args );
+		return array(
+			'success' => true,
+			'data'    => array(
+				'pages' => array_map( fn( $p ) => $this->format_post( $p, $render ), $pages ),
+				'count' => count( $pages ),
+			),
+		);
+	}
+
+	public function execute_getCategories( $params ) {
+		$args = array(
+			'taxonomy'   => 'category',
+			'hide_empty' => (bool) ( $params['hide_empty'] ?? false ),
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+		);
+		if ( isset( $params['parent'] ) ) {
+			$args['parent'] = absint( $params['parent'] );
+		}
+		$terms = \get_terms( $args );
+		if ( \is_wp_error( $terms ) ) {
+			return array( 'success' => false, 'error' => $terms->get_error_message() );
+		}
+		return array(
+			'success' => true,
+			'data'    => array_map( fn( $t ) => array(
+				'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug,
+				'description' => $t->description, 'count' => $t->count, 'parent' => $t->parent,
+			), $terms ),
+		);
+	}
+
+	public function execute_getTags( $params ) {
+		$terms = \get_terms( array(
+			'taxonomy'   => 'post_tag',
+			'hide_empty' => (bool) ( $params['hide_empty'] ?? false ),
+			'orderby'    => 'name',
+		) );
+		if ( \is_wp_error( $terms ) ) {
+			return array( 'success' => false, 'error' => $terms->get_error_message() );
+		}
+		return array(
+			'success' => true,
+			'data'    => array_map( fn( $t ) => array(
+				'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug,
+				'description' => $t->description, 'count' => $t->count,
+			), $terms ),
+		);
+	}
+
+	public function execute_getMedia( $params ) {
+		$id = absint( $params['id'] ?? 0 );
+		if ( ! $id ) {
+			return array( 'success' => false, 'error' => 'id required' );
+		}
+		$post = \get_post( $id );
+		if ( ! $post || 'attachment' !== $post->post_type ) {
+			return array( 'success' => false, 'error' => 'media not found' );
+		}
+		return array( 'success' => true, 'data' => $this->format_media( $post ) );
+	}
+
+	public function execute_listMedia( $params ) {
+		$args = array(
+			'post_type'      => 'attachment',
+			'post_status'    => 'inherit',
+			'posts_per_page' => absint( $params['per_page'] ?? 20 ),
+			'offset'         => absint( $params['offset'] ?? 0 ),
+		);
+		if ( isset( $params['mime_type'] ) ) {
+			$args['post_mime_type'] = sanitize_text_field( (string) $params['mime_type'] );
+		}
+		if ( isset( $params['author'] ) ) {
+			$args['author'] = absint( $params['author'] );
+		}
+		$items = \get_posts( $args );
+		return array(
+			'success' => true,
+			'data'    => array(
+				'media' => array_map( fn( $p ) => $this->format_media( $p ), $items ),
+				'count' => count( $items ),
+			),
+		);
+	}
+
+	public function execute_searchMedia( $params ) {
+		$search = sanitize_text_field( (string) ( $params['search'] ?? '' ) );
+		if ( '' === $search ) {
+			return array( 'success' => false, 'error' => 'search required' );
+		}
+		$args = array(
+			'post_type'      => 'attachment',
+			'post_status'    => 'inherit',
+			's'              => $search,
+			'posts_per_page' => absint( $params['per_page'] ?? 20 ),
+		);
+		if ( isset( $params['mime_type'] ) ) {
+			$args['post_mime_type'] = sanitize_text_field( (string) $params['mime_type'] );
+		}
+		$items = \get_posts( $args );
+		return array(
+			'success' => true,
+			'data'    => array(
+				'media' => array_map( fn( $p ) => $this->format_media( $p ), $items ),
+				'count' => count( $items ),
+			),
+		);
+	}
+
+	public function execute_getComments( $params ) {
+		return $this->do_list_comments( $params );
+	}
+
+	public function execute_listComments( $params ) {
+		return $this->do_list_comments( $params );
+	}
+
+	private function do_list_comments( $params ) {
+		$args = array(
+			'number' => absint( $params['per_page'] ?? 20 ),
+			'offset' => absint( $params['offset'] ?? 0 ),
+		);
+		if ( isset( $params['post_id'] ) ) {
+			$args['post_id'] = absint( $params['post_id'] );
+		}
+		if ( isset( $params['status'] ) ) {
+			$s = sanitize_key( (string) $params['status'] );
+			if ( in_array( $s, array( 'approve', 'hold', 'spam', 'trash', 'all' ), true ) ) {
+				$args['status'] = $s;
+			}
+		}
+		if ( isset( $params['author'] ) ) {
+			$args['user_id'] = absint( $params['author'] );
+		}
+		$comments = \get_comments( $args );
+		return array(
+			'success' => true,
+			'data'    => array(
+				'comments' => array_map( fn( $c ) => array(
+					'id'         => (int) $c->comment_ID,
+					'post_id'    => (int) $c->comment_post_ID,
+					'author'     => $c->comment_author,
+					'author_url' => $c->comment_author_url,
+					'content'    => $c->comment_content,
+					'date'       => $c->comment_date,
+					'approved'   => $c->comment_approved,
+					'parent'     => (int) $c->comment_parent,
+				), $comments ),
+				'count' => count( $comments ),
+			),
+		);
+	}
+
+	public function execute_getUsers( $params ) {
+		$args = array(
+			'number' => absint( $params['per_page'] ?? 20 ),
+			'fields' => array( 'ID', 'display_name', 'user_nicename', 'user_registered' ),
+		);
+		if ( isset( $params['role'] ) ) {
+			$args['role'] = sanitize_key( (string) $params['role'] );
+		}
+		if ( isset( $params['search'] ) ) {
+			$args['search'] = '*' . sanitize_text_field( (string) $params['search'] ) . '*';
+		}
+		$users = \get_users( $args );
+		return array(
+			'success' => true,
+			'data'    => array(
+				'users' => array_map( fn( $u ) => array(
+					'id'         => (int) $u->ID,
+					'name'       => $u->display_name,
+					'slug'       => $u->user_nicename,
+					'registered' => $u->user_registered,
+					'post_count' => (int) \count_user_posts( $u->ID, 'post', true ),
+				), $users ),
+				'count' => count( $users ),
+			),
+		);
+	}
+
+	public function execute_getSiteInfo( $params ) {
+		return array(
+			'success' => true,
+			'data'    => array(
+				'name'        => \get_bloginfo( 'name' ),
+				'tagline'     => \get_bloginfo( 'description' ),
+				'url'         => \home_url(),
+				'admin_url'   => \admin_url(),
+				'language'    => \get_bloginfo( 'language' ),
+				'timezone'    => \wp_timezone_string(),
+				'wp_version'  => \get_bloginfo( 'version' ),
+				'php_version' => PHP_VERSION,
+			),
+		);
+	}
+
+	public function execute_getSiteSettings( $params ) {
+		return array(
+			'success' => true,
+			'data'    => array(
+				'date_format'         => \get_option( 'date_format' ),
+				'time_format'         => \get_option( 'time_format' ),
+				'start_of_week'       => (int) \get_option( 'start_of_week' ),
+				'default_category'    => (int) \get_option( 'default_category' ),
+				'default_post_format' => \get_option( 'default_post_format' ),
+				'comments_open'       => (bool) \get_option( 'default_comment_status' ),
+				'comment_moderation'  => (bool) \get_option( 'comment_moderation' ),
+				'permalink_structure' => \get_option( 'permalink_structure' ),
+				'posts_per_page'      => (int) \get_option( 'posts_per_page' ),
+			),
+		);
+	}
+
+	public function execute_getMenus( $params ) {
+		$menus     = \wp_get_nav_menus();
+		$locations = \get_nav_menu_locations();
+		$out       = array();
+		foreach ( $menus as $menu ) {
+			$items       = \wp_get_nav_menu_items( $menu->term_id ) ?: array();
+			$locs        = array_keys( array_filter( $locations, fn( $mid ) => (int) $mid === (int) $menu->term_id ) );
+			$out[]       = array(
+				'id'        => (int) $menu->term_id,
+				'name'      => $menu->name,
+				'slug'      => $menu->slug,
+				'locations' => $locs,
+				'items'     => array_map( fn( $i ) => array(
+					'id'     => (int) $i->ID,
+					'label'  => $i->title,
+					'url'    => $i->url,
+					'parent' => (int) $i->menu_item_parent,
+					'order'  => (int) $i->menu_order,
+				), $items ),
+			);
+		}
+		return array( 'success' => true, 'data' => $out );
+	}
+
+	public function execute_getPostTypes( $params ) {
+		$public_only = (bool) ( $params['public_only'] ?? true );
+		$args        = $public_only ? array( 'public' => true ) : array();
+		$types       = \get_post_types( $args, 'objects' );
+		return array(
+			'success' => true,
+			'data'    => array_map( fn( $t ) => array(
+				'name'           => $t->name,
+				'label'          => $t->label,
+				'public'         => (bool) $t->public,
+				'hierarchical'   => (bool) $t->hierarchical,
+				'has_archive'    => (bool) $t->has_archive,
+				'supports'       => \get_all_post_type_supports( $t->name ),
+				'taxonomies'     => \get_object_taxonomies( $t->name ),
+			), array_values( $types ) ),
+		);
+	}
+
+	public function execute_getTaxonomies( $params ) {
+		$public_only = (bool) ( $params['public_only'] ?? true );
+		$args        = $public_only ? array( 'public' => true ) : array();
+		$taxes       = \get_taxonomies( $args, 'objects' );
+		return array(
+			'success' => true,
+			'data'    => array_map( fn( $t ) => array(
+				'name'         => $t->name,
+				'label'        => $t->label,
+				'public'       => (bool) $t->public,
+				'hierarchical' => (bool) $t->hierarchical,
+				'object_type'  => $t->object_type,
+			), array_values( $taxes ) ),
+		);
+	}
+
+	private function sanitize_status( $status ) {
+		$s = sanitize_key( (string) $status );
+		return in_array( $s, array( 'publish', 'draft', 'pending', 'private', 'future', 'any' ), true ) ? $s : 'publish';
+	}
+
+	private function format_media( $post ) {
+		$meta = \wp_get_attachment_metadata( $post->ID ) ?: array();
+		return array(
+			'id'         => (int) $post->ID,
+			'title'      => \get_the_title( $post ),
+			'alt'        => \get_post_meta( $post->ID, '_wp_attachment_image_alt', true ),
+			'caption'    => $post->post_excerpt,
+			'description'=> $post->post_content,
+			'url'        => \wp_get_attachment_url( $post->ID ),
+			'mime_type'  => $post->post_mime_type,
+			'date'       => $post->post_date,
+			'author_id'  => (int) $post->post_author,
+			'width'      => $meta['width']  ?? null,
+			'height'     => $meta['height'] ?? null,
+			'sizes'      => isset( $meta['sizes'] ) ? array_keys( $meta['sizes'] ) : array(),
+		);
 	}
 }

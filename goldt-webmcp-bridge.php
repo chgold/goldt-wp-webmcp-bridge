@@ -3,7 +3,7 @@
  * Plugin Name: GoldT WebMCP Bridge
  * Plugin URI: https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) — powered by the Servio Protocol (aka WebMCP) with OAuth 2.0
- * Version: 1.2.4
+ * Version: 1.2.6
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '1.2.4' );
+define( 'GOLDTWMCP_VERSION', '1.2.6' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
 
