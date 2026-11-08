@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,12 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 1.2.5 - 2026-09-01 =
+* Added: declarative brief metrics section in the manifest (`manifest.brief.metrics`) — goldnat.ai can now collect scalar KPIs on a schedule without an LLM in the loop.
+* Added: new read-only tool `wordpress.getContentStats(from, to, timezone)` — returns the count of published posts within the caller-supplied local date range, resolved to a UTC window via the IANA timezone. Powers the `content.published.daily` metric.
+* Added: public API `Manifest::register_brief_metric()` for modules to register brief metrics with regex-validated keys and the 50-metric ceiling.
+* Note: the manifest only emits the `brief` section when at least one metric was registered; invalid entries are rejected at registration time, never persisted.
 
 = 1.2.4 - 2026-08-31 =
 * Fixed: reverted plugin display name back to the original **GoldT WebMCP Bridge** (matches the plugin slug `goldt-webmcp-bridge`). 1.2.0 renamed it to a longer form that included the term "WordPress"; the wp.org Plugin Check flags that as a restricted term and it also no longer matched the slug. The Goldnat / Servio Protocol rebrand still lives everywhere it makes sense — description tagline, manifest, admin subtitle, quick-prompt template, OAuth client display — but the Plugin Name header stays stable.

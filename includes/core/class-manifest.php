@@ -50,6 +50,20 @@ class Manifest {
 	private $prompts = array();
 
 	/**
+	 * Registered brief metrics (declarative telemetry — no LLM in the loop).
+	 *
+	 * @var array
+	 */
+	private $brief_metrics = array();
+
+	/**
+	 * Registered brief lists.
+	 *
+	 * @var array
+	 */
+	private $brief_lists = array();
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -174,6 +188,80 @@ class Manifest {
 	}
 
 	/**
+	 * Register a declarative brief metric.
+	 *
+	 * Brief metrics let goldnat.ai collect scalar values from named tools on a schedule,
+	 * without a language model in the loop. Each entry declares WHICH tool to call, WHICH
+	 * args to pass (with {{periodStart}}, {{periodEnd}}, {{timezone}} substituted per
+	 * collection), and WHICH dotted path inside the JSON response holds the number.
+	 *
+	 * See docs-site/site-owners/manifest-format.md (brief section) for the full spec.
+	 *
+	 * @param array $config {
+	 *     Metric configuration.
+	 *
+	 *     @type string $key         Required. Canonical dotted key, matching
+	 *                               `^[a-z0-9]+(\.[a-z0-9_]+)+$`. E.g. `content.published.daily`.
+	 *     @type string $tool        Required. Manifest tool name WITHOUT site prefix, e.g.
+	 *                               `wordpress.getContentStats`.
+	 *     @type array  $args        Optional. Constant args, may contain {{...}} placeholders.
+	 *     @type string $valuePath   Required. Dotted path into the tool response — supports
+	 *                               object keys and numeric array indices only. E.g. `data.published_count`.
+	 *     @type string $unit        Optional. Free-form (max 24 chars). Currency codes
+	 *                               (ILS/USD/EUR/GBP) are formatted as currency. Omit for pure counts.
+	 *     @type string $granularity Optional. hour|day|week|month. Default: day.
+	 * }
+	 * @return bool
+	 */
+	public function register_brief_metric( $config ) {
+		if ( ! is_array( $config ) ) {
+			return false;
+		}
+		if ( empty( $config['key'] ) || empty( $config['tool'] ) || empty( $config['valuePath'] ) ) {
+			return false;
+		}
+		if ( ! preg_match( '/^[a-z0-9]+(\.[a-z0-9_]+)+$/', (string) $config['key'] ) ) {
+			return false;
+		}
+
+		$metric = array(
+			'key'       => (string) $config['key'],
+			'tool'      => (string) $config['tool'],
+			'valuePath' => (string) $config['valuePath'],
+		);
+
+		if ( isset( $config['args'] ) && is_array( $config['args'] ) ) {
+			$metric['args'] = $config['args'];
+		}
+		if ( isset( $config['unit'] ) && is_string( $config['unit'] ) && '' !== $config['unit'] ) {
+			$metric['unit'] = substr( $config['unit'], 0, 24 );
+		}
+		if ( isset( $config['granularity'] )
+			&& in_array( $config['granularity'], array( 'hour', 'day', 'week', 'month' ), true ) ) {
+			$metric['granularity'] = $config['granularity'];
+		}
+
+		// Cap total metrics per manifest to 50 (matches goldnat.ai collector limit).
+		if ( count( $this->brief_metrics ) >= 50 ) {
+			return false;
+		}
+
+		// Later registrations for the same key win (allows overrides via filters).
+		$this->brief_metrics[ $metric['key'] ] = $metric;
+
+		return true;
+	}
+
+	/**
+	 * Get all registered brief metrics.
+	 *
+	 * @return array
+	 */
+	public function get_brief_metrics() {
+		return array_values( $this->brief_metrics );
+	}
+
+	/**
 	 * Get all registered tools
 	 *
 	 * @return array
@@ -269,6 +357,21 @@ class Manifest {
 		if ( ! empty( $this->prompts ) ) {
 			$manifest['prompts']                 = $this->get_prompts();
 			$manifest['capabilities']['prompts'] = true;
+		}
+
+		// Add brief section if any metrics (or lists) were registered. This is the
+		// declarative telemetry contract with goldnat.ai — see manifest-format.md.
+		// The whole section is only emitted when there is at least one entry; an
+		// invalid metric never reaches here (register_brief_metric already rejected).
+		if ( ! empty( $this->brief_metrics ) || ! empty( $this->brief_lists ) ) {
+			$brief = array();
+			if ( ! empty( $this->brief_metrics ) ) {
+				$brief['metrics'] = $this->get_brief_metrics();
+			}
+			if ( ! empty( $this->brief_lists ) ) {
+				$brief['lists'] = array_values( $this->brief_lists );
+			}
+			$manifest['brief'] = $brief;
 		}
 
 		// Add server info.
