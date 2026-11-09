@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.7
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,13 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.7 - 2026-11-09 =
+* Security: RFC 7009 token revocation. The manifest now advertises `auth.revocation_url` (`/wp-json/goldt-webmcp-bridge/v1/oauth/revoke`) next to `token_url`, so platforms that hold tokens on a user's behalf (e.g. goldnat) can kill them on the site when access is cut on their side.
+* Fixed: `/oauth/revoke` now accepts the access token OR the refresh token (optional `token_type_hint` only changes lookup order) and revokes the whole pair, including the Token Registry row shown in "Token Registry" and "My AI Tokens".
+* Fixed: `/oauth/revoke` always answers 200 `{"success":true}` for unknown or already-revoked tokens (no token probing); only a missing `token` returns 400 `invalid_request`. Accepts form-urlencoded and JSON bodies; no authentication required (public PKCE clients).
+* Fixed: legacy manifest key `auth.revoke_url` pointed at the token endpoint, which does not revoke; it now points at the revoke endpoint too.
+* Added: `goldtwmcp_token_revoked` action fires after a pair is revoked (row ID + 16-char prefix only).
+
 = 1.2.4 - 2026-08-31 =
 * Fixed: reverted plugin display name back to the original **GoldT WebMCP Bridge** (matches the plugin slug `goldt-webmcp-bridge`). 1.2.0 renamed it to a longer form that included the term "WordPress"; the wp.org Plugin Check flags that as a restricted term and it also no longer matched the slug. The Goldnat / Servio Protocol rebrand still lives everywhere it makes sense — description tagline, manifest, admin subtitle, quick-prompt template, OAuth client display — but the Plugin Name header stays stable.
 * Removed: `includes/core/class-plugin-updater.php`. WordPress.org's Plugin Check rejects custom update systems (`Plugin Updater detected`), and the Free plugin was already served via wp.org's built-in updater; the custom checker was only used by external Pro plugins that must ship their own update code from here on.
@@ -517,6 +524,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.7 =
+Security: adds RFC 7009 token revocation (`auth.revocation_url` in the manifest). Revoking either token of a pair now revokes both. Upgrade recommended.
 
 = 1.2.4 =
 Reverts the plugin display name back to the original "GoldT WebMCP Bridge" (the 1.2.0 rename triggered a wp.org trademark warning). Removes the custom plugin updater (wp.org disallows self-updaters) and cleans up minor code warnings.

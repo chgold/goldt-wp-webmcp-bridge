@@ -245,28 +245,35 @@ curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/token" \
 
 ---
 
-### Step 5: Revoke Token (Optional)
+### Step 5: Revoke Token (Optional, RFC 7009)
 
-Revoke an access token when you're done or if it's compromised:
+Revoke a token when you're done or if it's compromised. The URL is advertised in the manifest as `auth.revocation_url`.
+No authentication is needed: whoever holds the token may revoke it. `token` may be the **access token or the refresh token** — either one revokes the whole pair. `token_type_hint` (`access_token` | `refresh_token`) is optional and only changes the lookup order.
 
-**Request:**
+**Request** (form-urlencoded; JSON bodies are accepted too):
 ```bash
-curl -X POST "http://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/revoke" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "token": "wpc_c6c9f8398c5f7921713011d19676ee2f81470cf7ec7c71ce91925cd129853dd3"
-  }'
+curl -X POST "https://yoursite.com/wp-json/goldt-webmcp-bridge/v1/oauth/revoke" \
+  -d "token=xfr_..." \
+  -d "token_type_hint=refresh_token" \
+  -d "client_id=claude-ai"
 ```
 
-**Response:**
+**Response** — always `200`, also for unknown or already-revoked tokens (so tokens cannot be probed):
 ```json
-{
-  "success": true,
-  "message": "Token revoked successfully"
-}
+{ "success": true }
 ```
 
-**Note:** Revoking an access token also revokes its associated refresh token.
+Only a missing `token` returns `400` `{"error":"invalid_request"}`. The revoke takes effect on the next request and also marks the token as revoked in the admin **Token Registry** and the user's **My AI Tokens** list.
+
+### OAuth Endpoints
+
+| Endpoint | Method | Auth | Purpose |
+|----------|--------|------|---------|
+| `/?goldtwmcp_oauth_authorize` | GET | WP login | Authorization (consent screen, PKCE S256) — manifest `auth.authorization_url` |
+| `/api/aiconnect-oauth` | POST | No | Token exchange (`grant_type=authorization_code` / `refresh_token`) — manifest `auth.token_url` |
+| `/wp-json/goldt-webmcp-bridge/v1/oauth/revoke` | POST | No | RFC 7009 token revocation — `token` (access or refresh) + optional `token_type_hint`; always 200, 400 only if `token` is missing — manifest `auth.revocation_url` |
+| `/api/aiconnect-manifest` | GET | No | Servio manifest |
+| `/api/aiconnect-tools?name={tool}` | POST | Bearer | Execute tools |
 
 ---
 
@@ -603,6 +610,9 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 1.2.7 - 2026-11-09
+* **Security:** RFC 7009 token revocation — manifest `auth.revocation_url`; `/oauth/revoke` accepts access OR refresh token (optional `token_type_hint`), revokes the whole pair + its Token Registry row, always returns 200 (400 only when `token` is missing). Legacy `auth.revoke_url` now points at the revoke endpoint as well.
 
 ### Version 0.4.6 - 2026-05-20
 * **Fixed (security):** `searchPosts` and `searchPages` reverted from `post_status=>'any'` back to `'publish'`. `WP_Query` with `'any'` bypasses WordPress capability checks entirely — it returns all posts including other users' drafts even to subscribers. Hardcoding `'publish'` ensures only published content is returned. The `status` schema parameter remains removed (since 0.4.4).

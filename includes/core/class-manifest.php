@@ -305,7 +305,11 @@ class Manifest {
 			'flow'                  => 'authorization_code',
 			'authorization_url'     => $site_url . '/?goldtwmcp_oauth_authorize',
 			'token_url'             => \home_url( '/api/aiconnect-oauth' ),
-			'revoke_url'            => \home_url( '/api/aiconnect-oauth' ),
+			// RFC 7009 token revocation. Platforms that hold tokens on a user's
+			// behalf (e.g. goldnat) call this when access is cut on their side.
+			'revocation_url'        => \rest_url( 'goldt-webmcp-bridge/v1/oauth/revoke' ),
+			// Legacy key kept for older clients; same endpoint.
+			'revoke_url'            => \rest_url( 'goldt-webmcp-bridge/v1/oauth/revoke' ),
 			'pkce_required'         => true,
 			'code_challenge_method' => 'S256',
 			'redirect_uri'          => 'urn:ietf:wg:oauth:2.0:oob',

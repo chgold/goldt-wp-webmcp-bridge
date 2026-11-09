@@ -60,37 +60,43 @@ class Revoke_Endpoint {
 	}
 
 	/**
-	 * Handle token revocation request.
+	 * Handle token revocation request (RFC 7009).
+	 *
+	 * Accepts form-urlencoded or JSON bodies. `token` (access OR refresh token)
+	 * is required; `token_type_hint` only changes the lookup order. Unknown or
+	 * already-revoked tokens still return 200 so callers cannot probe for valid
+	 * tokens; only a missing `token` returns 400 invalid_request.
 	 *
 	 * @param \WP_REST_Request $request REST request object.
-	 * @return \WP_REST_Response|\WP_Error
+	 * @return \WP_REST_Response
 	 */
 	public function handle_revoke_request( $request ) {
 		$token = $request->get_param( 'token' );
+		$token = is_string( $token ) ? trim( $token ) : '';
 
-		if ( empty( $token ) ) {
-			return new \WP_Error(
-				'invalid_request',
-				'Missing token parameter',
-				array( 'status' => 400 )
+		if ( '' === $token ) {
+			return new \WP_REST_Response(
+				array(
+					'error'             => 'invalid_request',
+					'error_description' => 'Missing token parameter',
+				),
+				400
 			);
 		}
 
-		$revoked = $this->oauth_server->revoke_token( $token );
+		$hint = $request->get_param( 'token_type_hint' );
+		$hint = is_string( $hint ) ? sanitize_key( $hint ) : null;
 
-		if ( ! $revoked ) {
-			return new \WP_Error(
-				'invalid_token',
-				'Token not found or already revoked',
-				array( 'status' => 400 )
-			);
-		}
+		// The result is deliberately not echoed back: the response is identical
+		// for valid, unknown and already-revoked tokens (RFC 7009 section 2.2).
+		$this->oauth_server->revoke_token( $token, $hint );
 
-		return rest_ensure_response(
-			array(
-				'success' => true,
-				'message' => 'Token revoked successfully',
-			)
+		$response = new \WP_REST_Response(
+			array( 'success' => true ),
+			200
 		);
+		$response->header( 'Cache-Control', 'no-store' );
+
+		return $response;
 	}
 }

@@ -298,27 +298,88 @@ class OAuth_Server {
 	}
 
 	/**
-	 * Revoke access token.
+	 * Revoke a token pair (RFC 7009).
 	 *
-	 * @param string $token Access token to revoke.
-	 * @return bool True if revoked successfully.
+	 * $token may be the access token OR the refresh token of a pair; either one
+	 * revokes the whole row, so neither half keeps working. $token_type_hint
+	 * ('access_token' | 'refresh_token') only changes which column is tried
+	 * first. Tokens are stored as-is in this plugin (there is no hash column),
+	 * so the lookup is a direct match on the token / refresh_token columns.
+	 *
+	 * @param string      $token           Access or refresh token to revoke.
+	 * @param string|null $token_type_hint Optional lookup hint.
+	 * @return bool True if a row was revoked by this call.
 	 */
-	public function revoke_token( $token ) {
+	public function revoke_token( $token, $token_type_hint = null ) {
 		global $wpdb;
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation
-		$updated = $wpdb->update(
-			"{$wpdb->prefix}goldtwmcp_oauth_tokens",
-			array( 'revoked_at' => gmdate( 'Y-m-d H:i:s' ) ),
-			array( 'token' => $token ),
-			array( '%s' ),
-			array( '%s' )
-		);
+		$token = (string) $token;
+		if ( '' === $token ) {
+			return false;
+		}
 
+		$columns = array( 'token', 'refresh_token' );
+		if ( 'refresh_token' === $token_type_hint ) {
+			$columns = array_reverse( $columns );
+		}
+
+		$row = null;
+		foreach ( $columns as $column ) {
+			if ( 'refresh_token' === $column ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation lookup, must hit the DB.
+				$row = $wpdb->get_row(
+					$wpdb->prepare(
+						"SELECT id, token, revoked_at FROM {$wpdb->prefix}goldtwmcp_oauth_tokens WHERE refresh_token = %s",
+						$token
+					)
+				);
+			} else {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation lookup, must hit the DB.
+				$row = $wpdb->get_row(
+					$wpdb->prepare(
+						"SELECT id, token, revoked_at FROM {$wpdb->prefix}goldtwmcp_oauth_tokens WHERE token = %s",
+						$token
+					)
+				);
+			}
+			if ( $row ) {
+				break;
+			}
+		}
+
+		if ( ! $row ) {
+			return false;
+		}
+
+		$updated = 0;
+		if ( null === $row->revoked_at ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation.
+			$updated = $wpdb->update(
+				"{$wpdb->prefix}goldtwmcp_oauth_tokens",
+				array( 'revoked_at' => gmdate( 'Y-m-d H:i:s' ) ),
+				array( 'id' => (int) $row->id ),
+				array( '%s' ),
+				array( '%d' )
+			);
+		}
+
+		// Keep the token registry (admin "Token Registry" + "My AI Tokens") in step.
+		// It is keyed by the access token's prefix, so always pass the access token.
 		$revoked_by = get_current_user_id();
-		Token_Registry::revoke( $token, $revoked_by ? $revoked_by : null );
+		Token_Registry::revoke( (string) $row->token, $revoked_by ? $revoked_by : null );
 
-		return false !== $updated;
+		// Token validation always reads the DB (no transient / object-cache layer
+		// for tokens), so the revoke is effective on the very next request.
+
+		/**
+		 * Fires after an OAuth token pair was revoked via the RFC 7009 path.
+		 *
+		 * @param int    $token_row_id Row ID in {prefix}goldtwmcp_oauth_tokens.
+		 * @param string $prefix       16-char access-token prefix (never the full secret).
+		 */
+		do_action( 'goldtwmcp_token_revoked', (int) $row->id, Token_Registry::prefix( (string) $row->token ) );
+
+		return $updated > 0;
 	}
 
 	/**
