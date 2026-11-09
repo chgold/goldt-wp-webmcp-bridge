@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.8
+Stable tag: 1.2.9
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,12 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.9 - 2026-11-09 =
+* Changed: All AI clients can now be granted every scope the user is entitled to; re-authorize to get new scopes. The eight built-in AI clients (Claude, ChatGPT, Gemini, Grok, Copilot, DeepSeek, Perplexity, Meta AI) may now request `delete`, `manage_users` and `admin` like the `goldnat-master` client — which AI product connects makes no difference. Fresh installs seed the full scope set for all nine clients; existing installs get it through an automatic DB upgrade (OAuth schema 2.0.8). Custom clients are not changed.
+* Security: what a token receives is capped by the WordPress user's own capabilities. `delete` requires `delete_posts` or `delete_pages`, `manage_users` requires `list_users` or `edit_users` (filter: `goldtwmcp_scope_capabilities`), and `admin` still requires `manage_options` (filter: `goldtwmcp_admin_scope_capability`). Scopes the user is not entitled to are dropped at consent, and every tool call re-checks the capability behind its scope (403 `insufficient_capability`).
+* Improved: the consent screen lists the scopes that will be granted and, separately, any requested scopes that are not granted because the account lacks the permission.
+* Note: existing tokens keep the scopes they were issued with. Re-authorize to get new scopes.
+
 = 1.2.8 - 2026-11-09 =
 * Fixed: new `admin` OAuth scope ("Site administration"). Pro and add-on tools that declare `required_scope: admin` (Pro `createUser`, `updateUser`, `updateSiteSettings`; WooCommerce `updateStoreSettings`) could never be called because no client was allowed to request that scope. The scope is now in the scope registry, the consent screen and the manifest (`auth.scopes`), and the built-in `goldnat-master` client may request it. Existing installs get it through an automatic DB upgrade (OAuth schema 2.0.7) that adds `admin` to every client that already had the full scope set; read/write-only clients are unchanged.
 * Security: `admin` is only granted to users who hold `manage_options` (filter: `goldtwmcp_admin_scope_capability`). A non-administrator who approves a consent request asking for `admin` receives a token without it, and every call to an admin tool re-checks the capability (403 `insufficient_capability`), on top of each tool's own WordPress capability checks.
@@ -530,6 +536,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.9 =
+All AI clients can now be granted every scope the user is entitled to (never more than the user's own WordPress permissions). Existing tokens keep their scopes: re-authorize to get new scopes.
 
 = 1.2.8 =
 Adds the `admin` OAuth scope so administrator-only tools (Pro user/settings tools, WooCommerce store settings) can be used. Only administrators receive it, and existing tokens keep their scopes: re-authorize to get `admin`. Also adds the `brief` metrics section to the manifest.

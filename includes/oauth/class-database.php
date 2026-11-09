@@ -17,6 +17,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Database {
 
 	/**
+	 * Full OAuth scope set every built-in AI client may request.
+	 *
+	 * Which of these a token actually receives is decided per user at grant
+	 * time (Scopes::filter_for_user()) and re-checked on every tool call, so
+	 * the client software never widens what the WordPress user can do.
+	 *
+	 * @var array<int,string>
+	 */
+	const FULL_SCOPES = array( 'read', 'write', 'delete', 'manage_users', 'admin' );
+
+	/**
+	 * Client IDs of the built-in (pre-registered) AI clients.
+	 *
+	 * @var array<int,string>
+	 */
+	const BUILTIN_CLIENT_IDS = array( 'goldnat-master', 'claude-ai', 'chatgpt', 'gemini', 'grok', 'perplexity', 'copilot', 'meta-ai', 'deepseek' );
+
+	/**
 	 * Get current database version
 	 */
 	public static function get_version() {
@@ -200,6 +218,63 @@ class Database {
 		if ( version_compare( $current_version, '2.0.7', '<' ) ) {
 			self::upgrade_to_2_0_7();
 		}
+
+		if ( version_compare( $current_version, '2.0.8', '<' ) ) {
+			self::upgrade_to_2_0_8();
+		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.8 — every built-in AI client may request the
+	 * full scope set.
+	 *
+	 * Until now only goldnat-master could request delete / manage_users /
+	 * admin; the other eight built-in clients (claude-ai, chatgpt, gemini,
+	 * grok, copilot, deepseek, perplexity, meta-ai) were limited to
+	 * read/write. Which AI product connects makes no difference: what a token
+	 * receives is capped by the WordPress user's own capabilities
+	 * (Scopes::filter_for_user() at grant time, re-checked per tool call).
+	 *
+	 * Each built-in client row gets the union of its current allowed_scopes
+	 * and FULL_SCOPES (nothing is removed). Admin-created custom clients are
+	 * not touched. Existing tokens keep the scopes they were issued with —
+	 * users re-authorize to receive new scopes.
+	 *
+	 * Idempotent: rows that already hold every scope are skipped.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_8() {
+		global $wpdb;
+
+		$clients_table = $wpdb->prefix . 'goldtwmcp_oauth_clients';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$rows = $wpdb->get_results( "SELECT id, client_id, allowed_scopes FROM {$clients_table}", ARRAY_A );
+
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				if ( ! in_array( (string) $row['client_id'], self::BUILTIN_CLIENT_IDS, true ) ) {
+					continue;
+				}
+				$allowed = json_decode( (string) $row['allowed_scopes'], true );
+				$allowed = is_array( $allowed ) ? array_map( 'strval', $allowed ) : array();
+				$merged  = array_values( array_unique( array_merge( $allowed, self::FULL_SCOPES ) ) );
+				if ( count( $merged ) === count( array_unique( $allowed ) ) ) {
+					continue;
+				}
+				$wpdb->update(
+					$clients_table,
+					array( 'allowed_scopes' => wp_json_encode( $merged ) ),
+					array( 'id' => (int) $row['id'] ),
+					array( '%s' ),
+					array( '%d' )
+				);
+			}
+		}
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		self::set_version( '2.0.8' );
 	}
 
 	/**
@@ -671,63 +746,63 @@ class Database {
 				'client_name'    => 'Goldnat',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users', 'admin' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'claude-ai',
 				'client_name'    => 'Claude AI (Anthropic)',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'chatgpt',
 				'client_name'    => 'ChatGPT (OpenAI)',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'gemini',
 				'client_name'    => 'Gemini (Google)',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'grok',
 				'client_name'    => 'Grok (xAI)',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'perplexity',
 				'client_name'    => 'Perplexity AI',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'copilot',
 				'client_name'    => 'Microsoft Copilot',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'meta-ai',
 				'client_name'    => 'Meta AI (Facebook)',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 			array(
 				'client_id'      => 'deepseek',
 				'client_name'    => 'DeepSeek AI',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write' ) ),
+				'allowed_scopes' => wp_json_encode( self::FULL_SCOPES ),
 			),
 		);
 

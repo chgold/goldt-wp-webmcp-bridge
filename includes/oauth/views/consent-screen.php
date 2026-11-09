@@ -43,6 +43,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</li>
 				<?php endforeach; ?>
 			</ul>
+			<?php if ( ! empty( $withheld_scopes ) ) : ?>
+				<h2><?php esc_html_e( 'Requested but not granted (your account does not have these permissions):', 'goldt-webmcp-bridge' ); ?></h2>
+				<ul class="scope-list">
+					<?php foreach ( $withheld_scopes as $goldtwmcp_scope ) : ?>
+						<li class="scope-item">
+							<svg class="scope-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+							</svg>
+							<span class="scope-label"><?php echo esc_html( goldtwmcp_get_scope_label( $goldtwmcp_scope ) ); ?></span>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+			<p style="color: #646970; font-size: 13px;">
+				<?php esc_html_e( 'The application can never do more than your own WordPress account is allowed to do, and every action is checked against your current permissions.', 'goldt-webmcp-bridge' ); ?>
+			</p>
 		</div>
 
 		<form method="post">
@@ -82,8 +98,8 @@ function goldtwmcp_get_scope_label( $goldtwmcp_scope_name ) {
 	$goldtwmcp_labels = array(
 		'read'         => __( 'Read your posts and content', 'goldt-webmcp-bridge' ),
 		'write'        => __( 'Create and modify posts', 'goldt-webmcp-bridge' ),
-		'delete'       => __( 'Delete posts', 'goldt-webmcp-bridge' ),
-		'manage_users' => __( 'Manage users', 'goldt-webmcp-bridge' ),
+		'delete'       => __( 'Delete posts, pages and other content', 'goldt-webmcp-bridge' ),
+		'manage_users' => __( 'View and manage user accounts', 'goldt-webmcp-bridge' ),
 		'admin'        => __( 'Site administration: change site settings, create users and change roles', 'goldt-webmcp-bridge' ),
 	);
 	return isset( $goldtwmcp_labels[ $goldtwmcp_scope_name ] ) ? $goldtwmcp_labels[ $goldtwmcp_scope_name ] : ucfirst( $goldtwmcp_scope_name );

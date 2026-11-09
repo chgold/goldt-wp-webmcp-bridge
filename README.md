@@ -127,8 +127,8 @@ http://yoursite.com/?goldtwmcp_oauth_authorize=1
 **Available scopes:**
 - `read` - Read posts, pages, and content
 - `write` - Create and update posts and pages  
-- `delete` - Delete posts and pages
-- `manage_users` - View and manage user accounts
+- `delete` - Delete posts and pages (granted only to users with `delete_posts` or `delete_pages`)
+- `manage_users` - View and manage user accounts (granted only to users with `list_users` or `edit_users`)
 - `admin` - Site administration: administrator-only tools (site settings, create users, change roles). Granted only to users with `manage_options`; each tool still checks its own capability
 
 User will see a consent screen and approve. They'll receive an **authorization code** (valid for 10 minutes).
@@ -611,6 +611,11 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 1.2.9 - 2026-11-09
+* **Changed:** All AI clients can now be granted every scope the user is entitled to; re-authorize to get new scopes. All nine built-in clients may request `read`, `write`, `delete`, `manage_users` and `admin` (DB upgrade 2.0.8 for existing installs).
+* **Security:** scopes are capped by the user's own WordPress capabilities at consent and re-checked on every tool call — `delete` needs `delete_posts`/`delete_pages`, `manage_users` needs `list_users`/`edit_users` (filter `goldtwmcp_scope_capabilities`), `admin` needs `manage_options`.
+* **Improved:** consent screen also lists requested scopes that are not granted.
 
 ### Version 1.2.8 - 2026-11-09
 * **Fixed:** new `admin` OAuth scope — tools declaring `required_scope: admin` (Pro `createUser` / `updateUser` / `updateSiteSettings`, WooCommerce `updateStoreSettings`) were uncallable. Added to the scope registry, consent screen, manifest `auth.scopes` and the `goldnat-master` client (DB upgrade 2.0.7 for existing installs). Granted only to `manage_options` users and re-checked on every admin-tool call. Existing tokens keep their scopes — re-authorize to get `admin`.

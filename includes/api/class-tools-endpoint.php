@@ -193,13 +193,16 @@ class Tools_Endpoint {
 			);
 		}
 
-		// The `admin` scope only lets a token reach admin tools; the token's
-		// user must ALSO still hold the admin capability right now (covers
-		// demoted users and add-on tools without their own capability check).
-		if ( 'admin' === $required_scope && ! \current_user_can( \GoldtWebMCP\OAuth\Scopes::get_admin_capability() ) ) {
+		// A privileged scope (`delete`, `manage_users`, `admin`) only lets a
+		// token reach those tools; the token's user must ALSO still hold the
+		// matching WordPress capability right now (covers demoted users and
+		// add-on tools without their own capability check).
+		if ( ! \GoldtWebMCP\OAuth\Scopes::user_can_use_scope( $required_scope, \get_current_user_id() ) ) {
 			return new \WP_Error(
 				'insufficient_capability',
-				'This tool requires a WordPress administrator account.',
+				'admin' === $required_scope
+					? 'This tool requires a WordPress administrator account.'
+					: sprintf( 'Your WordPress account does not have the permissions required by the "%s" scope.', $required_scope ),
 				array( 'status' => 403 )
 			);
 		}

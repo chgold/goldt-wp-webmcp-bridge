@@ -19,6 +19,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Authorize_Endpoint {
 
 	/**
+	 * Requested scopes withheld because the logged-in user lacks the matching
+	 * WordPress capability. Shown on the consent screen so the user sees
+	 * exactly what is and is not granted.
+	 *
+	 * @var array<int,string>
+	 */
+	private $withheld_scopes = array();
+
+
+	/**
 	 * OAuth server instance.
 	 *
 	 * @var OAuth_Server
@@ -119,7 +129,9 @@ class Authorize_Endpoint {
 		// non-administrator). Applied to both the consent screen and the
 		// approval POST, so what the user sees is exactly what gets granted.
 		if ( is_user_logged_in() ) {
-			$scopes = Scopes::filter_for_user( $scopes, get_current_user_id() );
+			$requested_scopes      = array_values( array_unique( $scopes ) );
+			$scopes                = Scopes::filter_for_user( $scopes, get_current_user_id() );
+			$this->withheld_scopes = array_values( array_diff( $requested_scopes, $scopes ) );
 			if ( empty( $scopes ) ) {
 				$scopes = array( 'read' );
 			}
@@ -251,6 +263,8 @@ class Authorize_Endpoint {
 				$client_id
 			)
 		);
+
+		$withheld_scopes = $this->withheld_scopes;
 
 		include GOLDTWMCP_PATH . 'includes/oauth/views/consent-screen.php';
 		exit;
