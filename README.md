@@ -129,6 +129,7 @@ http://yoursite.com/?goldtwmcp_oauth_authorize=1
 - `write` - Create and update posts and pages  
 - `delete` - Delete posts and pages
 - `manage_users` - View and manage user accounts
+- `admin` - Site administration: administrator-only tools (site settings, create users, change roles). Granted only to users with `manage_options`; each tool still checks its own capability
 
 User will see a consent screen and approve. They'll receive an **authorization code** (valid for 10 minutes).
 
@@ -610,6 +611,10 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 ---
 
 ## 📋 Changelog
+
+### Version 1.2.8 - 2026-11-09
+* **Fixed:** new `admin` OAuth scope — tools declaring `required_scope: admin` (Pro `createUser` / `updateUser` / `updateSiteSettings`, WooCommerce `updateStoreSettings`) were uncallable. Added to the scope registry, consent screen, manifest `auth.scopes` and the `goldnat-master` client (DB upgrade 2.0.7 for existing installs). Granted only to `manage_options` users and re-checked on every admin-tool call. Existing tokens keep their scopes — re-authorize to get `admin`.
+* **Added:** manifest `brief.metrics` section via `Manifest::register_brief_metric()` (only emitted when a valid metric references a tool present in the manifest).
 
 ### Version 1.2.7 - 2026-11-09
 * **Security:** RFC 7009 token revocation — manifest `auth.revocation_url`; `/oauth/revoke` accepts access OR refresh token (optional `token_type_hint`), revokes the whole pair + its Token Registry row, always returns 200 (400 only when `token` is missing). Legacy `auth.revoke_url` now points at the revoke endpoint as well.

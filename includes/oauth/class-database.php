@@ -196,6 +196,58 @@ class Database {
 		if ( version_compare( $current_version, '2.0.6', '<' ) ) {
 			self::upgrade_to_2_0_6();
 		}
+
+		if ( version_compare( $current_version, '2.0.7', '<' ) ) {
+			self::upgrade_to_2_0_7();
+		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.7 — grant the `admin` scope to full-access clients.
+	 *
+	 * Pro and add-on tools (createUser, updateUser, updateSiteSettings,
+	 * WooCommerce updateStoreSettings, ...) declare required_scope 'admin',
+	 * but no client was ever allowed to request it, so those tools could not
+	 * be called. Every client whose allowed_scopes already include the full
+	 * set (identified by 'manage_users' — today the built-in goldnat-master
+	 * client) gets 'admin' appended. Clients limited to read/write are left
+	 * unchanged.
+	 *
+	 * Existing access/refresh tokens are NOT touched: they keep the scopes they
+	 * were issued with. Users must re-authorize to receive `admin`, and only
+	 * users holding the admin capability ever receive it.
+	 *
+	 * Idempotent: rows that already contain 'admin' are skipped.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_7() {
+		global $wpdb;
+
+		$clients_table = $wpdb->prefix . 'goldtwmcp_oauth_clients';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$rows = $wpdb->get_results( "SELECT id, allowed_scopes FROM {$clients_table}", ARRAY_A );
+
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$allowed = json_decode( (string) $row['allowed_scopes'], true );
+				if ( ! is_array( $allowed ) || ! in_array( 'manage_users', $allowed, true ) || in_array( 'admin', $allowed, true ) ) {
+					continue;
+				}
+				$allowed[] = 'admin';
+				$wpdb->update(
+					$clients_table,
+					array( 'allowed_scopes' => wp_json_encode( array_values( $allowed ) ) ),
+					array( 'id' => (int) $row['id'] ),
+					array( '%s' ),
+					array( '%d' )
+				);
+			}
+		}
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		self::set_version( '2.0.7' );
 	}
 
 	/**
@@ -316,7 +368,7 @@ class Database {
 						'client_name'    => 'Goldnat',
 						'client_type'    => 'public',
 						'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-						'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
+						'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users', 'admin' ) ),
 					)
 				);
 			}
@@ -421,7 +473,7 @@ class Database {
 					'client_name'    => 'Goldnat',
 					'client_type'    => 'public',
 					'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-					'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
+					'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users', 'admin' ) ),
 				)
 			);
 		}
@@ -619,7 +671,7 @@ class Database {
 				'client_name'    => 'Goldnat',
 				'client_type'    => 'public',
 				'redirect_uris'  => wp_json_encode( array( 'urn:ietf:wg:oauth:2.0:oob' ) ),
-				'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users' ) ),
+				'allowed_scopes' => wp_json_encode( array( 'read', 'write', 'delete', 'manage_users', 'admin' ) ),
 			),
 			array(
 				'client_id'      => 'claude-ai',

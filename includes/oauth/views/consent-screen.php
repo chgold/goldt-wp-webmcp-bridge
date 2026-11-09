@@ -84,6 +84,7 @@ function goldtwmcp_get_scope_label( $goldtwmcp_scope_name ) {
 		'write'        => __( 'Create and modify posts', 'goldt-webmcp-bridge' ),
 		'delete'       => __( 'Delete posts', 'goldt-webmcp-bridge' ),
 		'manage_users' => __( 'Manage users', 'goldt-webmcp-bridge' ),
+		'admin'        => __( 'Site administration: change site settings, create users and change roles', 'goldt-webmcp-bridge' ),
 	);
 	return isset( $goldtwmcp_labels[ $goldtwmcp_scope_name ] ) ? $goldtwmcp_labels[ $goldtwmcp_scope_name ] : ucfirst( $goldtwmcp_scope_name );
 }

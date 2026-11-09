@@ -193,6 +193,17 @@ class Tools_Endpoint {
 			);
 		}
 
+		// The `admin` scope only lets a token reach admin tools; the token's
+		// user must ALSO still hold the admin capability right now (covers
+		// demoted users and add-on tools without their own capability check).
+		if ( 'admin' === $required_scope && ! \current_user_can( \GoldtWebMCP\OAuth\Scopes::get_admin_capability() ) ) {
+			return new \WP_Error(
+				'insufficient_capability',
+				'This tool requires a WordPress administrator account.',
+				array( 'status' => 403 )
+			);
+		}
+
 		$result = $module->execute_tool( $tool_method, $params );
 
 		if ( \is_wp_error( $result ) ) {
@@ -399,14 +410,14 @@ class Tools_Endpoint {
 	 */
 	public static function get_agent_clients() {
 		return array(
-			'claude-ai'     => array( 'label' => 'Claude (Anthropic)' ),
-			'chatgpt'       => array( 'label' => 'ChatGPT (OpenAI)' ),
-			'gemini'        => array( 'label' => 'Gemini (Google)' ),
-			'copilot'       => array( 'label' => 'Microsoft Copilot' ),
-			'grok'          => array( 'label' => 'Grok (xAI)' ),
-			'deepseek'      => array( 'label' => 'DeepSeek AI' ),
-			'perplexity'    => array( 'label' => 'Perplexity AI' ),
-			'meta-ai'       => array( 'label' => 'Meta AI' ),
+			'claude-ai'      => array( 'label' => 'Claude (Anthropic)' ),
+			'chatgpt'        => array( 'label' => 'ChatGPT (OpenAI)' ),
+			'gemini'         => array( 'label' => 'Gemini (Google)' ),
+			'copilot'        => array( 'label' => 'Microsoft Copilot' ),
+			'grok'           => array( 'label' => 'Grok (xAI)' ),
+			'deepseek'       => array( 'label' => 'DeepSeek AI' ),
+			'perplexity'     => array( 'label' => 'Perplexity AI' ),
+			'meta-ai'        => array( 'label' => 'Meta AI' ),
 			'goldnat-master' => array( 'label' => 'Goldnat' ),
 		);
 	}
@@ -417,7 +428,7 @@ class Tools_Endpoint {
 	 * Mirrors the XenForo addon model: the prompt grants access at the
 	 * intersection of the user's existing permissions, not at a level the
 	 * user chooses in a UI. A subscriber gets read-only; an editor adds
-	 * write; an admin adds delete + manage_users.
+	 * write; an admin adds delete + manage_users + admin.
 	 *
 	 * @return array<int,string>
 	 */
@@ -432,6 +443,9 @@ class Tools_Endpoint {
 		}
 		if ( \current_user_can( 'list_users' ) || \current_user_can( 'edit_users' ) ) {
 			$scopes[] = 'manage_users';
+		}
+		if ( \current_user_can( \GoldtWebMCP\OAuth\Scopes::get_admin_capability() ) ) {
+			$scopes[] = 'admin';
 		}
 
 		return $scopes;
@@ -501,6 +515,7 @@ class Tools_Endpoint {
 			'read'   => array(),
 			'write'  => array(),
 			'delete' => array(),
+			'admin'  => array(),
 		);
 		foreach ( $this->modules as $module_list ) {
 			foreach ( $module_list as $module ) {

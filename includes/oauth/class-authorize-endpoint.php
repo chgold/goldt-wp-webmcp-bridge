@@ -115,6 +115,17 @@ class Authorize_Endpoint {
 			return;
 		}
 
+		// Never hand a scope to a user who cannot use it (e.g. `admin` for a
+		// non-administrator). Applied to both the consent screen and the
+		// approval POST, so what the user sees is exactly what gets granted.
+		if ( is_user_logged_in() ) {
+			$scopes = Scopes::filter_for_user( $scopes, get_current_user_id() );
+			if ( empty( $scopes ) ) {
+				$scopes = array( 'read' );
+			}
+			$scope = implode( ' ', $scopes );
+		}
+
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified inside handle_approval/handle_denial
 		if ( isset( $_POST['goldtwmcp_oauth_approve'] ) ) {
 			$this->handle_approval( $client_id, $redirect_uri, $code_challenge, $code_challenge_method, $scopes, $state );

@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.7
+Stable tag: 1.2.8
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,12 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.8 - 2026-11-09 =
+* Fixed: new `admin` OAuth scope ("Site administration"). Pro and add-on tools that declare `required_scope: admin` (Pro `createUser`, `updateUser`, `updateSiteSettings`; WooCommerce `updateStoreSettings`) could never be called because no client was allowed to request that scope. The scope is now in the scope registry, the consent screen and the manifest (`auth.scopes`), and the built-in `goldnat-master` client may request it. Existing installs get it through an automatic DB upgrade (OAuth schema 2.0.7) that adds `admin` to every client that already had the full scope set; read/write-only clients are unchanged.
+* Security: `admin` is only granted to users who hold `manage_options` (filter: `goldtwmcp_admin_scope_capability`). A non-administrator who approves a consent request asking for `admin` receives a token without it, and every call to an admin tool re-checks the capability (403 `insufficient_capability`), on top of each tool's own WordPress capability checks.
+* Note: existing tokens keep the scopes they were issued with. To use admin tools, re-authorize (or generate a new connection prompt as an administrator) to get a token that includes `admin`.
+* Added: declarative brief metrics section in the manifest (`manifest.brief.metrics`) — goldnat.ai can now collect scalar KPIs on a schedule without an LLM in the loop. Public API `Manifest::register_brief_metric()` validates keys (`^[a-z0-9]+(\.[a-z0-9_]+)+$`) and caps the manifest at 50 metrics. The `brief` section is emitted only when at least one valid metric points at a tool that is present in the manifest. This activates the `content.published.daily` metric (`wordpress.getContentStats`) and add-on metrics such as WooCommerce `sales.revenue.daily` / `sales.orders.daily`.
+
 = 1.2.7 - 2026-11-09 =
 * Security: RFC 7009 token revocation. The manifest now advertises `auth.revocation_url` (`/wp-json/goldt-webmcp-bridge/v1/oauth/revoke`) next to `token_url`, so platforms that hold tokens on a user's behalf (e.g. goldnat) can kill them on the site when access is cut on their side.
 * Fixed: `/oauth/revoke` now accepts the access token OR the refresh token (optional `token_type_hint` only changes lookup order) and revokes the whole pair, including the Token Registry row shown in "Token Registry" and "My AI Tokens".
@@ -524,6 +530,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.8 =
+Adds the `admin` OAuth scope so administrator-only tools (Pro user/settings tools, WooCommerce store settings) can be used. Only administrators receive it, and existing tokens keep their scopes: re-authorize to get `admin`. Also adds the `brief` metrics section to the manifest.
 
 = 1.2.7 =
 Security: adds RFC 7009 token revocation (`auth.revocation_url` in the manifest). Revoking either token of a pair now revokes both. Upgrade recommended.
