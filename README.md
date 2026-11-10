@@ -612,6 +612,11 @@ add_action('goldtwmcp_register_modules', function($goldtwmcp_plugin) {
 
 ## 📋 Changelog
 
+### Version 1.2.10 - 2026-11-10
+* **Security:** `listComments` / `getComments` show non-moderators only approved comments on posts they can read; `hold`/`spam`/`trash` without `moderate_comments` → 403.
+* **Security:** ID parameters must be positive integers — a negative ID is no longer turned into a positive one by `absint()` (400 `invalid_param`; optional IDs accept 0 = none; `limit`/`offset`/`per_page` may not be negative).
+* **Fixed:** `getPost` / `getPage` with a non-positive numeric identifier → 400; `getMedia` on a missing item → 404 instead of 200 `success:false`.
+
 ### Version 1.2.9 - 2026-11-09
 * **Changed:** All AI clients can now be granted every scope the user is entitled to; re-authorize to get new scopes. All nine built-in clients may request `read`, `write`, `delete`, `manage_users` and `admin` (DB upgrade 2.0.8 for existing installs).
 * **Security:** scopes are capped by the user's own WordPress capabilities at consent and re-checked on every tool call — `delete` needs `delete_posts`/`delete_pages`, `manage_users` needs `list_users`/`edit_users` (filter `goldtwmcp_scope_capabilities`), `admin` needs `manage_options`.

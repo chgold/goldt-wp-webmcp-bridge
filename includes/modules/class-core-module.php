@@ -11,12 +11,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/trait-core-id-guard.php';
+
 /**
  * Core module for WordPress posts, pages, and user tools.
  *
  * @package GoldtWebMCP
  */
 class Core_Module extends Module_Base {
+
+	use Core_Id_Guard;
 
 	/**
 	 * Module name identifier.
@@ -753,8 +757,8 @@ class Core_Module extends Module_Base {
 
 		if ( is_numeric( $identifier ) ) {
 			$post_id = (int) $identifier;
-			if ( $post_id <= 0 ) {
-				return new \WP_Error( 'post_not_found', 'Post not found', array( 'status' => 404 ) );
+			if ( $post_id <= 0 || trim( (string) $identifier ) !== (string) $post_id ) {
+				return new \WP_Error( 'invalid_param', 'identifier must be a positive integer ID or a slug.', array( 'status' => 400 ) );
 			}
 			$post = \get_post( $post_id );
 		} else {
@@ -842,8 +846,8 @@ class Core_Module extends Module_Base {
 
 		if ( is_numeric( $identifier ) ) {
 			$page_id = (int) $identifier;
-			if ( $page_id <= 0 ) {
-				return new \WP_Error( 'page_not_found', 'Page not found', array( 'status' => 404 ) );
+			if ( $page_id <= 0 || trim( (string) $identifier ) !== (string) $page_id ) {
+				return new \WP_Error( 'invalid_param', 'identifier must be a positive integer ID or a slug.', array( 'status' => 400 ) );
 			}
 			$page = \get_post( $page_id );
 		} else {
@@ -1185,22 +1189,13 @@ class Core_Module extends Module_Base {
 	 * Execute the getMedia tool.
 	 *
 	 * @param array $params Tool parameters.
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	public function execute_getMedia( $params ) {
-		$id = absint( $params['id'] ?? 0 );
-		if ( ! $id ) {
-			return array(
-				'success' => false,
-				'error'   => 'id required',
-			);
-		}
+		$id   = (int) $params['id'];
 		$post = \get_post( $id );
 		if ( ! $post || 'attachment' !== $post->post_type ) {
-			return array(
-				'success' => false,
-				'error'   => 'media not found',
-			);
+			return new \WP_Error( 'not_found', 'Media ' . $id . ' not found.', array( 'status' => 404 ) );
 		}
 		return array(
 			'success' => true,
@@ -1274,7 +1269,7 @@ class Core_Module extends Module_Base {
 	 * Execute the getComments tool.
 	 *
 	 * @param array $params Tool parameters.
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	public function execute_getComments( $params ) {
 		return $this->do_list_comments( $params );
@@ -1284,17 +1279,42 @@ class Core_Module extends Module_Base {
 	 * Execute the listComments tool.
 	 *
 	 * @param array $params Tool parameters.
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	public function execute_listComments( $params ) {
 		return $this->do_list_comments( $params );
 	}
 
 	/**
+	 * Whether the current user may see a comment: moderators see every comment,
+	 * everyone else only approved comments on posts they can read (as on the site).
+	 *
+	 * @param \WP_Comment $comment Comment.
+	 * @return bool
+	 */
+	private function can_view_comment( $comment ) {
+		if ( \current_user_can( 'moderate_comments' ) ) {
+			return true;
+		}
+		if ( '1' !== (string) $comment->comment_approved ) {
+			return false;
+		}
+		$post_id = (int) $comment->comment_post_ID;
+		$post    = $post_id > 0 ? \get_post( $post_id ) : null;
+		if ( ! $post ) {
+			return false;
+		}
+		if ( 'publish' === $post->post_status && ! \post_password_required( $post ) ) {
+			return true;
+		}
+		return \current_user_can( 'read_post', $post_id ) && ! \post_password_required( $post );
+	}
+
+	/**
 	 * Shared implementation for getComments/listComments.
 	 *
 	 * @param array $params Tool parameters.
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	private function do_list_comments( $params ) {
 		$args = array(
@@ -1313,7 +1333,17 @@ class Core_Module extends Module_Base {
 		if ( isset( $params['author'] ) ) {
 			$args['user_id'] = absint( $params['author'] );
 		}
-		$comments = \get_comments( $args );
+		if ( ! \current_user_can( 'moderate_comments' ) ) {
+			// Non-moderators see what the public site shows: approved comments on posts they can read.
+			if ( isset( $args['status'] ) && ! in_array( $args['status'], array( 'approve', 'all' ), true ) ) {
+				return new \WP_Error( 'forbidden', 'Only users who can moderate comments may list ' . $args['status'] . ' comments.', array( 'status' => 403 ) );
+			}
+			$args['status'] = 'approve';
+			if ( ! empty( $args['post_id'] ) && ( ! \get_post( $args['post_id'] ) || ! \current_user_can( 'read_post', $args['post_id'] ) ) ) {
+				return new \WP_Error( 'not_found', 'Post not found.', array( 'status' => 404 ) );
+			}
+		}
+		$comments = array_values( array_filter( \get_comments( $args ), array( $this, 'can_view_comment' ) ) );
 		return array(
 			'success' => true,
 			'data'    => array(

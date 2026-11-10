@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.9
+Stable tag: 1.2.10
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,12 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.10 - 2026-11-10 =
+* Security: `listComments` and `getComments` show users who cannot moderate comments only approved comments on posts they can read (as on the public site). Before, any user with the read scope could list pending, spam and trashed comments and comments on private posts. Asking for `hold`, `spam` or `trash` without the moderate_comments permission returns 403.
+* Security: ID parameters must be positive integers. Before, a negative ID was silently turned into a positive one (`absint(-1)` = 1), so `post_id: -1` read the comments of post 1. A negative or zero required ID, or a negative optional ID (`post_id`, `author`, `parent`), returns 400 `invalid_param`. Optional IDs still accept 0 where 0 means "none". `limit`, `offset` and `per_page` may not be negative.
+* Fix: `getPost` / `getPage` with a numeric identifier that is not a positive whole number (for example -1 or 1.5) return 400 `invalid_param` instead of 404.
+* Fix: `getMedia` returns 404 `not_found` for a missing media item instead of HTTP 200 with `success: false`.
+
 = 1.2.9 - 2026-11-09 =
 * Changed: All AI clients can now be granted every scope the user is entitled to; re-authorize to get new scopes. The eight built-in AI clients (Claude, ChatGPT, Gemini, Grok, Copilot, DeepSeek, Perplexity, Meta AI) may now request `delete`, `manage_users` and `admin` like the `goldnat-master` client — which AI product connects makes no difference. Fresh installs seed the full scope set for all nine clients; existing installs get it through an automatic DB upgrade (OAuth schema 2.0.8). Custom clients are not changed.
 * Security: what a token receives is capped by the WordPress user's own capabilities. `delete` requires `delete_posts` or `delete_pages`, `manage_users` requires `list_users` or `edit_users` (filter: `goldtwmcp_scope_capabilities`), and `admin` still requires `manage_options` (filter: `goldtwmcp_admin_scope_capability`). Scopes the user is not entitled to are dropped at consent, and every tool call re-checks the capability behind its scope (403 `insufficient_capability`).
@@ -536,6 +542,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.10 =
+Security: comment tools no longer show unapproved comments to users who cannot moderate comments, and negative IDs are refused instead of being turned into positive ones.
 
 = 1.2.9 =
 All AI clients can now be granted every scope the user is entitled to (never more than the user's own WordPress permissions). Existing tokens keep their scopes: re-authorize to get new scopes.
