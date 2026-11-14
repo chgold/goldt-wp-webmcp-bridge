@@ -159,6 +159,61 @@ class Tools_Endpoint {
 	}
 
 	/**
+	 * Resolve a full tool name (module.tool) to its module + definition.
+	 *
+	 * Used by the in-process Tool_Gateway (1.2.11). Module names are matched
+	 * exactly (no "{module}_{tool}" fallback): in-process callers always pass
+	 * the full dotted name.
+	 *
+	 * @param string $tool_name Full tool name.
+	 * @return array{module: \GoldtWebMCP\Modules\Module_Base, method: string, required_scope: string}|null
+	 */
+	public function resolve_tool( $tool_name ) {
+		$tool_name = (string) $tool_name;
+		if ( ! str_contains( $tool_name, '.' ) ) {
+			return null;
+		}
+		list( $module_name, $tool_method ) = explode( '.', $tool_name, 2 );
+		$module                            = $this->find_module_for_tool( $module_name, $tool_method );
+		if ( ! $module ) {
+			return null;
+		}
+		$tools = $module->get_tools();
+		return array(
+			'module'         => $module,
+			'method'         => $tool_method,
+			'required_scope' => $tools[ $tool_method ]['required_scope'] ?? 'read',
+		);
+	}
+
+	/**
+	 * Every registered tool by full name: module, required_scope, description, input_schema.
+	 *
+	 * @return array<string,array>
+	 */
+	public function get_all_tools() {
+		$out = array();
+		foreach ( $this->modules as $module_name => $module_list ) {
+			foreach ( $module_list as $module ) {
+				foreach ( $module->get_tools() as $tool ) {
+					// The first module that defines a tool is the one REST and the gateway execute
+					// (find_module_for_tool), so a later same-named definition must not replace it here.
+					if ( isset( $out[ $tool['name'] ] ) ) {
+						continue;
+					}
+					$out[ $tool['name'] ] = array(
+						'module'         => $module_name,
+						'required_scope' => $tool['required_scope'] ?? 'read',
+						'description'    => $tool['description'],
+						'input_schema'   => $tool['input_schema'],
+					);
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
 	 * Execute a tool via REST API.
 	 *
 	 * @param \WP_REST_Request $request REST request object.

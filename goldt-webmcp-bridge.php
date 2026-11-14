@@ -3,7 +3,7 @@
  * Plugin Name: GoldT WebMCP Bridge
  * Plugin URI: https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) — powered by the Servio Protocol (aka WebMCP) with OAuth 2.0
- * Version: 1.2.10
+ * Version: 1.2.11
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '1.2.10' );
+define( 'GOLDTWMCP_VERSION', '1.2.11' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
 
@@ -171,7 +171,22 @@ function goldtwmcp_init() {
 
 	require_once GOLDTWMCP_PATH . 'includes/class-goldtwmcp.php';
 	$plugin = new GoldtWebMCP_Plugin();
+	GoldtWebMCP_Plugin::set_instance( $plugin );
 	$plugin->run();
+}
+
+/**
+ * In-process tool gateway of the Bridge (1.2.11), or null when the Bridge is
+ * not running (missing vendor/ or tables). Call after plugins_loaded 9999.
+ *
+ * @return \GoldtWebMCP\Core\Tool_Gateway|null
+ */
+function goldtwmcp_tool_gateway() {
+	if ( ! class_exists( 'GoldtWebMCP_Plugin' ) ) {
+		return null;
+	}
+	$plugin = GoldtWebMCP_Plugin::instance();
+	return $plugin ? $plugin->get_tool_gateway() : null;
 }
 
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'goldtwmcp_action_links' );

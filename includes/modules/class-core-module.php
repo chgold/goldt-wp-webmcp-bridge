@@ -424,6 +424,14 @@ class Core_Module extends Module_Base {
 							'type'    => 'integer',
 							'default' => 20,
 						),
+						'offset'   => array(
+							'type'    => 'integer',
+							'default' => 0,
+						),
+						'order'    => array(
+							'type'        => 'string',
+							'description' => 'asc (oldest first) | desc (newest first, default)',
+						),
 					),
 				),
 			)
@@ -432,7 +440,7 @@ class Core_Module extends Module_Base {
 		$this->register_tool(
 			'listComments',
 			array(
-				'description'    => 'Alias for getComments — enumerate all comments across the site with filters.',
+				'description'    => 'Alias for getComments — enumerate all comments across the site with filters. With post_id the answer carries the exact total and has_more for paging (offset/per_page, order=asc for reading order).',
 				'required_scope' => 'read',
 				'input_schema'   => array(
 					'type'       => 'object',
@@ -446,6 +454,10 @@ class Core_Module extends Module_Base {
 						'offset'   => array(
 							'type'    => 'integer',
 							'default' => 0,
+						),
+						'order'    => array(
+							'type'        => 'string',
+							'description' => 'asc (oldest first) | desc (newest first, default)',
 						),
 					),
 				),
@@ -1006,12 +1018,21 @@ class Core_Module extends Module_Base {
 			$content = $post->post_content;
 		}
 
+		// Password-protected post: the public site shows neither content nor excerpt until the
+		// password is entered (WordPress REST returns them empty with protected=true). Only users
+		// who can edit the post see them — the same rule the WordPress REST API applies.
+		$protected = \post_password_required( $post ) && ! \current_user_can( 'edit_post', $post->ID );
+		if ( $protected ) {
+			$content = '';
+		}
+
 		return array(
 			'id'             => $post->ID,
 			'title'          => \get_the_title( $post ),
 			'content'        => $content,
 			'render'         => $render,
-			'excerpt'        => \get_the_excerpt( $post ),
+			'protected'      => $protected,
+			'excerpt'        => $protected ? '' : \get_the_excerpt( $post ),
 			'slug'           => $post->post_name,
 			'status'         => $post->post_status,
 			'type'           => $post->post_type,
@@ -1074,7 +1095,7 @@ class Core_Module extends Module_Base {
 			);
 		}
 		$render = $this->resolve_render( $params );
-		$posts  = \get_posts( $args );
+		$posts  = array_values( array_filter( \get_posts( $args ), array( $this, 'can_read_listed_post' ) ) );
 		return array(
 			'success' => true,
 			'data'    => array(
@@ -1101,7 +1122,7 @@ class Core_Module extends Module_Base {
 			$args['post_parent'] = absint( $params['parent'] );
 		}
 		$render = $this->resolve_render( $params );
-		$pages  = \get_posts( $args );
+		$pages  = array_values( array_filter( \get_posts( $args ), array( $this, 'can_read_listed_post' ) ) );
 		return array(
 			'success' => true,
 			'data'    => array(
@@ -1333,35 +1354,65 @@ class Core_Module extends Module_Base {
 		if ( isset( $params['author'] ) ) {
 			$args['user_id'] = absint( $params['author'] );
 		}
+		if ( isset( $params['order'] ) ) {
+			$order = strtoupper( sanitize_key( (string) $params['order'] ) );
+			if ( in_array( $order, array( 'ASC', 'DESC' ), true ) ) {
+				$args['order']   = $order;
+				$args['orderby'] = array(
+					'comment_date_gmt' => $order,
+					'comment_ID'       => $order,
+				);
+			}
+		}
 		if ( ! \current_user_can( 'moderate_comments' ) ) {
 			// Non-moderators see what the public site shows: approved comments on posts they can read.
 			if ( isset( $args['status'] ) && ! in_array( $args['status'], array( 'approve', 'all' ), true ) ) {
 				return new \WP_Error( 'forbidden', 'Only users who can moderate comments may list ' . $args['status'] . ' comments.', array( 'status' => 403 ) );
 			}
 			$args['status'] = 'approve';
-			if ( ! empty( $args['post_id'] ) && ( ! \get_post( $args['post_id'] ) || ! \current_user_can( 'read_post', $args['post_id'] ) ) ) {
-				return new \WP_Error( 'not_found', 'Post not found.', array( 'status' => 404 ) );
+			if ( ! empty( $args['post_id'] ) ) {
+				$post = \get_post( $args['post_id'] );
+				if ( ! $post || ( 'publish' !== $post->post_status && ! \current_user_can( 'read_post', $args['post_id'] ) ) ) {
+					return new \WP_Error( 'not_found', 'Post not found.', array( 'status' => 404 ) );
+				}
+				// The public site shows no comments of a password-protected post until the password is entered.
+				if ( \post_password_required( $post ) ) {
+					return new \WP_Error( 'password_protected', 'This post is password protected.', array( 'status' => 403 ) );
+				}
 			}
 		}
 		$comments = array_values( array_filter( \get_comments( $args ), array( $this, 'can_view_comment' ) ) );
+		$data     = array(
+			'comments' => array_map(
+				fn( $c ) => array(
+					'id'         => (int) $c->comment_ID,
+					'post_id'    => (int) $c->comment_post_ID,
+					'author'     => $c->comment_author,
+					'author_url' => $c->comment_author_url,
+					'content'    => $c->comment_content,
+					'date'       => $c->comment_date,
+					'approved'   => $c->comment_approved,
+					'parent'     => (int) $c->comment_parent,
+					'url'        => \get_comment_link( $c ),
+				),
+				$comments
+			),
+			'count'    => count( $comments ),
+		);
+		if ( ! empty( $args['post_id'] ) ) {
+			// Exact total for one post (same visibility filter as the page above: for a
+			// non-moderator every row of the count is a comment they can see), so a
+			// caller can page a long comment thread without guessing.
+			$count_args = $args;
+			unset( $count_args['number'], $count_args['offset'], $count_args['orderby'], $count_args['order'] );
+			$count_args['count'] = true;
+			$total               = (int) \get_comments( $count_args );
+			$data['total']       = $total;
+			$data['has_more']    = ( (int) $args['offset'] + count( $comments ) ) < $total && count( $comments ) > 0;
+		}
 		return array(
 			'success' => true,
-			'data'    => array(
-				'comments' => array_map(
-					fn( $c ) => array(
-						'id'         => (int) $c->comment_ID,
-						'post_id'    => (int) $c->comment_post_ID,
-						'author'     => $c->comment_author,
-						'author_url' => $c->comment_author_url,
-						'content'    => $c->comment_content,
-						'date'       => $c->comment_date,
-						'approved'   => $c->comment_approved,
-						'parent'     => (int) $c->comment_parent,
-					),
-					$comments
-				),
-				'count'    => count( $comments ),
-			),
+			'data'    => $data,
 		);
 	}
 
@@ -1533,6 +1584,19 @@ class Core_Module extends Module_Base {
 				array_values( $taxes )
 			),
 		);
+	}
+
+	/**
+	 * Listing visibility (listPosts / listPages): a draft, pending, private or
+	 * scheduled entry is listed only for users who may read it — the rule
+	 * getPost / getPage already apply (1.2.11; before, any read-scope user could
+	 * list other authors' drafts and private posts with status=any).
+	 *
+	 * @param \WP_Post $post Post.
+	 * @return bool
+	 */
+	private function can_read_listed_post( $post ) {
+		return 'publish' === $post->post_status || \current_user_can( 'read_post', $post->ID );
 	}
 
 	/**

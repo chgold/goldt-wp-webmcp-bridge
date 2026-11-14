@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.10
+Stable tag: 1.2.11
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,13 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.11 - 2026-11-14 =
+* New: in-process tool gateway for other plugins on the same site — `goldtwmcp_tool_gateway()->call_as( $user_id, 'wordpress.getPost', $args, $context )`. It runs a registered tool as the given WordPress user with the same access layers as the REST endpoint (blocked users, the WordPress capability behind the tool's scope, a per-user rate limit in its own bucket) plus an optional `allowed_tools` restriction; anonymous callers may use read tools only. Content checks stay inside each tool, so a caller can never see more than the user could. `check_access()` tells whether a call would be allowed without running it; every call fires `goldtwmcp_tool_gateway_call`. The REST endpoint is unchanged.
+* Security: password-protected posts and pages no longer return their content or excerpt (`searchPosts`, `getPost`, `searchPages`, `getPage`, `listPosts`, `listPages`) to users who cannot edit them — the same rule the WordPress REST API applies. A new `protected` field says when content was withheld. Comment tools refuse to list the comments of a password-protected post (403 `password_protected`) for users who cannot moderate comments.
+* Security: `listPosts` and `listPages` with `status=draft|pending|private|future|any` list a non-published entry only to users who may read it (the rule `getPost` / `getPage` already apply). Before, any user with the read scope could list other authors' drafts and private posts.
+* Fixed: the gateway's tool list reports the definition (input schema) of the tool that actually runs when two modules define the same name.
+* Improved: `listComments` / `getComments` with `post_id` return the exact `total` and `has_more`, accept `order` (`asc` = reading order) and `offset` (getComments), and give each comment its `url`.
+
 = 1.2.10 - 2026-11-10 =
 * Security: `listComments` and `getComments` show users who cannot moderate comments only approved comments on posts they can read (as on the public site). Before, any user with the read scope could list pending, spam and trashed comments and comments on private posts. Asking for `hold`, `spam` or `trash` without the moderate_comments permission returns 403.
 * Security: ID parameters must be positive integers. Before, a negative ID was silently turned into a positive one (`absint(-1)` = 1), so `post_id: -1` read the comments of post 1. A negative or zero required ID, or a negative optional ID (`post_id`, `author`, `parent`), returns 400 `invalid_param`. Optional IDs still accept 0 where 0 means "none". `limit`, `offset` and `per_page` may not be negative.
@@ -542,6 +549,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.11 =
+Security: password-protected posts no longer expose their content, and draft / private posts are no longer listed, to users who cannot read them. Adds an in-process tool gateway for other Goldnat plugins (for example the AI Assistant) and exact comment totals for paging.
 
 = 1.2.10 =
 Security: comment tools no longer show unapproved comments to users who cannot moderate comments, and negative IDs are refused instead of being turned into positive ones.

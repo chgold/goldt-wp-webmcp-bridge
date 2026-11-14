@@ -45,6 +45,39 @@ class GoldtWebMCP_Plugin {
 	private $modules = array();
 
 	/**
+	 * In-process tool gateway (1.2.11).
+	 *
+	 * @var \GoldtWebMCP\Core\Tool_Gateway|null
+	 */
+	private $tool_gateway = null;
+
+	/**
+	 * The running plugin instance (set in goldtwmcp_init()).
+	 *
+	 * @var GoldtWebMCP_Plugin|null
+	 */
+	private static $instance = null;
+
+	/**
+	 * The running plugin instance, or null before plugins_loaded.
+	 *
+	 * @return GoldtWebMCP_Plugin|null
+	 */
+	public static function instance() {
+		return self::$instance;
+	}
+
+	/**
+	 * Remember the running instance.
+	 *
+	 * @param GoldtWebMCP_Plugin $plugin Instance.
+	 * @return void
+	 */
+	public static function set_instance( $plugin ) {
+		self::$instance = $plugin;
+	}
+
+	/**
 	 * Constructor.
 	 *
 	 * NOTE: register_modules() is DELIBERATELY not called here. It's deferred
@@ -85,6 +118,7 @@ class GoldtWebMCP_Plugin {
 		require_once GOLDTWMCP_PATH . 'includes/modules/class-core-module.php';
 		require_once GOLDTWMCP_PATH . 'includes/modules/class-translation-module.php';
 		require_once GOLDTWMCP_PATH . 'includes/api/class-tools-endpoint.php';
+		require_once GOLDTWMCP_PATH . 'includes/core/class-tool-gateway.php';
 
 		// OAuth 2.0 components.
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-database.php';
@@ -168,6 +202,20 @@ class GoldtWebMCP_Plugin {
 	 */
 	public function get_tools_endpoint() {
 		return $this->tools_endpoint;
+	}
+
+	/**
+	 * In-process tool gateway: other plugins call registered tools as a WordPress
+	 * user with the REST access layers applied (see Tool_Gateway). Available after
+	 * plugins_loaded priority 9999 (when every module is registered).
+	 *
+	 * @return \GoldtWebMCP\Core\Tool_Gateway
+	 */
+	public function get_tool_gateway() {
+		if ( null === $this->tool_gateway ) {
+			$this->tool_gateway = new \GoldtWebMCP\Core\Tool_Gateway( $this->tools_endpoint );
+		}
+		return $this->tool_gateway;
 	}
 
 	/**
