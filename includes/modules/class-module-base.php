@@ -82,7 +82,9 @@ abstract class Module_Base {
 			'description'    => $config['description'],
 			'input_schema'   => $config['input_schema'],
 			'callback'       => $config['callback'] ?? array( $this, 'execute_' . $name ),
-			'required_scope' => $config['required_scope'] ?? 'read',
+			'required_scope' => isset( $config['required_scope'] ) && is_string( $config['required_scope'] ) && '' !== $config['required_scope']
+				? $config['required_scope']
+				: $this->undeclared_scope( $name, $full_name ),
 		);
 
 		if ( $this->manifest ) {
@@ -96,6 +98,112 @@ abstract class Module_Base {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Read-only verbs: a tool registered without required_scope whose name starts
+	 * with one of these (followed by an upper-case letter or a digit) is a read tool.
+	 * Same rule as the XenForo add-on (ToolRegistry::READ_PREFIX_PATTERN), plus the
+	 * read-only verbs WordPress add-ons use (export, validate, analyze, audit).
+	 */
+	const READ_VERB_PATTERN = '/^(get|list|search|find|read|count|download|check|preview|explain|describe|lookup|fetch|show|view|is|has|export|validate|analyze|audit|compare)[A-Z0-9]/';
+
+	/**
+	 * Tools registered without required_scope (full name => scope applied), for
+	 * diagnostics and tests.
+	 *
+	 * @var array<string,string>
+	 */
+	protected static $undeclared_scope_tools = array();
+
+	/**
+	 * Released add-on tools that act only on the caller's own session and were
+	 * shipped without required_scope, relying on the pre-1.2.12 `read` default
+	 * (WooCommerce AI Connect <= 1.4.4: the shopper's own cart). They keep `read`
+	 * so shop customers — who no longer receive the write scope — can still use
+	 * them. Every other undeclared tool fails closed. Filter:
+	 * goldtwmcp_legacy_read_tools.
+	 *
+	 * @var string[]
+	 */
+	const LEGACY_READ_TOOLS = array( 'woocommerce.addToCart', 'woocommerce.applyCouponToCart' );
+
+	/**
+	 * Scope for a tool that does not declare one — fail-closed (since 1.2.12).
+	 *
+	 * Before 1.2.12 every undeclared tool became `read`, so an add-on that forgot
+	 * the declaration exposed its write and delete tools to read-only tokens.
+	 * Now only a tool whose name is a read verb (getX, listX, searchX, …) is
+	 * `read`; deleteX / removeX / purgeX / pruneX are `delete`; everything else is
+	 * `write`. Add-ons should always declare required_scope explicitly — an
+	 * undeclared tool fires the goldtwmcp_undeclared_tool_scope action, and the
+	 * tools that got write / delete this way are written to the debug log once
+	 * per request (WP_DEBUG + WP_DEBUG_LOG only).
+	 *
+	 * @param string $name      Tool name without module prefix.
+	 * @param string $full_name Full tool name.
+	 * @return string
+	 */
+	protected function undeclared_scope( $name, $full_name ) {
+		$name = (string) $name;
+		/**
+		 * Filter the undeclared tools that keep the pre-1.2.12 `read` default.
+		 *
+		 * @since 1.2.12
+		 * @param string[] $tools Full tool names.
+		 */
+		$legacy = (array) apply_filters( 'goldtwmcp_legacy_read_tools', self::LEGACY_READ_TOOLS );
+		if ( preg_match( self::READ_VERB_PATTERN, $name ) || in_array( (string) $full_name, $legacy, true ) ) {
+			$scope = 'read';
+		} elseif ( preg_match( '/^(delete|remove|purge|prune)[A-Z0-9]/', $name ) ) {
+			$scope = 'delete';
+		} else {
+			$scope = 'write';
+		}
+		self::$undeclared_scope_tools[ $full_name ] = $scope;
+
+		// A non-read default is a behaviour change from before 1.2.12: note it once per
+		// request in the debug log (never on screen — responses must stay clean JSON).
+		if ( 'read' !== $scope && 1 === count( array_diff( self::$undeclared_scope_tools, array( 'read' ) ) ) ) {
+			add_action( 'shutdown', array( __CLASS__, 'log_undeclared_scope_tools' ) );
+		}
+
+		/**
+		 * Fires when a tool is registered without required_scope.
+		 *
+		 * @since 1.2.12
+		 * @param string $full_name Full tool name.
+		 * @param string $scope     Scope applied (read for read verbs, delete for delete verbs, otherwise write).
+		 * @param string $module    Module class.
+		 */
+		do_action( 'goldtwmcp_undeclared_tool_scope', $full_name, $scope, get_class( $this ) );
+
+		return $scope;
+	}
+
+	/**
+	 * Debug-log the undeclared tools that were registered write / delete (shutdown, once per request).
+	 *
+	 * @return void
+	 */
+	public static function log_undeclared_scope_tools() {
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG || ! defined( 'WP_DEBUG_LOG' ) || ! WP_DEBUG_LOG ) {
+			return;
+		}
+		$closed = array_diff( self::$undeclared_scope_tools, array( 'read' ) );
+		if ( $closed ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-log only (guarded by WP_DEBUG + WP_DEBUG_LOG); tells add-on developers which tools to declare.
+			error_log( 'GoldT WebMCP Bridge: ' . count( $closed ) . ' tool(s) do not declare required_scope and were registered fail-closed: ' . implode( ', ', array_map( static fn( $n, $sc ) => $n . '=' . $sc, array_keys( $closed ), $closed ) ) );
+		}
+	}
+
+	/**
+	 * Tools registered without required_scope in this request (full name => scope applied).
+	 *
+	 * @return array<string,string>
+	 */
+	public static function get_undeclared_scope_tools() {
+		return self::$undeclared_scope_tools;
 	}
 
 	/**

@@ -182,7 +182,7 @@ class Tools_Endpoint {
 		return array(
 			'module'         => $module,
 			'method'         => $tool_method,
-			'required_scope' => $tools[ $tool_method ]['required_scope'] ?? 'read',
+			'required_scope' => $tools[ $tool_method ]['required_scope'] ?? 'write',
 		);
 	}
 
@@ -203,7 +203,7 @@ class Tools_Endpoint {
 					}
 					$out[ $tool['name'] ] = array(
 						'module'         => $module_name,
-						'required_scope' => $tool['required_scope'] ?? 'read',
+						'required_scope' => $tool['required_scope'] ?? 'write',
 						'description'    => $tool['description'],
 						'input_schema'   => $tool['input_schema'],
 					);
@@ -238,7 +238,7 @@ class Tools_Endpoint {
 		$tools = $module->get_tools();
 
 		$tool           = $tools[ $tool_method ];
-		$required_scope = $tool['required_scope'] ?? 'read';
+		$required_scope = $tool['required_scope'] ?? 'write';
 
 		if ( ! $this->check_scope( $required_scope ) ) {
 			return new \WP_Error(
@@ -491,22 +491,11 @@ class Tools_Endpoint {
 	 * @return array<int,string>
 	 */
 	private function derive_scopes_from_caps() {
-		$scopes = array( 'read' );
-
-		if ( \current_user_can( 'edit_posts' ) || \current_user_can( 'edit_pages' ) ) {
-			$scopes[] = 'write';
-		}
-		if ( \current_user_can( 'delete_posts' ) || \current_user_can( 'delete_pages' ) ) {
-			$scopes[] = 'delete';
-		}
-		if ( \current_user_can( 'list_users' ) || \current_user_can( 'edit_users' ) ) {
-			$scopes[] = 'manage_users';
-		}
-		if ( \current_user_can( \GoldtWebMCP\OAuth\Scopes::get_admin_capability() ) ) {
-			$scopes[] = 'admin';
-		}
-
-		return $scopes;
+		// Same capability map as consent and every tool call (Scopes::get_scope_capabilities()).
+		return \GoldtWebMCP\OAuth\Scopes::filter_for_user(
+			array( 'read', 'write', 'delete', 'manage_users', 'admin' ),
+			\get_current_user_id()
+		);
 	}
 
 	/**
@@ -578,7 +567,7 @@ class Tools_Endpoint {
 		foreach ( $this->modules as $module_list ) {
 			foreach ( $module_list as $module ) {
 				foreach ( $module->get_tools() as $tool ) {
-					$scope                      = $tool['required_scope'] ?? 'read';
+					$scope                      = $tool['required_scope'] ?? 'write';
 					$all_tools[]                = $tool;
 					$tools_by_scope[ $scope ][] = $tool;
 				}
@@ -610,7 +599,7 @@ class Tools_Endpoint {
 			array_filter(
 				$all_tools,
 				static function ( $tool ) use ( $scopes ) {
-					$req = $tool['required_scope'] ?? 'read';
+					$req = $tool['required_scope'] ?? 'write';
 					return in_array( $req, $scopes, true );
 				}
 			)
@@ -636,7 +625,7 @@ class Tools_Endpoint {
 		$granted_tools = $this->filter_tools_by_scopes( $ctx['all_tools'], $scopes );
 		$read_tools    = array();
 		foreach ( $granted_tools as $tool ) {
-			if ( ( $tool['required_scope'] ?? 'read' ) === 'read' ) {
+			if ( ( $tool['required_scope'] ?? 'write' ) === 'read' ) {
 				$read_tools[] = $tool;
 			}
 		}

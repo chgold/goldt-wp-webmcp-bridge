@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.11
+Stable tag: 1.2.12
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,11 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.12 - 2026-11-15 =
+* Security: the `write` scope now requires at least one editing capability (posts, pages, media, comments, categories, menus, settings, or a shop's products / orders — `edit_posts`, `edit_pages`, `upload_files`, `moderate_comments`, `manage_categories`, `edit_theme_options`, `manage_options`, `edit_products`, `manage_woocommerce`, `edit_shop_orders`, `edit_shop_payments`; filter `goldtwmcp_scope_capabilities`). A subscriber or shop customer who approves a connection now gets a read-only token, as the connection prompt already did, and a write tool called with an older token of such a user is refused with 403 `insufficient_capability`. Every write tool still checks its own WordPress capability on each call.
+* Security: a tool that does not declare `required_scope` is no longer treated as a read tool. Only a tool named with a read verb (get, list, search, find, count, export, validate, analyze, …) defaults to `read`; delete / remove / purge / prune tools default to `delete`; every other undeclared tool defaults to `write`, so a read-only token cannot reach it. An undeclared tool fires the `goldtwmcp_undeclared_tool_scope` action, and with WP_DEBUG_LOG the tools that were closed this way are written to the debug log; add-ons should declare the scope of every tool. Released add-on tools that act only on the shopper's own cart (WooCommerce AI Connect `addToCart`, `applyCouponToCart`) keep `read` (filter `goldtwmcp_legacy_read_tools`).
+* Changed: the connection prompt derives its scopes from the same capability map as the consent screen and every tool call.
+
 = 1.2.11 - 2026-11-14 =
 * New: in-process tool gateway for other plugins on the same site — `goldtwmcp_tool_gateway()->call_as( $user_id, 'wordpress.getPost', $args, $context )`. It runs a registered tool as the given WordPress user with the same access layers as the REST endpoint (blocked users, the WordPress capability behind the tool's scope, a per-user rate limit in its own bucket) plus an optional `allowed_tools` restriction; anonymous callers may use read tools only. Content checks stay inside each tool, so a caller can never see more than the user could. `check_access()` tells whether a call would be allowed without running it; every call fires `goldtwmcp_tool_gateway_call`. The REST endpoint is unchanged.
 * Security: password-protected posts and pages no longer return their content or excerpt (`searchPosts`, `getPost`, `searchPages`, `getPage`, `listPosts`, `listPages`) to users who cannot edit them — the same rule the WordPress REST API applies. A new `protected` field says when content was withheld. Comment tools refuse to list the comments of a password-protected post (403 `password_protected`) for users who cannot moderate comments.
@@ -549,6 +554,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.12 =
+Security: only users who can edit something on the site get the write scope (subscribers and customers get read-only tokens), and tools that do not declare a scope are no longer treated as read tools.
 
 = 1.2.11 =
 Security: password-protected posts no longer expose their content, and draft / private posts are no longer listed, to users who cannot read them. Adds an in-process tool gateway for other Goldnat plugins (for example the AI Assistant) and exact comment totals for paging.

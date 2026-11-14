@@ -71,21 +71,41 @@ class Scopes {
 	 * the listed capabilities. The same map is used at grant time (consent /
 	 * authorization code) and again on every tool call, so an OAuth client —
 	 * whichever AI product it is — can never act beyond the WordPress user's
-	 * own permissions. `read` and `write` are not gated here (individual
-	 * tools check their own capabilities, e.g. moderate_comments).
+	 * own permissions. `read` is not gated (individual tools check their own
+	 * capabilities, e.g. read_post).
+	 *
+	 * `write` (since 1.2.12) needs at least one editing capability — content,
+	 * comments, media, terms, menus, settings or a shop's products/orders — so a
+	 * subscriber or shop customer gets a read-only token, as with the connection
+	 * prompt. Every write tool still checks its own WordPress capability on
+	 * each call; this is the second, token-level line.
 	 *
 	 * @return array<string,array<int,string>> Scope => any-of capability list.
 	 */
 	public static function get_scope_capabilities() {
 		$map = array(
+			'write'        => array(
+				'edit_posts',
+				'edit_pages',
+				'upload_files',
+				'moderate_comments',
+				'manage_categories',
+				'edit_theme_options',
+				'manage_options',
+				'edit_products',
+				'manage_woocommerce',
+				'edit_shop_orders',
+				'edit_shop_payments',
+			),
 			'delete'       => array( 'delete_posts', 'delete_pages' ),
 			'manage_users' => array( 'list_users', 'edit_users' ),
 		);
 
 		/**
-		 * Filter the any-of capability lists that gate the `delete` and
-		 * `manage_users` OAuth scopes. The `admin` scope is controlled by the
-		 * separate goldtwmcp_admin_scope_capability filter.
+		 * Filter the any-of capability lists that gate the `write`, `delete`
+		 * and `manage_users` OAuth scopes (an add-on whose staff role has none
+		 * of the listed capabilities adds its own here). The `admin` scope is
+		 * controlled by the separate goldtwmcp_admin_scope_capability filter.
 		 *
 		 * @param array $map Scope => array of capabilities (any-of).
 		 */
@@ -100,7 +120,7 @@ class Scopes {
 	/**
 	 * Whether a user currently holds the WordPress capability behind a scope.
 	 *
-	 * Ungated scopes (read, write, unknown) always return true.
+	 * Ungated scopes (read, unknown) always return true.
 	 *
 	 * @param string $scope   Scope identifier.
 	 * @param int    $user_id WordPress user ID.
@@ -125,7 +145,7 @@ class Scopes {
 	/**
 	 * Drop scopes the given user is not entitled to receive.
 	 *
-	 * `delete`, `manage_users` and `admin` are removed for users who lack the
+	 * `write`, `delete`, `manage_users` and `admin` are removed for users who lack the
 	 * matching WordPress capability (see get_scope_capabilities()), so a user
 	 * who approves a consent request asking for more than they can do simply
 	 * receives a token capped at their own permissions.
