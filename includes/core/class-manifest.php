@@ -379,8 +379,8 @@ class Manifest {
 			)
 		);
 		if ( ! empty( $gated ) ) {
-			$manifest['capabilities']['confirmation'] = true;
-			$manifest['confirmation']                 = array(
+			// Top-level object (capabilities is a closed set in the Servio manifest schema).
+			$manifest['confirmation'] = array(
 				'flow'                => Confirmation::FLOW,
 				'pending_status_code' => 202,
 				'error_code'          => 'confirmation_required',
