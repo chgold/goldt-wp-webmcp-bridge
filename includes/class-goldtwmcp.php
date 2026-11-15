@@ -114,6 +114,7 @@ class GoldtWebMCP_Plugin {
 
 		require_once GOLDTWMCP_PATH . 'includes/core/class-manifest.php';
 		require_once GOLDTWMCP_PATH . 'includes/core/class-rate-limiter.php';
+		require_once GOLDTWMCP_PATH . 'includes/core/class-confirmation.php';
 		require_once GOLDTWMCP_PATH . 'includes/modules/class-module-base.php';
 		require_once GOLDTWMCP_PATH . 'includes/modules/class-core-module.php';
 		require_once GOLDTWMCP_PATH . 'includes/modules/class-translation-module.php';
@@ -132,6 +133,7 @@ class GoldtWebMCP_Plugin {
 		require_once GOLDTWMCP_PATH . 'includes/oauth/class-admin-ui.php';
 		require_once GOLDTWMCP_PATH . 'includes/admin/class-token-registry-admin.php';
 		require_once GOLDTWMCP_PATH . 'includes/user/class-my-tokens-page.php';
+		require_once GOLDTWMCP_PATH . 'includes/user/class-confirmation-page.php';
 		require_once GOLDTWMCP_PATH . 'includes/core/class-info-page.php';
 	}
 
@@ -251,6 +253,11 @@ class GoldtWebMCP_Plugin {
 
 		$my_tokens_page = new \GoldtWebMCP\User\My_Tokens_Page();
 		$my_tokens_page->init();
+
+		// Confirmation flow (1.2.13): the user's own confirm / reject / autonomy page.
+		$confirmation_page = new \GoldtWebMCP\User\Confirmation_Page();
+		$confirmation_page->init();
+		add_action( 'goldtwmcp_token_cleanup_cron', array( '\GoldtWebMCP\Core\Confirmation', 'cleanup' ) );
 
 		$info_page = new \GoldtWebMCP\Core\Info_Page();
 		$info_page->init();
@@ -433,7 +440,8 @@ class GoldtWebMCP_Plugin {
 		}
 
 		$data = ( $result instanceof \WP_REST_Response ) ? $result->get_data() : $result;
-		status_header( 200 );
+		// 202 = waiting for the user's confirmation (confirmation flow, 1.2.13).
+		status_header( ( $result instanceof \WP_REST_Response ) ? (int) $result->get_status() : 200 );
 		echo wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 	}
 

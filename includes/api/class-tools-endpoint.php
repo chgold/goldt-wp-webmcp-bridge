@@ -77,6 +77,16 @@ class Tools_Endpoint {
 
 		\register_rest_route(
 			'goldt-webmcp-bridge/v1',
+			'/confirmations/(?P<id>conf_[a-z0-9]{32})',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_confirmation_status' ),
+				'permission_callback' => array( $this, 'check_permission' ),
+			)
+		);
+
+		\register_rest_route(
+			'goldt-webmcp-bridge/v1',
 			'/generate-prompt',
 			array(
 				'methods'             => 'POST',
@@ -262,13 +272,36 @@ class Tools_Endpoint {
 			);
 		}
 
+		// Who is calling (the confirmation flow binds a pending action / autonomy grant to the client).
+		$token_data = $this->bearer_auth->get_current_token_data();
+		\GoldtWebMCP\Core\Confirmation::set_context( 'rest', is_array( $token_data ) ? (string) ( $token_data['client_id'] ?? '' ) : '' );
+
 		$result = $module->execute_tool( $tool_method, $params );
 
 		if ( \is_wp_error( $result ) ) {
 			return $result;
 		}
 
+		// Not executed: waiting for the user's confirmation (Servio §6.5 — 202 Accepted).
+		if ( is_array( $result ) && 'pending_confirmation' === ( $result['status'] ?? null ) ) {
+			return new \WP_REST_Response( $result, 202 );
+		}
+
 		return \rest_ensure_response( $result );
+	}
+
+	/**
+	 * Status of one of the caller's pending actions (GET status_url). Never executes.
+	 *
+	 * @param \WP_REST_Request $request REST request object.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function get_confirmation_status( $request ) {
+		$action = \GoldtWebMCP\Core\Confirmation::get_action( (string) $request->get_param( 'id' ) );
+		if ( ! $action || (int) \get_current_user_id() !== (int) $action['user_id'] ) {
+			return new \WP_Error( 'confirmation_not_found', 'Unknown confirmation_id for this user.', array( 'status' => 404 ) );
+		}
+		return \rest_ensure_response( \GoldtWebMCP\Core\Confirmation::public_status( $action ) );
 	}
 
 	/**

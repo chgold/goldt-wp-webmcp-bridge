@@ -18,6 +18,14 @@ $goldtwmcp_delete_all = get_option( 'goldtwmcp_delete_on_uninstall', 0 );
 
 delete_option( 'goldtwmcp_jwt_secret' );
 
+// Confirmation flow (1.2.13): pending actions hold tool arguments and autonomy grants
+// are permissions — both always go. The audit log is kept unless the user opted in.
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_pending_actions" );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_autonomy_grants" );
+delete_option( 'goldtwmcp_confirmation_db_version' );
+
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 $wpdb->query(
 	"DELETE FROM {$wpdb->options} 
@@ -45,6 +53,8 @@ if ( $goldtwmcp_delete_all ) {
          WHERE option_name LIKE 'goldtwmcp_client_%'"
 	);
 
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_confirmation_log" );
 	delete_option( 'goldtwmcp_rate_limit_per_minute' );
 	delete_option( 'goldtwmcp_rate_limit_per_hour' );
 	delete_option( 'goldtwmcp_delete_on_uninstall' );

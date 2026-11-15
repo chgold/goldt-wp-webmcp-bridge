@@ -76,25 +76,41 @@ abstract class Module_Base {
 		}
 
 		$full_name = $this->module_name . '.' . $name;
+		$scope     = isset( $config['required_scope'] ) && is_string( $config['required_scope'] ) && '' !== $config['required_scope']
+			? $config['required_scope']
+			: $this->undeclared_scope( $name, $full_name );
+
+		// Confirmation flow (1.2.13): destructive / financial tools run only after the user confirms.
+		$confirmation = \GoldtWebMCP\Core\Confirmation::normalize( $config['confirmation'] ?? null, $scope );
+		$description  = $config['description'];
+		$schema       = $config['input_schema'];
+		if ( $confirmation ) {
+			if ( true === $confirmation['required'] ) {
+				// The agent cannot confirm by itself: its confirm argument is gone.
+				$schema = \GoldtWebMCP\Core\Confirmation::strip_confirm_from_schema( (array) $schema );
+			}
+			$description .= \GoldtWebMCP\Core\Confirmation::description_suffix( $confirmation );
+		}
 
 		$this->tools[ $name ] = array(
 			'name'           => $full_name,
-			'description'    => $config['description'],
-			'input_schema'   => $config['input_schema'],
+			'description'    => $description,
+			'input_schema'   => $schema,
 			'callback'       => $config['callback'] ?? array( $this, 'execute_' . $name ),
-			'required_scope' => isset( $config['required_scope'] ) && is_string( $config['required_scope'] ) && '' !== $config['required_scope']
-				? $config['required_scope']
-				: $this->undeclared_scope( $name, $full_name ),
+			'required_scope' => $scope,
+			'confirmation'   => $confirmation,
 		);
 
 		if ( $this->manifest ) {
-			$this->manifest->register_tool(
-				$full_name,
-				array(
-					'description'  => $config['description'],
-					'input_schema' => $config['input_schema'],
-				)
+			$manifest_config = array(
+				'description'  => $description,
+				'input_schema' => $schema,
 			);
+			if ( $confirmation ) {
+				$manifest_config['confirmation'] = is_callable( $confirmation['required'] ) ? 'conditional' : 'required';
+				$manifest_config['risk']         = $confirmation['risk'];
+			}
+			$this->manifest->register_tool( $full_name, $manifest_config );
 		}
 
 		return true;
@@ -227,6 +243,14 @@ abstract class Module_Base {
 
 		if ( ! is_callable( $tool['callback'] ) ) {
 			return new \WP_Error( 'tool_not_callable', sprintf( 'Tool %s is not callable', $tool_name ) );
+		}
+
+		// Confirmation flow: a gated call becomes a pending action the user must confirm.
+		if ( ! empty( $tool['confirmation'] ) ) {
+			$gated = \GoldtWebMCP\Core\Confirmation::gate( $this, $tool_name, $tool, is_array( $params ) ? $params : array(), $validated );
+			if ( null !== $gated ) {
+				return $gated;
+			}
 		}
 
 		try {

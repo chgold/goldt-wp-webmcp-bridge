@@ -25,6 +25,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *                  (Scopes::user_can_use_scope — same check as REST)
  *   rate_limit     per-user (per-IP for guests) limit, in a bucket separate from REST:
  *                  user_{id}@inprocess[:{bucket}]
+ *   confirmation   (1.2.13) the tool needs the user's own confirmation: status 202,
+ *                  error.code confirmation_required, `confirmation` = confirm_url,
+ *                  confirmation_id, preview, expires_at. Nothing was executed.
  *
  * Content checks stay INSIDE each tool (current_user_can / read_post / comment
  * visibility), which run as the given user — the gateway adds none of its own,
@@ -155,8 +158,25 @@ class Tool_Gateway {
 		}
 		$this->rate_limiter->record_request( $identifier );
 
-		$def    = $this->endpoint->resolve_tool( $tool );
+		$def = $this->endpoint->resolve_tool( $tool );
+		Confirmation::set_context( 'inprocess', isset( $context['caller'] ) ? (string) $context['caller'] : '' );
 		$result = $def['module']->execute_tool( $def['method'], $args );
+
+		// Gated tool: not executed, waiting for the user's confirmation (1.2.13).
+		if ( is_array( $result ) && 'pending_confirmation' === ( $result['status'] ?? null ) ) {
+			$out = array(
+				'success'      => false,
+				'status'       => 202,
+				'tool'         => $tool,
+				'error'        => array(
+					'code'    => 'confirmation_required',
+					'message' => (string) $result['message'],
+				),
+				'confirmation' => $result['data'],
+				'denied_layer' => 'confirmation',
+			);
+			return $this->finish( $tool, $context, $user_id, $out );
+		}
 
 		if ( \is_wp_error( $result ) ) {
 			$data   = $result->get_error_data();

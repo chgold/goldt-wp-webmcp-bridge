@@ -110,6 +110,12 @@ class Manifest {
 			$tool['dangerous'] = (bool) $config['dangerous'];
 		}
 
+		// Confirmation flow (1.2.13): "required" | "conditional"; absent = none.
+		if ( isset( $config['confirmation'] ) && in_array( $config['confirmation'], array( 'required', 'conditional' ), true ) ) {
+			$tool['confirmation'] = $config['confirmation'];
+			$tool['risk']         = isset( $config['risk'] ) ? (string) $config['risk'] : 'destructive';
+		}
+
 		$this->tools[ $name ] = $tool;
 
 		return true;
@@ -310,6 +316,26 @@ class Manifest {
 	}
 
 	/**
+	 * Agent instructions for tools that need the user's confirmation.
+	 *
+	 * @return string
+	 */
+	private function get_confirmation_instructions() {
+		foreach ( $this->tools as $t ) {
+			if ( isset( $t['confirmation'] ) ) {
+				return "## ACTIONS THAT NEED THE USER'S CONFIRMATION\n"
+					. 'Tools marked confirmation=required (or conditional) never run from your call alone. '
+					. 'They answer HTTP 202 with code confirmation_required, a preview, confirm_url and confirmation_id. '
+					. 'Show the user the preview and the confirm_url, and tell them nothing has happened yet. '
+					. 'Do not call the tool again on your own, do not loop, and never say it was done. '
+					. 'When the user says they confirmed, call the same tool with the same arguments plus confirmation_id (or GET status_url): '
+					. "you then get the real result. A rejected or expired confirmation is final - ask the user before starting again.\n\n";
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * Generate complete WebMCP manifest
 	 *
 	 * @return array
@@ -339,7 +365,35 @@ class Manifest {
 				. "- Empty search → returns latest content\n"
 				. "- No results? Try removing filters or broadening date range\n"
 				. "- 'Recent content' without date → try last week, then last month\n\n"
-				. $this->get_translation_instructions();
+				. $this->get_translation_instructions()
+				. $this->get_confirmation_instructions();
+		}
+
+		// Confirmation flow descriptor (only when at least one tool needs the user's confirmation).
+		$gated = array_values(
+			array_filter(
+				$this->get_tools(),
+				static function ( $t ) {
+					return isset( $t['confirmation'] );
+				}
+			)
+		);
+		if ( ! empty( $gated ) ) {
+			$manifest['capabilities']['confirmation'] = true;
+			$manifest['confirmation']                 = array(
+				'flow'                => Confirmation::FLOW,
+				'pending_status_code' => 202,
+				'error_code'          => 'confirmation_required',
+				'status_url_template' => \rest_url( 'goldt-webmcp-bridge/v1/confirmations/{confirmation_id}' ),
+				'confirmed_by'        => 'user',
+				'autonomy'            => 'per-user, per-tool, per-client grant, revocable by the user',
+				'tools'               => array_map(
+					static function ( $t ) {
+						return $t['name'];
+					},
+					$gated
+				),
+			);
 		}
 
 		// Add resources if registered.
