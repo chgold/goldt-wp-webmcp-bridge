@@ -102,6 +102,8 @@ class Database {
             expires_at DATETIME NOT NULL,
             refresh_token_expires_at DATETIME DEFAULT NULL,
             revoked_at DATETIME DEFAULT NULL,
+            rotated_at DATETIME DEFAULT NULL,
+            rotated_to_id BIGINT(20) UNSIGNED DEFAULT NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY token (token),
@@ -222,6 +224,49 @@ class Database {
 		if ( version_compare( $current_version, '2.0.8', '<' ) ) {
 			self::upgrade_to_2_0_8();
 		}
+
+		if ( version_compare( $current_version, '2.0.9', '<' ) ) {
+			self::upgrade_to_2_0_9();
+		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.9 — refresh-token rotation grace window.
+	 *
+	 * Adds `rotated_at` (when a refresh exchange retired this row) and
+	 * `rotated_to_id` (the row that replaced it) to the OAuth tokens table, so a
+	 * client that repeats a refresh with the refresh token it just used (lost
+	 * response, retry, two workers) gets the same new pair back for a short
+	 * time instead of being logged out. See OAuth_Server::exchange_refresh_token().
+	 *
+	 * Idempotent: a column that already exists is not added again.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_9() {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'goldtwmcp_oauth_tokens';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Schema upgrade; table name from $wpdb->prefix, fragments are constants.
+		$columns = $wpdb->get_col( 'SHOW COLUMNS FROM `' . esc_sql( $table ) . '`' );
+		if ( ! is_array( $columns ) || empty( $columns ) ) {
+			// Table missing (fresh install runs create_tables, which has the columns).
+			self::set_version( '2.0.9' );
+			return;
+		}
+		$additions = array(
+			'rotated_at'    => 'ADD COLUMN rotated_at DATETIME DEFAULT NULL AFTER revoked_at',
+			'rotated_to_id' => 'ADD COLUMN rotated_to_id BIGINT(20) UNSIGNED DEFAULT NULL AFTER rotated_at',
+		);
+		foreach ( $additions as $column => $fragment ) {
+			if ( ! in_array( $column, $columns, true ) ) {
+				$wpdb->query( 'ALTER TABLE `' . esc_sql( $table ) . '` ' . $fragment );
+			}
+		}
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		self::set_version( '2.0.9' );
 	}
 
 	/**

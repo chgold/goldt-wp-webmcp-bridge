@@ -917,15 +917,14 @@ class Confirmation {
 		if ( ! self::installed() ) {
 			return array();
 		}
-		$t = $wpdb->prefix . 'goldtwmcp_pending_actions';
 		if ( 'pending' === $status ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Expire stale rows first (lazy); table name from $wpdb->prefix.
-			$wpdb->query( $wpdb->prepare( "UPDATE {$t} SET status = 'expired' WHERE user_id = %d AND status = 'pending' AND expires_at <= %s", (int) $user_id, gmdate( 'Y-m-d H:i:s' ) ) );
+			$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}goldtwmcp_pending_actions SET status = 'expired' WHERE user_id = %d AND status = 'pending' AND expires_at <= %s", (int) $user_id, gmdate( 'Y-m-d H:i:s' ) ) );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix.
-			return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$t} WHERE user_id = %d AND status = 'pending' ORDER BY created_at DESC LIMIT %d", (int) $user_id, (int) $limit ), ARRAY_A );
+			return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}goldtwmcp_pending_actions WHERE user_id = %d AND status = 'pending' ORDER BY created_at DESC LIMIT %d", (int) $user_id, (int) $limit ), ARRAY_A );
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix.
-		return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$t} WHERE user_id = %d ORDER BY created_at DESC LIMIT %d", (int) $user_id, (int) $limit ), ARRAY_A );
+		return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}goldtwmcp_pending_actions WHERE user_id = %d ORDER BY created_at DESC LIMIT %d", (int) $user_id, (int) $limit ), ARRAY_A );
 	}
 
 	/**

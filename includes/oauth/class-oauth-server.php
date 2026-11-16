@@ -267,6 +267,11 @@ class OAuth_Server {
 		}
 
 		if ( null !== $token_data->revoked_at ) {
+			// Grace window: the refresh token was retired by a refresh a moment ago.
+			$replay = $this->refresh_grace_replay( $token_data );
+			if ( null !== $replay ) {
+				return $replay;
+			}
 			return new \WP_Error( 'invalid_grant', 'Refresh token has been revoked' );
 		}
 
@@ -274,15 +279,23 @@ class OAuth_Server {
 			return new \WP_Error( 'invalid_grant', 'Refresh token expired' );
 		}
 
-		// Revoke the old access token and refresh token.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token revocation
-		$wpdb->update(
-			"{$wpdb->prefix}goldtwmcp_oauth_tokens",
-			array( 'revoked_at' => gmdate( 'Y-m-d H:i:s' ) ),
-			array( 'id' => $token_data->id ),
-			array( '%s' ),
-			array( '%d' )
+		// Retire the old pair. Atomic: of two concurrent refreshes with the same
+		// refresh token, exactly one wins and mints the new pair; the other one
+		// gets that same pair through the grace window below.
+		$now_mysql = gmdate( 'Y-m-d H:i:s' );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- OAuth token rotation (atomic claim).
+		$claimed = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->prefix}goldtwmcp_oauth_tokens SET revoked_at = %s, rotated_at = %s WHERE id = %d AND revoked_at IS NULL",
+				$now_mysql,
+				$now_mysql,
+				(int) $token_data->id
+			)
 		);
+
+		if ( 1 !== (int) $claimed ) {
+			return $this->wait_for_concurrent_rotation( (int) $token_data->id );
+		}
 
 		Token_Registry::revoke( $token_data->token );
 
@@ -294,7 +307,140 @@ class OAuth_Server {
 			'refresh'
 		);
 
+		if ( is_array( $new_token ) ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- link the retired row to its successor (grace window).
+			$new_id = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT id FROM {$wpdb->prefix}goldtwmcp_oauth_tokens WHERE token = %s",
+					$new_token['access_token']
+				)
+			);
+			if ( $new_id > 0 ) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- link the retired row to its successor (grace window).
+				$wpdb->update(
+					"{$wpdb->prefix}goldtwmcp_oauth_tokens",
+					array( 'rotated_to_id' => $new_id ),
+					array( 'id' => (int) $token_data->id ),
+					array( '%d' ),
+					array( '%d' )
+				);
+			}
+		}
+
 		return $new_token;
+	}
+
+	/**
+	 * Seconds during which a just-rotated refresh token still returns the pair
+	 * that replaced it (default 60, filter `goldtwmcp_refresh_grace_seconds`,
+	 * 0 disables, at most 300).
+	 *
+	 * @return int
+	 */
+	public static function refresh_grace_seconds() {
+		/**
+		 * Grace window for a repeated refresh with a just-rotated refresh token.
+		 *
+		 * @param int $seconds Default 60.
+		 */
+		$seconds = (int) \apply_filters( 'goldtwmcp_refresh_grace_seconds', 60 );
+		return max( 0, min( 300, $seconds ) );
+	}
+
+	/**
+	 * Grace window for refresh-token rotation.
+	 *
+	 * When a client repeats a refresh with the refresh token it has just used
+	 * (the response was lost, a retry, two workers sharing one credential), it
+	 * gets back the SAME new pair the first refresh produced — never a second
+	 * one — provided:
+	 *  - the old row was retired by a refresh (not by a revoke) at most
+	 *    refresh_grace_seconds() ago,
+	 *  - its successor still exists, belongs to the same user and client, is not
+	 *    revoked and its access token has not expired.
+	 * Anything else returns null (the caller answers invalid_grant). A revoke of
+	 * the new pair therefore also ends the grace window at once.
+	 *
+	 * @param object $old Row of the retired token (goldtwmcp_oauth_tokens).
+	 * @return array|null Token response, or null when no grace applies.
+	 */
+	private function refresh_grace_replay( $old ) {
+		global $wpdb;
+
+		$grace = self::refresh_grace_seconds();
+		if ( $grace <= 0 || empty( $old->rotated_at ) || empty( $old->rotated_to_id ) ) {
+			return null;
+		}
+		$rotated = strtotime( $old->rotated_at . ' UTC' );
+		if ( false === $rotated || ( time() - $rotated ) > $grace ) {
+			return null;
+		}
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- grace-window lookup of the successor pair.
+		$next = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_tokens WHERE id = %d",
+				(int) $old->rotated_to_id
+			)
+		);
+		if ( ! $next || null !== $next->revoked_at ) {
+			return null;
+		}
+		if ( (string) $next->client_id !== (string) $old->client_id || (int) $next->user_id !== (int) $old->user_id ) {
+			return null;
+		}
+		$now        = time();
+		$expires    = strtotime( $next->expires_at . ' UTC' );
+		$rt_expires = strtotime( (string) $next->refresh_token_expires_at . ' UTC' );
+		if ( false === $expires || $expires <= $now || Token_Registry::is_revoked( $next->token ) ) {
+			return null;
+		}
+
+		$scopes = json_decode( (string) $next->scopes, true );
+		$scopes = is_array( $scopes ) ? $scopes : array();
+
+		return array(
+			'access_token'             => $next->token,
+			'token_type'               => 'Bearer',
+			'expires_in'               => $expires - $now,
+			'refresh_token'            => $next->refresh_token,
+			'refresh_token_expires_in' => false === $rt_expires ? 0 : max( 0, $rt_expires - $now ),
+			'scope'                    => implode( ' ', $scopes ),
+		);
+	}
+
+	/**
+	 * A concurrent refresh claimed this row first: wait (up to ~2 s) until it
+	 * has linked its new pair, then return that pair through the grace window.
+	 *
+	 * @param int $old_id Row id of the refresh token being exchanged.
+	 * @return array|\WP_Error
+	 */
+	private function wait_for_concurrent_rotation( $old_id ) {
+		global $wpdb;
+
+		for ( $i = 0; $i < 20; $i++ ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- must read the live row written by the concurrent request.
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT * FROM {$wpdb->prefix}goldtwmcp_oauth_tokens WHERE id = %d",
+					(int) $old_id
+				)
+			);
+			if ( ! $row || empty( $row->rotated_at ) ) {
+				break; // Revoked (not rotated) meanwhile.
+			}
+			if ( ! empty( $row->rotated_to_id ) ) {
+				$replay = $this->refresh_grace_replay( $row );
+				if ( null !== $replay ) {
+					return $replay;
+				}
+				break;
+			}
+			usleep( 100000 );
+		}
+
+		return new \WP_Error( 'invalid_grant', 'Refresh token has been revoked' );
 	}
 
 	/**
