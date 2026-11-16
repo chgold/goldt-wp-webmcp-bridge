@@ -467,14 +467,14 @@ class Core_Module extends Module_Base {
 		$this->register_tool(
 			'getUsers',
 			array(
-				'description'    => 'List users by role or name search. Returns id/name/role/post_count only (no email — that requires admin scope).',
+				'description'    => 'List users (id, name, slug, post_count; never e-mail). Like the WordPress REST API: without the list_users capability only authors with published posts are listed, the role filter is refused and search matches display name / slug only.',
 				'required_scope' => 'read',
 				'input_schema'   => array(
 					'type'       => 'object',
 					'properties' => array(
 						'role'     => array(
 							'type'        => 'string',
-							'description' => 'administrator | editor | author | contributor | subscriber',
+							'description' => 'administrator | editor | author | contributor | subscriber (needs the list_users capability)',
 						),
 						'search'   => array( 'type' => 'string' ),
 						'per_page' => array(
@@ -1419,32 +1419,65 @@ class Core_Module extends Module_Base {
 	/**
 	 * Execute the getUsers tool.
 	 *
+	 * Same visibility as the core REST API (/wp/v2/users): a caller without the
+	 * list_users capability sees only authors with published posts of a public
+	 * post type, may not filter by role, searches by display name / slug only
+	 * (never login or e-mail, which would tell whether an address is registered)
+	 * and gets no registration date. Users with list_users see everyone (still
+	 * without e-mail — that is the Pro listUsers tool).
+	 *
 	 * @param array $params Tool parameters.
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	public function execute_getUsers( $params ) {
+		$can_list = \current_user_can( 'list_users' );
+		$fields   = array( 'ID', 'display_name', 'user_nicename' );
+		if ( $can_list ) {
+			$fields[] = 'user_registered';
+		}
 		$args = array(
-			'number' => absint( $params['per_page'] ?? 20 ),
-			'fields' => array( 'ID', 'display_name', 'user_nicename', 'user_registered' ),
+			'number' => max( 1, min( 100, absint( $params['per_page'] ?? 20 ) ) ),
+			'fields' => $fields,
 		);
-		if ( isset( $params['role'] ) ) {
+		if ( isset( $params['role'] ) && '' !== (string) $params['role'] ) {
+			if ( ! $can_list ) {
+				return new \WP_Error( 'forbidden_role_filter', 'Filtering users by role requires the list_users capability (as in the WordPress REST API).', array( 'status' => 403 ) );
+			}
 			$args['role'] = sanitize_key( (string) $params['role'] );
 		}
-		if ( isset( $params['search'] ) ) {
+		if ( isset( $params['search'] ) && '' !== (string) $params['search'] ) {
 			$args['search'] = '*' . sanitize_text_field( (string) $params['search'] ) . '*';
+			if ( ! $can_list ) {
+				$args['search_columns'] = array( 'user_nicename', 'display_name' );
+			}
+		}
+		if ( ! $can_list ) {
+			$args['has_published_posts'] = array_values(
+				\get_post_types(
+					array(
+						'public'       => true,
+						'show_in_rest' => true,
+					)
+				)
+			);
 		}
 		$users = \get_users( $args );
 		return array(
 			'success' => true,
 			'data'    => array(
 				'users' => array_map(
-					fn( $u ) => array(
-						'id'         => (int) $u->ID,
-						'name'       => $u->display_name,
-						'slug'       => $u->user_nicename,
-						'registered' => $u->user_registered,
-						'post_count' => (int) \count_user_posts( $u->ID, 'post', true ),
-					),
+					function ( $u ) use ( $can_list ) {
+						$row = array(
+							'id'         => (int) $u->ID,
+							'name'       => $u->display_name,
+							'slug'       => $u->user_nicename,
+							'post_count' => (int) \count_user_posts( $u->ID, 'post', true ),
+						);
+						if ( $can_list ) {
+							$row['registered'] = $u->user_registered;
+						}
+						return $row;
+					},
 					$users
 				),
 				'count' => count( $users ),

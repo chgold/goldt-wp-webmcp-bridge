@@ -365,6 +365,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * Manifest: gated tools carry `confirmation` (`required` / `conditional`) and `risk` (`financial` / `destructive`), their description says what to do, a top-level `confirmation` object describes the flow and the agent instructions explain it. The same flow applies to the in-process tool gateway (`status` 202, `denied_layer` `confirmation`).
 * New REST route `GET /wp-json/goldt-webmcp-bridge/v1/confirmations/{id}` (Bearer, own actions only) reports pending / executed / rejected / expired and the result.
 * Fixed: `/api/aiconnect-tools` now passes the tool's HTTP status through (it always answered 200).
+* Security: an AI Connect access token is now a key to AI Connect's tools only. Before, the token logged its user in on every WordPress request — the whole core REST API (`/wp-json/wp/v2/…`), `admin-ajax.php`, `admin-post.php` and front-end pages — so an agent could do anything the user's role allows, beyond the plugin's tools and scopes. The token is accepted only on the plugin's own agent routes (tools, confirmation status, and the public manifest / OAuth routes); on any other REST route it is refused with 403 `goldtwmcp_token_route_not_allowed`. The route is taken the way WordPress dispatches it (a `?rest_route=` override or a faked query string no longer passes). A site owner can allow further routes explicitly with the filter `goldtwmcp_bearer_allowed_routes` (default: none).
+* Security: the browser-only routes `generate-prompt` and `my-tokens` no longer accept an access token. Before, a read-only token could call `generate-prompt` and receive a new token with every scope its user is entitled to.
+* Security: `getUsers` shows other users the way the WordPress REST API does. Without the `list_users` capability it lists only authors with published posts, refuses the `role` filter (403 `forbidden_role_filter`), searches display name and slug only (never login or e-mail, so it can no longer tell whether an address is registered) and returns no registration date. `per_page` is capped at 100.
 
 = 1.2.12 - 2026-11-15 =
 * Security: the `write` scope now requires at least one editing capability (posts, pages, media, comments, categories, menus, settings, or a shop's products / orders — `edit_posts`, `edit_pages`, `upload_files`, `moderate_comments`, `manage_categories`, `edit_theme_options`, `manage_options`, `edit_products`, `manage_woocommerce`, `edit_shop_orders`, `edit_shop_payments`; filter `goldtwmcp_scope_capabilities`). A subscriber or shop customer who approves a connection now gets a read-only token, as the connection prompt already did, and a write tool called with an older token of such a user is refused with 403 `insufficient_capability`. Every write tool still checks its own WordPress capability on each call.
@@ -565,7 +568,7 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 == Upgrade Notice ==
 
 = 1.2.13 =
-Security: refunds, deletions and other risky actions of Goldnat add-ons now wait for your own confirmation (Users › AI actions) instead of running on the agent's word.
+Security: risky add-on actions wait for your own confirmation (Users › AI actions); AI Connect tokens work only on AI Connect's own endpoints, not the whole WordPress REST API; getUsers lists only users WordPress shows publicly.
 
 = 1.2.12 =
 Security: only users who can edit something on the site get the write scope (subscribers and customers get read-only tokens), and tools that do not declare a scope are no longer treated as read tools.

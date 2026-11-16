@@ -43,6 +43,113 @@ class Bearer_Auth {
 	}
 
 	/**
+	 * REST namespace prefix of this plugin's routes.
+	 */
+	const OWN_NAMESPACE = '/goldt-webmcp-bridge/';
+
+	/**
+	 * Routes inside our namespace that are for the user's own browser session only.
+	 * An access token is never accepted there: a token could otherwise mint a new
+	 * token with every scope its user is entitled to (generate-prompt), or list and
+	 * revoke the user's other connections (my-tokens).
+	 *
+	 * @var string[]
+	 */
+	const HUMAN_ONLY_ROUTES = array(
+		'/goldt-webmcp-bridge/v1/generate-prompt',
+		'/goldt-webmcp-bridge/v1/my-tokens',
+	);
+
+	/**
+	 * The REST route this HTTP request addresses, or '' when it is not a REST request.
+	 *
+	 * Mirrors how WordPress itself picks the route: a `rest_route` query/body
+	 * variable wins over the pretty-permalink path (WP::parse_request), so a request
+	 * like /wp-json/goldt-webmcp-bridge/v1/manifest?rest_route=/wp/v2/users/me is
+	 * treated as the core route it really dispatches to. Once WordPress has parsed
+	 * the request, its own query var is used (authoritative).
+	 *
+	 * @return string Route starting with '/', or ''.
+	 */
+	public static function current_rest_route() {
+		if ( isset( $GLOBALS['wp'] ) && is_object( $GLOBALS['wp'] ) && ! empty( $GLOBALS['wp']->query_vars['rest_route'] ) ) {
+			return '/' . ltrim( (string) $GLOBALS['wp']->query_vars['rest_route'], '/' );
+		}
+		// phpcs:disable WordPress.Security.NonceVerification -- route detection only, no state change.
+		foreach ( array( $_POST, $_GET ) as $source ) {
+			if ( isset( $source['rest_route'] ) && is_string( $source['rest_route'] ) ) {
+				return '/' . ltrim( sanitize_text_field( wp_unslash( $source['rest_route'] ) ), '/' );
+			}
+		}
+		// phpcs:enable WordPress.Security.NonceVerification
+		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- only parsed, never output or stored.
+		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
+		$path = rawurldecode( $path );
+		$pref = trim( \rest_get_url_prefix(), '/' ) . '/';
+		// Anchored at the start of the path (after the site's base path): a REST
+		// prefix further along the path — e.g. /wp-admin/admin-ajax.php/wp-json/…
+		// via PATH_INFO — is not a REST request.
+		$bases = array_unique(
+			array(
+				trailingslashit( (string) wp_parse_url( \home_url( '/' ), PHP_URL_PATH ) ),
+				trailingslashit( (string) wp_parse_url( \site_url( '/' ), PHP_URL_PATH ) ),
+				'/',
+			)
+		);
+		foreach ( $bases as $base ) {
+			$full = $base . $pref;
+			if ( 0 === strpos( $path, $full ) ) {
+				return '/' . ltrim( substr( $path, strlen( $full ) ), '/' );
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * May an AI Connect access token authenticate a request to this route?
+	 *
+	 * Yes only for this plugin's own agent routes (tools, confirmation status,
+	 * public OAuth/manifest routes). Never for core / other plugins' REST routes,
+	 * and never for the human-only routes above. A site owner who really wants an
+	 * agent token to reach a further route lists its prefix in the
+	 * `goldtwmcp_bearer_allowed_routes` filter (default: none).
+	 *
+	 * @param string $route REST route ('' = not a REST request).
+	 * @return bool
+	 */
+	public static function token_allowed_for_route( $route ) {
+		$route = (string) $route;
+		if ( '' === $route || false !== strpos( $route, '..' ) || false !== strpos( $route, '//' ) ) {
+			return false;
+		}
+		foreach ( self::HUMAN_ONLY_ROUTES as $human ) {
+			if ( $route === $human || 0 === strpos( $route, $human . '/' ) ) {
+				return false;
+			}
+		}
+		if ( 0 === strpos( $route, self::OWN_NAMESPACE ) ) {
+			return true;
+		}
+		/**
+		 * Extra REST route prefixes an AI Connect access token may authenticate.
+		 *
+		 * Default empty: the token works only on AI Connect's own routes, so an agent
+		 * can do exactly what the plugin's tools and scopes allow — not everything the
+		 * user could do through the core REST API. Example: array( '/wp/v2/media' ).
+		 *
+		 * @param string[] $prefixes Route prefixes (each starting with '/').
+		 */
+		$allowed = (array) \apply_filters( 'goldtwmcp_bearer_allowed_routes', array() );
+		foreach ( $allowed as $prefix ) {
+			$prefix = '/' . ltrim( (string) $prefix, '/' );
+			if ( '/' !== $prefix && 0 === strpos( $route, $prefix ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Determine the current user from a Bearer token.
 	 *
 	 * @param int|false $user_id Existing user ID or false.
@@ -56,6 +163,13 @@ class Bearer_Auth {
 		$token = $this->get_bearer_token();
 
 		if ( ! $token ) {
+			return $user_id;
+		}
+
+		// SEC-20: the token is a key to AI Connect's tools only. It never logs the
+		// user in on core REST routes, admin-ajax.php, admin-post.php or front-end
+		// pages (the /api/aiconnect-tools handler authenticates on its own).
+		if ( ! self::token_allowed_for_route( self::current_rest_route() ) ) {
 			return $user_id;
 		}
 
@@ -92,18 +206,34 @@ class Bearer_Auth {
 			return $result;
 		}
 
-		if ( ! $this->is_goldtwmcp_request() ) {
+		$route = self::current_rest_route();
+
+		// SEC-20: an AI Connect token sent to a route it is not valid for is refused
+		// outright (instead of silently treating the caller as a guest), so a client
+		// learns the token is scoped to the AI Connect tools. Tokens of other plugins
+		// (which fail our validation) are left alone.
+		$presented = $this->get_bearer_token();
+		if ( $presented && ! self::token_allowed_for_route( $route ) && ! is_wp_error( $this->oauth_server->validate_token( $presented ) ) ) {
+			return new \WP_Error(
+				'goldtwmcp_token_route_not_allowed',
+				'This AI Connect access token is valid only for the AI Connect tool endpoints of this site, not for ' . ( '' === $route ? 'this URL' : $route ) . '.',
+				array( 'status' => 403 )
+			);
+		}
+
+		if ( ! $this->is_goldtwmcp_request( $route ) ) {
 			return $result;
 		}
 
 		// Public endpoints that don't require authentication.
-		if ( $this->is_public_endpoint() ) {
+		if ( $this->is_public_endpoint( $route ) ) {
 			return $result;
 		}
 
 		// Cookie-authenticated user-facing endpoints (generate-prompt, my-tokens).
-		// These use the WP REST nonce + same-origin session cookie; do not require Bearer.
-		if ( \is_user_logged_in() && $this->is_user_facing_endpoint() ) {
+		// These use the WP REST nonce + same-origin session cookie; do not require Bearer
+		// (and a Bearer token was refused above, so the user here comes from the cookie).
+		if ( $this->is_user_facing_endpoint( $route ) ) {
 			return $result;
 		}
 
@@ -178,60 +308,54 @@ class Bearer_Auth {
 	}
 
 	/**
-	 * Check whether this is a GoldtWebMCP REST API request.
+	 * Is this a request to one of this plugin's REST routes?
 	 *
+	 * Decided on the route WordPress dispatches to — not on a substring of the raw
+	 * URI, which a query string could fake.
+	 *
+	 * @param string|null $route REST route (null = detect).
 	 * @return bool
 	 */
-	private function is_goldtwmcp_request() {
-		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-		return strpos( $request_uri, '/wp-json/goldt-webmcp-bridge/' ) !== false;
+	private function is_goldtwmcp_request( $route = null ) {
+		$route = null === $route ? self::current_rest_route() : (string) $route;
+		return 0 === strpos( $route, self::OWN_NAMESPACE );
 	}
 
 	/**
-	 * Check whether the current request is a public endpoint.
+	 * Is this one of the public routes (token, revoke, manifest)?
 	 *
+	 * @param string|null $route REST route (null = detect).
 	 * @return bool
 	 */
-	private function is_public_endpoint() {
-		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-
-		$public_endpoints = array(
-			'/wp-json/goldt-webmcp-bridge/v1/oauth/token',
-			'/wp-json/goldt-webmcp-bridge/v1/oauth/revoke',
-			'/wp-json/goldt-webmcp-bridge/v1/manifest',
+	private function is_public_endpoint( $route = null ) {
+		$route = null === $route ? self::current_rest_route() : (string) $route;
+		return in_array(
+			untrailingslashit( $route ),
+			array(
+				'/goldt-webmcp-bridge/v1/oauth/token',
+				'/goldt-webmcp-bridge/v1/oauth/revoke',
+				'/goldt-webmcp-bridge/v1/manifest',
+			),
+			true
 		);
-
-		foreach ( $public_endpoints as $endpoint ) {
-			if ( strpos( $request_uri, $endpoint ) !== false ) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
 	 * Endpoints meant for the logged-in user's browser session (not for AI agents).
 	 *
-	 * Bypasses Bearer requirement when WordPress cookie auth resolves a user.
-	 * Each endpoint's own permission_callback still enforces login + nonce.
+	 * Bypasses the Bearer requirement; each endpoint's own permission_callback still
+	 * enforces login, and WordPress's REST cookie check enforces the nonce.
 	 *
+	 * @param string|null $route REST route (null = detect).
 	 * @return bool
 	 */
-	private function is_user_facing_endpoint() {
-		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-
-		$user_endpoints = array(
-			'/wp-json/goldt-webmcp-bridge/v1/generate-prompt',
-			'/wp-json/goldt-webmcp-bridge/v1/my-tokens',
-		);
-
-		foreach ( $user_endpoints as $endpoint ) {
-			if ( strpos( $request_uri, $endpoint ) !== false ) {
+	private function is_user_facing_endpoint( $route = null ) {
+		$route = null === $route ? self::current_rest_route() : (string) $route;
+		foreach ( self::HUMAN_ONLY_ROUTES as $human ) {
+			if ( $route === $human || 0 === strpos( $route, $human . '/' ) ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
