@@ -2,8 +2,9 @@
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
-"Language: he_IL
+"Language: he_IL\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "GoldT WebMCP Bridge"
 msgstr "גשר WebMCP של GoldT"
@@ -272,3 +273,148 @@ msgstr "חָשׁוּב:"
 msgid "This code expires in 10 minutes and can only be used once."
 msgstr "קוד זה פג תוקף בעוד 10 דקות וניתן להשתמש בו פעם אחת בלבד."
 
+msgid "AI actions awaiting your confirmation"
+msgstr "פעולות AI שמחכות לאישור שלך"
+
+msgid "AI actions"
+msgstr "פעולות AI"
+
+msgid "Confirmations must be made by you in your own signed-in browser session."
+msgstr "רק את/ה יכול/ה לאשר, מתוך הדפדפן שבו את/ה מחובר/ת לאתר."
+
+msgid "This action does not belong to you."
+msgstr "הפעולה הזו לא שייכת לך."
+
+msgid "Review"
+msgstr "לבדיקה"
+
+msgid "Unknown action, or it belongs to another account."
+msgstr "פעולה לא מוכרת, או שהיא שייכת לחשבון אחר."
+
+msgid "An AI agent connected to your account asked to run these actions. Nothing has happened yet: each one runs only if you confirm it here."
+msgstr "סוכן AI שמחובר לחשבון שלך ביקש לבצע את הפעולות האלה. שום דבר עוד לא קרה: כל פעולה תתבצע רק אם תאשר/י אותה כאן."
+
+msgid "Nothing is waiting."
+msgstr "אין פעולות שמחכות."
+
+msgid "Risk"
+msgstr "סיכון"
+
+msgid "Agent"
+msgstr "סוכן"
+
+msgid "Expires (UTC)"
+msgstr "תוקף עד (UTC)"
+
+msgid "Confirmed. The action ran once."
+msgstr "אושר. הפעולה בוצעה פעם אחת."
+
+msgid "Confirmed, but the action failed. See the result below."
+msgstr "אושר, אבל הפעולה נכשלה. התוצאה מופיעה למטה."
+
+msgid "Rejected. The action will not run."
+msgstr "נדחה. הפעולה לא תתבצע."
+
+msgid "This action was already decided or has expired."
+msgstr "כבר התקבלה החלטה על הפעולה הזו, או שתוקפה פג."
+
+msgid "Permission removed. The agent must ask you again."
+msgstr "ההרשאה הוסרה. הסוכן יצטרך לבקש ממך שוב."
+
+msgid "That permission was not found."
+msgstr "ההרשאה לא נמצאה."
+
+msgid "Nothing has been done yet. It runs once, only if you confirm it below."
+msgstr "שום דבר עוד לא בוצע. הפעולה תתבצע פעם אחת, ורק אם תאשר/י אותה למטה."
+
+msgid "Requested by"
+msgstr "מי ביקש"
+
+msgid "Requested (UTC)"
+msgstr "מתי התבקש (UTC)"
+
+msgid "Status"
+msgstr "מצב"
+
+msgid "Technical details"
+msgstr "פרטים טכניים"
+
+msgid "Result"
+msgstr "תוצאה"
+
+msgid "From now on, let %1$s run %2$s without asking me (you can remove this below at any time)."
+msgstr "מעכשיו לתת ל-%1$s לבצע את %2$s בלי לשאול אותי (אפשר לבטל את זה למטה בכל רגע)."
+
+msgid "Confirm and run"
+msgstr "לאשר ולבצע"
+
+msgid "Reject"
+msgstr "לדחות"
+
+msgid "Money - this moves or records money"
+msgstr "כסף - הפעולה מעבירה או רושמת כסף"
+
+msgid "Hard to undo - this deletes or changes something important"
+msgstr "קשה לבטל - הפעולה מוחקת או משנה משהו חשוב"
+
+msgid "Waiting for your decision"
+msgstr "מחכה להחלטה שלך"
+
+msgid "Running now"
+msgstr "מתבצעת עכשיו"
+
+msgid "Confirmed by you - it ran once"
+msgstr "אישרת - הפעולה בוצעה פעם אחת"
+
+msgid "Confirmed by you - it ran once and failed"
+msgstr "אישרת - הפעולה רצה פעם אחת ונכשלה"
+
+msgid "Rejected by you - it did not run"
+msgstr "דחית - הפעולה לא בוצעה"
+
+msgid "Expired - it did not run"
+msgstr "פג התוקף - הפעולה לא בוצעה"
+
+msgid "What will happen"
+msgstr "מה יקרה"
+
+msgid "Yes"
+msgstr "כן"
+
+msgid "No"
+msgstr "לא"
+
+msgid "Agents you let act without asking"
+msgstr "סוכנים שהרשית להם לפעול בלי לשאול"
+
+msgid "None. Every action above needs your confirmation."
+msgstr "אין. כל פעולה צריכה את האישור שלך."
+
+msgid "Tool"
+msgstr "כלי"
+
+msgid "Since (UTC)"
+msgstr "מאז (UTC)"
+
+msgid "Remove"
+msgstr "להסיר"
+
+msgid "Recent activity"
+msgstr "פעילות אחרונה"
+
+msgid "When (UTC)"
+msgstr "מתי (UTC)"
+
+msgid "Event"
+msgstr "אירוע"
+
+msgid "Run the action “%s”"
+msgstr "ביצוע הפעולה “%s”"
+
+msgid "%s — nothing has been done yet. Open the link, check the details and approve or decline."
+msgstr "%s — שום דבר עוד לא בוצע. יש לפתוח את הקישור, לבדוק את הפרטים ולאשר או לדחות."
+
+msgid "%d AI action is waiting for your confirmation."
+msgid_plural "%d AI actions are waiting for your confirmation."
+msgstr[0] "פעולת AI אחת מחכה לאישור שלך."
+msgstr[1] "%d פעולות AI מחכות לאישור שלך."

@@ -3,7 +3,7 @@
  * Plugin Name: GoldT WebMCP Bridge
  * Plugin URI: https://plugins.goldnat.ai/wordpress/goldt-webmcp-bridge
  * Description: Bridge for 8 AI agents (Claude, ChatGPT, Grok, more) — powered by the Servio Protocol (aka WebMCP) with OAuth 2.0
- * Version: 1.2.13
+ * Version: 1.2.14
  * Author: chagold
  * Author URI: https://github.com/chgold
  * License: GPL v3
@@ -18,9 +18,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLDTWMCP_VERSION', '1.2.13' );
+define( 'GOLDTWMCP_VERSION', '1.2.14' );
 define( 'GOLDTWMCP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GOLDTWMCP_URL', plugin_dir_url( __FILE__ ) );
+
+// Translations shipped in languages/ (1.2.14): tell WordPress where they are, so texts the
+// user reads (the confirmation summary and the confirm page) load in the user's own
+// language, also after switch_to_user_locale(). A language pack from WordPress.org wins.
+if ( isset( $GLOBALS['wp_textdomain_registry'] ) && method_exists( $GLOBALS['wp_textdomain_registry'], 'set_custom_path' ) ) {
+	$GLOBALS['wp_textdomain_registry']->set_custom_path( 'goldt-webmcp-bridge', GOLDTWMCP_PATH . 'languages' );
+}
 
 // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 // Load Composer dependencies.

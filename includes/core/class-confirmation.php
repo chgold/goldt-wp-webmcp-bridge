@@ -42,21 +42,49 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'summary'  => 'Records a refund for order #{order_id}',  // shown to the user
  *       'preview'  => null | 'self' | callable( array $args ): array|\WP_Error,
  *   )
+ * The summary is the one sentence the USER reads on the confirmation card and on the
+ * confirm page ("Delete 22 old revisions and 5 spam comments"). It is never empty
+ * (1.2.14). Order: preview['summary'] (a preview callback / a 'self' preview may build
+ * a specific, translated sentence from the real data) → the 'summary' template
+ * ({placeholders} filled from the arguments, then from scalar preview values) →
+ * preview['what'] → a generic "Run …" sentence. Previews and summaries are built in
+ * the user's own language (switch_to_user_locale).
  * preview 'self' = the tool callback itself builds the preview: it is called in
  * preview mode (is_preview() true) and must return a `confirmation_required`
  * WP_Error carrying data['preview'] BEFORE any side effect. Only use 'self' for a
  * callback that checks is_confirmed_execution() (or the add-on helper does).
+ *
+ * Duplicates (1.2.14): the same user + tool + arguments + client never gets a second
+ * request while one is pending, and a call that repeats an action the user has just
+ * confirmed (result not collected yet, or run within the last few minutes) gets the
+ * stored result back instead of a new request. `confirmation_new: true` asks again
+ * on purpose (the user wants the same thing a second time).
  *
  * @since 1.2.13
  */
 class Confirmation {
 
 	const FLOW        = 'user-confirm-v1';
-	const DB_VERSION  = '1.0.0';
+	const DB_VERSION  = '1.1.0';
 	const DB_OPTION   = 'goldtwmcp_confirmation_db_version';
 	const PAGE_SLUG   = 'goldtwmcp-ai-actions';
 	const DEFAULT_TTL = 900;
 	const KEEP_DAYS   = 30;
+
+	/**
+	 * A repeated call within this many seconds of the confirmed run gets the stored result.
+	 *
+	 * @since 1.2.14
+	 */
+	const RECENT_WINDOW = 120;
+
+	/**
+	 * Same, while the agent has not collected the result yet (15 minutes: long enough for
+	 * "the user confirmed, then told the agent", short enough that the site has not moved on).
+	 *
+	 * @since 1.2.14
+	 */
+	const UNDELIVERED_WINDOW = 900;
 
 	/**
 	 * Current mode: null (normal agent call), 'preview' or 'confirmed'.
@@ -188,7 +216,7 @@ class Confirmation {
 	 */
 	public static function description_suffix( array $conf ) {
 		$when = is_callable( $conf['required'] ) ? 'For the risky variants of this call, the' : 'The';
-		return ' ' . $when . ' site requires the USER\'s own confirmation (' . $conf['risk'] . '): the call returns HTTP 202 confirmation_required with a preview and confirm_url instead of running. Show the preview and the link to the user and wait; do not retry on your own. After the user confirms, call again with confirmation_id to get the result.';
+		return ' ' . $when . ' site requires the USER\'s own confirmation (' . $conf['risk'] . '): the call returns HTTP 202 confirmation_required with a preview and confirm_url instead of running. Tell the user what is waiting (the "summary" field), show the link and wait; do not retry on your own. After the user confirms, call again with confirmation_id to get the result.';
 	}
 
 	// ------------------------------------------------------------- the gate.
@@ -263,18 +291,39 @@ class Confirmation {
 		$existing = self::find_pending( $user_id, $full, $hash, self::client_key() );
 		if ( $existing ) {
 			self::log( 'reused', $existing['id'], $user_id, $full );
-			return self::pending_envelope( $existing );
+			return self::pending_envelope( $existing, true );
 		}
 
-		// Build the preview (no side effect).
-		$preview = self::build_preview( $conf, $tool, $validated );
-		if ( \is_wp_error( $preview ) ) {
-			return $preview;
+		// The user has just confirmed exactly this call and it ran: report that run instead
+		// of asking again (1.2.14). `confirmation_new: true` = the user wants it once more.
+		$again = isset( $raw['confirmation_new'] ) && in_array( $raw['confirmation_new'], array( true, 'true', 1, '1' ), true );
+		if ( ! $again ) {
+			$done = self::find_recent_executed( $user_id, $full, $hash, self::client_key() );
+			if ( $done ) {
+				self::log( 'duplicate_blocked', $done['id'], $user_id, $full );
+				return self::executed_answer( $done, true );
+			}
 		}
-		if ( isset( $preview['__completed'] ) ) {
-			// The tool answered without needing confirmation (dry run, report-only…).
-			return $preview['__completed'];
+
+		// Build the preview and the user's summary (no side effect), in the user's language.
+		$switched = function_exists( 'switch_to_user_locale' ) && \switch_to_user_locale( $user_id );
+		try {
+			$preview = self::build_preview( $conf, $tool, $validated );
+			if ( \is_wp_error( $preview ) ) {
+				return $preview;
+			}
+			if ( isset( $preview['__completed'] ) ) {
+				// The tool answered without needing confirmation (dry run, report-only…).
+				return $preview['__completed'];
+			}
+			$summary = self::resolve_summary( $conf, $full, $validated, $preview );
+		} finally {
+			if ( $switched ) {
+				\restore_previous_locale();
+			}
 		}
+		unset( $preview['summary'] );
+		$conf['summary'] = $summary;
 
 		$action = self::create_pending( $user_id, $full, $validated, $hash, $conf, $preview );
 		if ( \is_wp_error( $action ) ) {
@@ -366,7 +415,7 @@ class Confirmation {
 			case 'executed':
 			case 'failed':
 				self::log( 'replay_blocked', $conf_id, $user_id, $full );
-				return self::executed_answer( $action );
+				return self::executed_answer( $action, false );
 			case 'rejected':
 				return new \WP_Error( 'confirmation_rejected', 'The user rejected this action. Do not retry it unless the user asks again.', array( 'status' => 410 ) );
 			case 'executing':
@@ -379,28 +428,138 @@ class Confirmation {
 	/**
 	 * Stored result of an executed action (never re-executed).
 	 *
-	 * @param array $action Action row.
+	 * @param array $action    Action row.
+	 * @param bool  $duplicate True when the agent repeated the call without confirmation_id.
 	 * @return array|\WP_Error
 	 */
-	private static function executed_answer( array $action ) {
+	private static function executed_answer( array $action, $duplicate = false ) {
 		$result = json_decode( (string) $action['result_json'], true );
-		$meta   = array(
-			'confirmation_id' => $action['id'],
-			'status'          => $action['status'],
-			'executed_at'     => self::iso( $action['decided_at'] ),
-			'note'            => 'Already executed once after the user confirmed. Re-submitting never runs it again.',
+		$when   = self::iso( $action['decided_at'] );
+		$note   = 'Already executed exactly once, at ' . $when . ', after the user confirmed. This call did NOT run it again and nothing new is waiting for the user: what you see is the stored result of that single run.';
+		if ( $duplicate ) {
+			$note .= ' Do not call this tool again for the same request and do not ask the user to confirm again. Only if the user explicitly asks to do the very same thing a second time, repeat the call with "confirmation_new": true.';
+		}
+		$meta = array(
+			'confirmation_id'  => $action['id'],
+			'status'           => $action['status'],
+			'already_executed' => true,
+			'executed_at'      => $when,
+			'summary'          => self::summary_of( $action ),
+			'note'             => $note,
 		);
+		self::mark_delivered( $action );
 		if ( 'failed' === $action['status'] ) {
 			$code = is_array( $result ) && isset( $result['code'] ) ? (string) $result['code'] : 'execution_failed';
 			$msg  = is_array( $result ) && isset( $result['message'] ) ? (string) $result['message'] : 'The confirmed action failed.';
-			return new \WP_Error( $code, $msg, array_merge( array( 'status' => is_array( $result ) && isset( $result['status'] ) ? (int) $result['status'] : 400 ), array( 'confirmation' => $meta ) ) );
+			return new \WP_Error( $code, 'The user confirmed this action and it ran once, at ' . $when . ', but it FAILED: ' . $msg . ' It was not run again by this call.' . ( $duplicate ? ' To try once more, ask the user first, then call with "confirmation_new": true (the user will be asked to confirm again).' : '' ), array_merge( array( 'status' => is_array( $result ) && isset( $result['status'] ) ? (int) $result['status'] : 400 ), array( 'confirmation' => $meta ) ) );
 		}
 		if ( ! is_array( $result ) ) {
 			$result = array( 'data' => $result );
 		}
 		self::redact_delivered_secrets( $action );
+		$own                    = isset( $result['message'] ) && is_string( $result['message'] ) ? trim( $result['message'] ) : '';
+		$result['message']      = 'Already executed - the user confirmed and it ran once at ' . $when . '. Not run again by this call; this is the result of that run' . ( '' !== $own ? ': ' . $own : '.' );
 		$result['confirmation'] = $meta;
 		return $result;
+	}
+
+	/**
+	 * Remember that the agent has collected the result of an executed action.
+	 *
+	 * @since 1.2.14
+	 * @param array $action Action row.
+	 * @return void
+	 */
+	private static function mark_delivered( array $action ) {
+		global $wpdb;
+		if ( ! empty( $action['delivered_at'] ) || ! in_array( $action['status'], array( 'executed', 'failed' ), true ) ) {
+			return;
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bridge's own table.
+		$wpdb->update( $wpdb->prefix . 'goldtwmcp_pending_actions', array( 'delivered_at' => gmdate( 'Y-m-d H:i:s' ) ), array( 'id' => $action['id'] ), array( '%s' ), array( '%s' ) );
+	}
+
+	// -------------------------------------------------------------- summary.
+
+	/**
+	 * The one sentence the user reads. Never empty.
+	 *
+	 * @since 1.2.14
+	 * @param array  $conf    Declaration.
+	 * @param string $full    Tool.
+	 * @param array  $args    Validated arguments.
+	 * @param array  $preview Preview (may carry 'summary' / 'what').
+	 * @return string
+	 */
+	public static function resolve_summary( array $conf, $full, array $args, array $preview ) {
+		$summary = isset( $preview['summary'] ) && is_string( $preview['summary'] ) ? $preview['summary'] : '';
+		if ( '' === trim( $summary ) && '' !== trim( (string) ( $conf['summary'] ?? '' ) ) ) {
+			$summary = preg_replace_callback(
+				'/\{([a-z0-9_]+)\}/',
+				static function ( $m ) use ( $args, $preview ) {
+					foreach ( array( $args, $preview ) as $source ) {
+						if ( isset( $source[ $m[1] ] ) && is_scalar( $source[ $m[1] ] ) && ! is_bool( $source[ $m[1] ] ) && '' !== (string) $source[ $m[1] ] ) {
+							return (string) $source[ $m[1] ];
+						}
+					}
+					return $m[0];
+				},
+				(string) $conf['summary']
+			);
+		}
+		if ( '' === trim( (string) $summary ) && isset( $preview['what'] ) && is_string( $preview['what'] ) ) {
+			$summary = $preview['what'];
+		}
+		$summary = self::clean_summary( $summary );
+		return '' !== $summary ? $summary : self::generic_summary( $full );
+	}
+
+	/**
+	 * Last-resort summary for a tool that declares none ("Run “delete order”").
+	 * Add-ons must not rely on it: Security Baseline SEC-19 requires a specific summary.
+	 *
+	 * @since 1.2.14
+	 * @param string $full Tool.
+	 * @return string
+	 */
+	public static function generic_summary( $full ) {
+		$name  = false !== strpos( (string) $full, '.' ) ? substr( (string) $full, strrpos( (string) $full, '.' ) + 1 ) : (string) $full;
+		$words = strtolower( trim( (string) preg_replace( '/(?<=[a-z0-9])(?=[A-Z])|_+/', ' ', $name ) ) );
+		/* translators: %s: action name in plain words, e.g. "delete order" */
+		return sprintf( __( 'Run the action “%s”', 'goldt-webmcp-bridge' ), $words );
+	}
+
+	/**
+	 * One plain line, no markup, at most 255 characters.
+	 *
+	 * @since 1.2.14
+	 * @param mixed $summary Raw summary.
+	 * @return string
+	 */
+	private static function clean_summary( $summary ) {
+		$summary = trim( (string) preg_replace( '/\s+/u', ' ', \wp_strip_all_tags( (string) $summary ) ) );
+		if ( function_exists( 'mb_strlen' ) && mb_strlen( $summary ) > 255 ) {
+			$summary = mb_substr( $summary, 0, 254 ) . '…';
+		} elseif ( ! function_exists( 'mb_strlen' ) && strlen( $summary ) > 255 ) {
+			$summary = substr( $summary, 0, 252 ) . '...';
+		}
+		return $summary;
+	}
+
+	/**
+	 * Summary of a stored action (rows written by 1.2.13 may have none).
+	 *
+	 * @since 1.2.14
+	 * @param array $action Action row.
+	 * @return string
+	 */
+	public static function summary_of( array $action ) {
+		$summary = self::clean_summary( $action['summary'] ?? '' );
+		if ( '' !== $summary ) {
+			return $summary;
+		}
+		$preview = json_decode( (string) ( $action['preview_json'] ?? '' ), true );
+		return self::resolve_summary( array(), (string) $action['tool'], array(), is_array( $preview ) ? $preview : array() );
 	}
 
 	/**
@@ -446,30 +605,52 @@ class Confirmation {
 	/**
 	 * The 202 envelope for a pending action.
 	 *
+	 * `summary` and `user_message` are for the USER (plain words, the user's language);
+	 * `message` is the instruction for the agent and must not be shown to the user.
+	 *
 	 * @param array $action Action row.
+	 * @param bool  $reused True when this call repeated a request that is already waiting.
 	 * @return array
 	 */
-	public static function pending_envelope( array $action ) {
-		$preview  = json_decode( (string) $action['preview_json'], true );
-		$expires  = (int) strtotime( $action['expires_at'] . ' UTC' );
+	public static function pending_envelope( array $action, $reused = false ) {
+		$preview = json_decode( (string) $action['preview_json'], true );
+		$expires = (int) strtotime( $action['expires_at'] . ' UTC' );
+		$summary = self::summary_of( $action );
+		$user_id = (int) $action['user_id'];
+
+		$switched = function_exists( 'switch_to_user_locale' ) && $user_id > 0 && \switch_to_user_locale( $user_id );
+		/* translators: %s: what the action does, e.g. "Delete 22 old revisions" */
+		$user_message = sprintf( __( '%s — nothing has been done yet. Open the link, check the details and approve or decline.', 'goldt-webmcp-bridge' ), rtrim( $summary, '.' ) );
+		if ( $switched ) {
+			\restore_previous_locale();
+		}
+
 		$envelope = array(
 			'confirmation_id' => $action['id'],
-			'confirm_url'     => self::confirm_url( $action['id'], (int) $action['user_id'] ),
+			'confirm_url'     => self::confirm_url( $action['id'], $user_id ),
 			'status_url'      => \rest_url( 'goldt-webmcp-bridge/v1/confirmations/' . $action['id'] ),
 			'expires_at'      => gmdate( 'c', $expires ),
 			'expires_in'      => max( 0, $expires - time() ),
 			'tool'            => $action['tool'],
 			'risk'            => $action['risk'],
-			'summary'         => (string) $action['summary'],
+			'summary'         => $summary,
+			'user_message'    => $user_message,
 			'preview'         => is_array( $preview ) ? $preview : array(),
 			'flow'            => self::FLOW,
 		);
+		if ( $reused ) {
+			$envelope['reused'] = true;
+		}
+		$message = ( $reused ? 'Not executed, and NO new request was created: this exact action is already waiting for the user (same confirmation_id as before). ' : 'Not executed. ' )
+			. 'This action needs the user\'s own confirmation. Tell the user in plain words what is waiting - use the "summary" field ("' . $summary . '") - and ask them to open confirm_url (signed in to the site) to approve or decline. '
+			. 'Do NOT call this tool again on your own and do not tell the user it was done. When the user says they confirmed, call it again with the same arguments plus confirmation_id (or GET status_url) to get the result. '
+			. '(This "message" is an instruction for you, the agent - never show it to the user.)';
 		return array_merge(
 			array(
 				'success' => false,
 				'status'  => 'pending_confirmation',
 				'code'    => 'confirmation_required',
-				'message' => 'Not executed. This action needs the user\'s own confirmation. Show the user the preview and ask them to open confirm_url (signed in to the site) to confirm or reject. Do NOT call this tool again on your own and do not tell the user it was done. When the user says they confirmed, call it again with the same arguments plus confirmation_id (or GET status_url) to get the result.',
+				'message' => $message,
 			),
 			$envelope,
 			array( 'data' => $envelope )
@@ -822,15 +1003,9 @@ class Confirmation {
 		global $wpdb;
 		$id      = 'conf_' . strtolower( wp_generate_password( 32, false, false ) );
 		$now     = time();
-		$summary = $conf['summary'];
-		if ( '' !== $summary ) {
-			$summary = preg_replace_callback(
-				'/\{([a-z0-9_]+)\}/',
-				static function ( $m ) use ( $args ) {
-					return isset( $args[ $m[1] ] ) && is_scalar( $args[ $m[1] ] ) ? (string) $args[ $m[1] ] : $m[0];
-				},
-				$summary
-			);
+		$summary = self::clean_summary( $conf['summary'] ?? '' );
+		if ( '' === $summary ) {
+			$summary = self::resolve_summary( $conf, $full, $args, $preview );
 		}
 		$row = array(
 			'id'           => $id,
@@ -839,7 +1014,7 @@ class Confirmation {
 			'args_json'    => (string) wp_json_encode( $args ),
 			'args_hash'    => $hash,
 			'preview_json' => (string) wp_json_encode( $preview ),
-			'summary'      => substr( (string) $summary, 0, 255 ),
+			'summary'      => $summary,
 			'risk'         => $conf['risk'],
 			'client_key'   => self::client_key(),
 			'status'       => 'pending',
@@ -875,6 +1050,48 @@ class Confirmation {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Must be live.
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}goldtwmcp_pending_actions WHERE user_id = %d AND tool = %s AND args_hash = %s AND client_key = %s AND status = 'pending' AND expires_at > %s ORDER BY created_at DESC LIMIT 1", (int) $user_id, $full, $hash, $client, gmdate( 'Y-m-d H:i:s' ) ), ARRAY_A );
+		return $row ? $row : null;
+	}
+
+	/**
+	 * The same call, confirmed by the user and already run: within RECENT_WINDOW of the
+	 * run, or within UNDELIVERED_WINDOW while the agent has not collected the result.
+	 *
+	 * @since 1.2.14
+	 * @param int    $user_id User.
+	 * @param string $full    Tool.
+	 * @param string $hash    Hash.
+	 * @param string $client  Client key.
+	 * @return array|null
+	 */
+	private static function find_recent_executed( $user_id, $full, $hash, $client ) {
+		global $wpdb;
+		/**
+		 * Filter how long (seconds) a repeated identical call gets the stored result of the
+		 * confirmed run instead of a new confirmation request. 0 switches it off.
+		 *
+		 * @since 1.2.14
+		 * @param int    $seconds Default 120.
+		 * @param string $tool    Full tool name.
+		 */
+		$recent = max( 0, min( DAY_IN_SECONDS, (int) apply_filters( 'goldtwmcp_confirmation_duplicate_window', self::RECENT_WINDOW, $full ) ) );
+		if ( 0 === $recent ) {
+			return null;
+		}
+		$undelivered = max( $recent, self::UNDELIVERED_WINDOW );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Must be live.
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}goldtwmcp_pending_actions WHERE user_id = %d AND tool = %s AND args_hash = %s AND client_key = %s AND status IN ('executed','failed') AND ( decided_at > %s OR ( delivered_at IS NULL AND decided_at > %s ) ) ORDER BY decided_at DESC LIMIT 1",
+				(int) $user_id,
+				$full,
+				$hash,
+				$client,
+				gmdate( 'Y-m-d H:i:s', time() - $recent ),
+				gmdate( 'Y-m-d H:i:s', time() - $undelivered )
+			),
+			ARRAY_A
+		);
 		return $row ? $row : null;
 	}
 
@@ -939,12 +1156,17 @@ class Confirmation {
 			'tool'            => $action['tool'],
 			'status'          => $action['status'],
 			'risk'            => $action['risk'],
+			'summary'         => self::summary_of( $action ),
 			'created_at'      => self::iso( $action['created_at'] ),
 			'expires_at'      => self::iso( $action['expires_at'] ),
 			'decided_at'      => self::iso( $action['decided_at'] ),
 		);
 		if ( in_array( $action['status'], array( 'executed', 'failed' ), true ) ) {
 			$out['result'] = json_decode( (string) $action['result_json'], true );
+			$out['note']   = 'executed' === $action['status']
+				? 'The user confirmed and the action ran exactly once. Do not call the tool again for this request.'
+				: 'The user confirmed and the action ran once but failed. It is not retried automatically.';
+			self::mark_delivered( $action );
 			self::redact_delivered_secrets( $action );
 		}
 		if ( 'pending' === $action['status'] ) {
@@ -1047,7 +1269,8 @@ class Confirmation {
 	}
 
 	/**
-	 * Create / upgrade the three tables (dbDelta, idempotent).
+	 * Create / upgrade the three tables (dbDelta, idempotent). 1.1.0 (bridge 1.2.14)
+	 * adds pending_actions.delivered_at.
 	 *
 	 * @return void
 	 */
@@ -1075,6 +1298,7 @@ class Confirmation {
             decided_at DATETIME NULL,
             decided_by BIGINT(20) UNSIGNED NULL,
             result_json LONGTEXT NULL,
+            delivered_at DATETIME NULL,
             PRIMARY KEY  (id),
             KEY user_status (user_id,status),
             KEY lookup (user_id,tool,args_hash)

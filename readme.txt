@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.13
+Stable tag: 1.2.14
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,16 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.14 - 2026-11-17 =
+* Fix: an action that waits for the user's confirmation always carries one plain sentence written for the user - `summary` ("Delete 22 old revisions and 5 spam comments") - and `user_message` (the same, plus what to do next). Before, a tool that declared no summary left it empty, and the confirmation card of an AI client showed the instruction meant for the agent ("Not executed… Do NOT call this tool again…") to the customer. The summary now comes from the tool's own preview (`preview.summary`, built from the real names and numbers), from its `summary` template (placeholders are filled from the arguments and from the preview), from `preview.what`, and as a last resort from a generic sentence - never empty. `message` stays an instruction for the agent and says so.
+* The summary and the preview are built in the user's own language (`switch_to_user_locale`). Hebrew ships with the plugin for the confirmation texts; the `languages/` folder is now registered so bundled translations load.
+* Users › AI actions: the sentence is the headline of the page, followed by what will happen and what is lost in plain lines; the tool name and the raw data moved under "Technical details". Risk and status are shown in words.
+* Fix: no needless second confirmation request. When the user has just confirmed an action and the agent repeats the same call without `confirmation_id`, the bridge returns the stored result ("already executed at …, not run again") instead of creating a new request - for 2 minutes after the run, or 15 minutes while the agent has not collected the result yet. `"confirmation_new": true` asks again on purpose; filter `goldtwmcp_confirmation_duplicate_window` (0 = off). A request that is still waiting is reused as before, and the answer now says so (`reused`).
+* The answer after a confirmed run is unambiguous: `message` starts with "Already executed", and `confirmation` carries `already_executed`, `executed_at`, `summary` and a note. `GET /confirmations/{id}` also returns `summary`.
+* Manifest: the agent instructions and the top-level `confirmation` object describe `summary`, `user_message` and the duplicate rule.
+* Database: `pending_actions.delivered_at` (schema 1.1.0, added automatically).
+* Tests: tests/confirmation-flow.php (82 checks).
+
 = 1.2.13 - 2026-11-16 =
 * Security: confirmation flow for destructive and financial tools, enforced in code. A tool registered with `confirmation` (for example a refund or a delete) is never run by an agent's call alone: the call answers HTTP 202 `confirmation_required` with a preview, `confirmation_id`, `confirm_url`, `status_url` and `expires_at`, and nothing happens until the user confirms it on Users › AI actions in their own signed-in browser session (auth cookie + nonce; requests carrying a Bearer token are refused there). The agent's own `confirm: true` argument is ignored for these tools and removed from their schema.
 * A pending action is bound to the user, the tool, the exact arguments (hash) and the client, expires after 15 minutes (filter `goldtwmcp_confirmation_ttl`), runs at most once, and a re-submission with `confirmation_id` returns the stored result instead of running again (replay protection). Rejected and expired actions are final.
@@ -567,6 +577,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.14 =
+Confirmation requests show the user one clear sentence about what will happen, in their language; after you confirm, a repeated call from the AI agent no longer creates a second request.
 
 = 1.2.13 =
 Security update, recommended for all sites: AI Connect tokens work only on AI Connect's own endpoints; risky actions wait for your confirmation; getUsers shows only public authors; a repeated token refresh no longer disconnects the AI client.

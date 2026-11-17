@@ -325,11 +325,15 @@ class Manifest {
 			if ( isset( $t['confirmation'] ) ) {
 				return "## ACTIONS THAT NEED THE USER'S CONFIRMATION\n"
 					. 'Tools marked confirmation=required (or conditional) never run from your call alone. '
-					. 'They answer HTTP 202 with code confirmation_required, a preview, confirm_url and confirmation_id. '
-					. 'Show the user the preview and the confirm_url, and tell them nothing has happened yet. '
+					. 'They answer HTTP 202 with code confirmation_required, a summary, a preview, confirm_url and confirmation_id. '
+					. 'Tell the user what is waiting in the words of "summary" (one plain sentence written for the user, in their language; "user_message" is the same with what to do next), show the confirm_url, and say nothing has happened yet. '
+					. 'Never show the user the "message" field - it is an instruction for you. '
 					. 'Do not call the tool again on your own, do not loop, and never say it was done. '
 					. 'When the user says they confirmed, call the same tool with the same arguments plus confirmation_id (or GET status_url): '
-					. "you then get the real result. A rejected or expired confirmation is final - ask the user before starting again.\n\n";
+					. 'you then get the real result, marked confirmation.already_executed=true - the action ran exactly once and your call did not run it again. '
+					. 'If you repeat the call without confirmation_id right after the user confirmed, you get that same stored result, not a new request; '
+					. 'send "confirmation_new": true only when the user explicitly asks to do the very same thing a second time. '
+					. "A rejected or expired confirmation is final - ask the user before starting again.\n\n";
 			}
 		}
 		return '';
@@ -386,6 +390,8 @@ class Manifest {
 				'error_code'          => 'confirmation_required',
 				'status_url_template' => \rest_url( 'goldt-webmcp-bridge/v1/confirmations/{confirmation_id}' ),
 				'confirmed_by'        => 'user',
+				'user_text'           => 'summary (one sentence for the user, in the user\'s language) and user_message; "message" is for the agent only',
+				'duplicates'          => 'a pending request is reused; after the user confirmed, the same call returns the stored result (confirmation.already_executed) instead of a new request; "confirmation_new": true asks again on purpose',
 				'autonomy'            => 'per-user, per-tool, per-client grant, revocable by the user',
 				'tools'               => array_map(
 					static function ( $t ) {

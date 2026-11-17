@@ -36,6 +36,8 @@ class Confirmation_Page {
 	public function init() {
 		add_action( 'admin_menu', array( $this, 'add_menu' ), 50 );
 		add_action( 'admin_notices', array( $this, 'pending_notice' ) );
+		// Schema upgrades (1.2.14 adds a column) without waiting for the next gated call.
+		add_action( 'admin_init', array( '\\GoldtWebMCP\\Core\\Confirmation', 'maybe_install' ) );
 	}
 
 	/**
@@ -184,7 +186,7 @@ class Confirmation_Page {
 			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Action', 'goldt-webmcp-bridge' ) . '</th><th>' . esc_html__( 'Risk', 'goldt-webmcp-bridge' ) . '</th><th>' . esc_html__( 'Agent', 'goldt-webmcp-bridge' ) . '</th><th>' . esc_html__( 'Expires (UTC)', 'goldt-webmcp-bridge' ) . '</th><th></th></tr></thead><tbody>';
 			foreach ( $pending as $a ) {
 				$link = add_query_arg( 'confirmation_id', rawurlencode( $a['id'] ), admin_url( $this->parent() . '?page=' . Confirmation::PAGE_SLUG ) );
-				echo '<tr><td><code>' . esc_html( $a['tool'] ) . '</code><br>' . esc_html( $a['summary'] ) . '</td><td>' . esc_html( $a['risk'] ) . '</td><td>' . esc_html( $a['client_key'] ) . '</td><td>' . esc_html( $a['expires_at'] ) . '</td><td><a class="button button-primary" href="' . esc_url( $link ) . '">' . esc_html__( 'Review', 'goldt-webmcp-bridge' ) . '</a></td></tr>';
+				echo '<tr><td><strong>' . esc_html( Confirmation::summary_of( $a ) ) . '</strong><br><code>' . esc_html( $a['tool'] ) . '</code></td><td>' . esc_html( $this->risk_label( $a['risk'] ) ) . '</td><td>' . esc_html( $a['client_key'] ) . '</td><td>' . esc_html( $a['expires_at'] ) . '</td><td><a class="button button-primary" href="' . esc_url( $link ) . '">' . esc_html__( 'Review', 'goldt-webmcp-bridge' ) . '</a></td></tr>';
 			}
 			echo '</tbody></table>';
 		}
@@ -223,15 +225,21 @@ class Confirmation_Page {
 	 */
 	private function render_action( array $action ) {
 		$preview = json_decode( (string) $action['preview_json'], true );
-		$risk    = 'financial' === $action['risk'] ? __( 'Financial', 'goldt-webmcp-bridge' ) : __( 'Destructive', 'goldt-webmcp-bridge' );
+		$preview = is_array( $preview ) ? $preview : array();
+		// The sentence the user decides on, in plain words - never the tool's technical text.
+		echo '<div class="notice notice-' . esc_attr( 'pending' === $action['status'] ? 'warning' : 'info' ) . ' inline" style="margin:16px 0;padding:12px 16px"><p style="font-size:1.3em;margin:0 0 4px"><strong>' . esc_html( Confirmation::summary_of( $action ) ) . '</strong></p>';
+		if ( 'pending' === $action['status'] ) {
+			echo '<p style="margin:0">' . esc_html__( 'Nothing has been done yet. It runs once, only if you confirm it below.', 'goldt-webmcp-bridge' ) . '</p>';
+		}
+		echo '</div>';
 		echo '<table class="form-table"><tbody>';
-		echo '<tr><th>' . esc_html__( 'Action', 'goldt-webmcp-bridge' ) . '</th><td><code>' . esc_html( $action['tool'] ) . '</code> ' . esc_html( $action['summary'] ) . '</td></tr>';
-		echo '<tr><th>' . esc_html__( 'Risk', 'goldt-webmcp-bridge' ) . '</th><td><strong>' . esc_html( $risk ) . '</strong></td></tr>';
+		$this->render_preview_rows( $preview, Confirmation::summary_of( $action ) );
+		echo '<tr><th>' . esc_html__( 'Risk', 'goldt-webmcp-bridge' ) . '</th><td><strong>' . esc_html( $this->risk_label( $action['risk'] ) ) . '</strong></td></tr>';
 		echo '<tr><th>' . esc_html__( 'Requested by', 'goldt-webmcp-bridge' ) . '</th><td>' . esc_html( $action['client_key'] ) . '</td></tr>';
 		echo '<tr><th>' . esc_html__( 'Requested (UTC)', 'goldt-webmcp-bridge' ) . '</th><td>' . esc_html( $action['created_at'] ) . '</td></tr>';
 		echo '<tr><th>' . esc_html__( 'Expires (UTC)', 'goldt-webmcp-bridge' ) . '</th><td>' . esc_html( $action['expires_at'] ) . '</td></tr>';
-		echo '<tr><th>' . esc_html__( 'Status', 'goldt-webmcp-bridge' ) . '</th><td>' . esc_html( $action['status'] ) . '</td></tr>';
-		echo '<tr><th>' . esc_html__( 'What will happen', 'goldt-webmcp-bridge' ) . '</th><td><pre style="white-space:pre-wrap;max-width:900px">' . esc_html( (string) wp_json_encode( $preview, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ) . '</pre></td></tr>';
+		echo '<tr><th>' . esc_html__( 'Status', 'goldt-webmcp-bridge' ) . '</th><td>' . esc_html( $this->status_label( $action['status'] ) ) . '</td></tr>';
+		echo '<tr><th>' . esc_html__( 'Technical details', 'goldt-webmcp-bridge' ) . '</th><td><details><summary><code>' . esc_html( $action['tool'] ) . '</code></summary><pre style="white-space:pre-wrap;max-width:900px">' . esc_html( (string) wp_json_encode( $preview, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ) . '</pre></details></td></tr>';
 		if ( in_array( $action['status'], array( 'executed', 'failed' ), true ) ) {
 			$result = json_decode( (string) $action['result_json'], true );
 			echo '<tr><th>' . esc_html__( 'Result', 'goldt-webmcp-bridge' ) . '</th><td><pre style="white-space:pre-wrap;max-width:900px">' . esc_html( (string) wp_json_encode( $result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ) . '</pre></td></tr>';
@@ -260,6 +268,78 @@ class Confirmation_Page {
 		echo '<p><button type="submit" name="goldtwmcp_decision" value="confirm" class="button button-primary">' . esc_html__( 'Confirm and run', 'goldt-webmcp-bridge' ) . '</button> ';
 		echo '<button type="submit" name="goldtwmcp_decision" value="reject" class="button">' . esc_html__( 'Reject', 'goldt-webmcp-bridge' ) . '</button></p>';
 		echo '</form>';
+	}
+
+	/**
+	 * Risk in the user's language.
+	 *
+	 * @since 1.2.14
+	 * @param string $risk financial | destructive.
+	 * @return string
+	 */
+	private function risk_label( $risk ) {
+		return 'financial' === $risk
+			? __( 'Money - this moves or records money', 'goldt-webmcp-bridge' )
+			: __( 'Hard to undo - this deletes or changes something important', 'goldt-webmcp-bridge' );
+	}
+
+	/**
+	 * Status in the user's language.
+	 *
+	 * @since 1.2.14
+	 * @param string $status Action status.
+	 * @return string
+	 */
+	private function status_label( $status ) {
+		$labels = array(
+			'pending'   => __( 'Waiting for your decision', 'goldt-webmcp-bridge' ),
+			'executing' => __( 'Running now', 'goldt-webmcp-bridge' ),
+			'executed'  => __( 'Confirmed by you - it ran once', 'goldt-webmcp-bridge' ),
+			'failed'    => __( 'Confirmed by you - it ran once and failed', 'goldt-webmcp-bridge' ),
+			'rejected'  => __( 'Rejected by you - it did not run', 'goldt-webmcp-bridge' ),
+			'expired'   => __( 'Expired - it did not run', 'goldt-webmcp-bridge' ),
+		);
+		return $labels[ $status ] ?? (string) $status;
+	}
+
+	/**
+	 * The preview as readable rows: the tool's own "details" lines (plain sentences),
+	 * then simple values with their names in words. Nested data stays under
+	 * "Technical details".
+	 *
+	 * @since 1.2.14
+	 * @param array  $preview Preview.
+	 * @param string $summary The sentence already shown above (not repeated).
+	 * @return void
+	 */
+	private function render_preview_rows( array $preview, $summary ) {
+		$lines = array();
+		if ( isset( $preview['what'] ) && is_string( $preview['what'] ) && '' !== trim( $preview['what'] ) && trim( $preview['what'] ) !== $summary ) {
+			$lines[] = $preview['what'];
+		}
+		if ( isset( $preview['details'] ) && is_array( $preview['details'] ) ) {
+			foreach ( $preview['details'] as $line ) {
+				if ( is_string( $line ) && '' !== trim( $line ) ) {
+					$lines[] = $line;
+				}
+			}
+		}
+		if ( $lines ) {
+			echo '<tr><th>' . esc_html__( 'What will happen', 'goldt-webmcp-bridge' ) . '</th><td><ul style="margin:0;list-style:disc;padding-inline-start:1.2em">';
+			foreach ( $lines as $line ) {
+				echo '<li>' . esc_html( $line ) . '</li>';
+			}
+			echo '</ul></td></tr>';
+		}
+		foreach ( $preview as $key => $value ) {
+			if ( in_array( $key, array( 'what', 'details', 'summary', 'arguments' ), true ) || ! is_scalar( $value ) || '' === (string) $value ) {
+				continue;
+			}
+			if ( is_bool( $value ) ) {
+				$value = $value ? __( 'Yes', 'goldt-webmcp-bridge' ) : __( 'No', 'goldt-webmcp-bridge' );
+			}
+			echo '<tr><th>' . esc_html( ucfirst( str_replace( '_', ' ', (string) $key ) ) ) . '</th><td>' . esc_html( (string) $value ) . '</td></tr>';
+		}
 	}
 
 	/**

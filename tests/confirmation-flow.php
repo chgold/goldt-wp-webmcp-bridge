@@ -1,6 +1,6 @@
 <?php
 /**
- * Regression test (1.2.13): confirmation flow for destructive / financial tools.
+ * Regression test (1.2.13, extended 1.2.14): confirmation flow for destructive / financial tools.
  *
  * Throw-away module "qaconfirm" with a self-previewing financial tool, a destructive
  * tool without a preview callback, a conditional tool and a read tool that declares
@@ -27,7 +27,14 @@
  *   - read-only token never reaches the gate (insufficient_scope);
  *   - the confirm page refuses requests that carry an Authorization header / no cookie;
  *   - status_url (REST) reports pending / executed for the owner only;
- *   - every decision is in the audit log.
+ *   - every decision is in the audit log;
+ *   - 1.2.14 — the user's summary is never empty and never the agent-facing text:
+ *     template from the arguments, preview['summary'] from the tool, a generic sentence
+ *     when a tool declares nothing, a row stored without a summary, the user's own
+ *     language, `user_message`; the confirm page shows it as the headline;
+ *   - 1.2.14 — no needless second request: the same call after the user confirmed
+ *     returns the stored result ("already executed"), within the short window or while
+ *     the result was not collected; `confirmation_new: true` asks again on purpose.
  *
  * Exit status 0 = every check passed, 1 = at least one failed.
  *
@@ -116,6 +123,28 @@ class QAConfirm_Module extends \GoldtWebMCP\Modules\Module_Base {
 						);
 					},
 				),
+			)
+		);
+		$this->register_tool(
+			'wipeThings',
+			array(
+				'description'    => 'Wipe things.',
+				'input_schema'   => array(
+					'type'       => 'object',
+					'properties' => array( 'older_than_days' => array( 'type' => 'integer' ) ),
+				),
+				'required_scope' => 'delete',
+				'confirmation'   => array(
+					'summary' => 'Wipe old things',
+					'preview' => static function ( $a ) {
+						return array(
+							'summary' => sprintf( 'Delete %d things older than %d days', 3, (int) ( $a['older_than_days'] ?? 30 ) ),
+							'details' => array( 'This cannot be undone.' ),
+							'count'   => 3,
+						);
+					},
+				),
+				'callback'       => static fn() => array( 'wiped' => 3 ),
 			)
 		);
 		$this->register_tool(
@@ -471,7 +500,21 @@ list( $st, $body ) = qacf_rest(
 		'amount'   => 25,
 	)
 );
-qacf_check( 202 === $st && $cid !== ( $body['confirmation_id'] ?? '' ) && 1 === qacf_count( 'refund' ), 'a new call after execution needs a NEW confirmation', array( $st, $body ) );
+qacf_check( 200 === $st && true === ( $body['confirmation']['already_executed'] ?? null ) && $cid === ( $body['confirmation']['confirmation_id'] ?? '' ) && 1 === qacf_count( 'refund' ), '1.2.14: the same call right after the user confirmed → the stored result, no second request', array( $st, $body ) );
+qacf_check( 0 === strpos( (string) ( $body['message'] ?? '' ), 'Already executed' ) && false !== strpos( (string) ( $body['confirmation']['note'] ?? '' ), 'confirmation_new' ), '… and the answer says plainly: already executed, not run again', $body );
+qacf_check( 0 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}goldtwmcp_pending_actions WHERE user_id = %d AND tool = %s AND status = 'pending'", $editor, 'qaconfirm.refundThing' ) ), '… and nothing new waits for the user' );
+list( $st, $body ) = qacf_rest(
+	$endpoint,
+	$tok_all,
+	$editor,
+	'qaconfirm.refundThing',
+	array(
+		'thing_id'         => 7,
+		'amount'           => 25,
+		'confirmation_new' => true,
+	)
+);
+qacf_check( 202 === $st && $cid !== ( $body['confirmation_id'] ?? '' ) && 1 === qacf_count( 'refund' ), 'confirmation_new: true → a NEW confirmation request (the user asked again)', array( $st, $body ) );
 $second = (string) ( $body['confirmation_id'] ?? '' );
 
 echo "\n== Reject + expiry ==\n";
@@ -541,8 +584,93 @@ $g = $gateway->call_as(
 );
 qacf_check( 202 === $g['status'] && 1 === qacf_count( 'status' ) && 'cancelled' === ( $g['confirmation']['preview']['to'] ?? '' ), 'risky variant (status=cancelled) → 202 with callable preview', $g );
 
+echo "\n== 1.2.14: duplicate window ==\n";
+$dup_args = array(
+	'thing_id' => 21,
+	'amount'   => 5,
+);
+list( $st, $body ) = qacf_rest( $endpoint, $tok_all, $editor, 'qaconfirm.refundThing', $dup_args );
+$dup_id            = (string) ( $body['confirmation_id'] ?? '' );
+$before            = qacf_count( 'refund' );
+$o                 = qacf_as( $editor, fn() => Confirmation::confirm( $dup_id ) );
+qacf_check( $o['ok'] && $before + 1 === qacf_count( 'refund' ), 'fixture: user confirms refund of thing 21', $o );
+// The user took 10 minutes to come back to the agent; the agent never collected the result.
+$wpdb->update( $wpdb->prefix . 'goldtwmcp_pending_actions', array( 'decided_at' => gmdate( 'Y-m-d H:i:s', time() - 600 ) ), array( 'id' => $dup_id ) );
+list( $st, $body ) = qacf_rest( $endpoint, $tok_all, $editor, 'qaconfirm.refundThing', $dup_args );
+qacf_check( 200 === $st && $dup_id === ( $body['confirmation']['confirmation_id'] ?? '' ) && $before + 1 === qacf_count( 'refund' ), 'result not collected yet (10 min later) → stored result, no second request', array( $st, $body ) );
+qacf_check( ! empty( Confirmation::get_action( $dup_id )['delivered_at'] ), '… and the result is now marked as collected' );
+list( $st, $body ) = qacf_rest( $endpoint, $tok_all, $editor, 'qaconfirm.refundThing', $dup_args );
+qacf_check( 202 === $st && $dup_id !== ( $body['confirmation_id'] ?? '' ) && $before + 1 === qacf_count( 'refund' ), 'collected and outside the short window → an identical call is a new request again', array( $st, $body ) );
+qacf_as( $editor, fn() => Confirmation::reject( (string) ( $body['confirmation_id'] ?? '' ) ) );
+list( $st, $body ) = qacf_rest( $endpoint, $tok_all, $other, 'qaconfirm.refundThing', $dup_args );
+qacf_check( 403 === $st || ( 202 === $st && $dup_id !== ( $body['confirmation_id'] ?? '' ) ), 'another user never gets the first user\'s result', array( $st, $body ) );
+add_filter( 'goldtwmcp_confirmation_duplicate_window', '__return_zero' );
+$wpdb->update( $wpdb->prefix . 'goldtwmcp_pending_actions', array( 'decided_at' => gmdate( 'Y-m-d H:i:s' ) ), array( 'id' => $dup_id ) );
+list( $st, $body ) = qacf_rest( $endpoint, $tok_all, $editor, 'qaconfirm.refundThing', $dup_args );
+qacf_check( 202 === $st, 'filter goldtwmcp_confirmation_duplicate_window = 0 switches it off', array( $st, $body ) );
+qacf_as( $editor, fn() => Confirmation::reject( (string) ( $body['confirmation_id'] ?? '' ) ) );
+remove_filter( 'goldtwmcp_confirmation_duplicate_window', '__return_zero' );
+
+echo "\n== 1.2.14: the user's summary ==\n";
+$agent_text = array( 'Not executed', 'Do NOT', 'confirmation_id', 'call this tool' );
+$clean      = static function ( $text ) use ( $agent_text ) {
+	if ( ! is_string( $text ) || '' === trim( $text ) ) {
+		return false;
+	}
+	foreach ( $agent_text as $needle ) {
+		if ( false !== stripos( $text, $needle ) ) {
+			return false;
+		}
+	}
+	return true;
+};
+$g          = $gateway->call_as( $editor, 'qaconfirm.deleteThing', array( 'thing_id' => 31 ), array( 'caller' => 'qa-summary' ) );
+qacf_check( Confirmation::generic_summary( 'qaconfirm.deleteThing' ) === ( $g['confirmation']['summary'] ?? '' ) && 'Run the action “delete thing”' === $g['confirmation']['summary'], 'tool that declares no summary → generic sentence, never empty', $g['confirmation']['summary'] ?? null );
+$row = Confirmation::get_action( (string) $g['confirmation']['confirmation_id'] );
+qacf_check( '' !== (string) $row['summary'], '… and it is stored with the pending action', $row['summary'] );
+$g = $gateway->call_as( $editor, 'qaconfirm.wipeThings', array( 'older_than_days' => 14 ), array( 'caller' => 'qa-summary' ) );
+qacf_check( 'Delete 3 things older than 14 days' === ( $g['confirmation']['summary'] ?? '' ), 'preview[summary] from the tool wins over the template (real numbers)', $g['confirmation'] ?? null );
+qacf_check( ! isset( $g['confirmation']['preview']['summary'] ) && array( 'This cannot be undone.' ) === ( $g['confirmation']['preview']['details'] ?? null ), '… summary is not repeated inside the preview; details stay', $g['confirmation']['preview'] ?? null );
+qacf_check( $clean( $g['confirmation']['summary'] ?? '' ) && $clean( $g['confirmation']['user_message'] ?? '' ) && false !== strpos( (string) $g['confirmation']['user_message'], 'Delete 3 things older than 14 days' ), 'summary + user_message are for the user (no agent instructions in them)', $g['confirmation'] ?? null );
+qacf_check( false !== strpos( (string) ( $g['error']['message'] ?? '' ), 'Delete 3 things older than 14 days' ) && false !== strpos( (string) $g['error']['message'], 'never show it to the user' ), 'the agent message quotes the summary and says it is not for the user', $g['error'] ?? null );
+$wipe_id = (string) $g['confirmation']['confirmation_id'];
+$wpdb->update( $wpdb->prefix . 'goldtwmcp_pending_actions', array( 'summary' => '' ), array( 'id' => $wipe_id ) );
+$env = Confirmation::pending_envelope( Confirmation::get_action( $wipe_id ) );
+qacf_check( $clean( $env['summary'] ), 'a row stored without a summary (written by 1.2.13) still gets one', $env['summary'] );
+$_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $tok_all;
+wp_set_current_user( $editor );
+$req = new WP_REST_Request( 'GET', '/goldt-webmcp-bridge/v1/confirmations/' . $wipe_id );
+$req->set_url_params( array( 'id' => $wipe_id ) );
+$s = rest_ensure_response( $endpoint->get_confirmation_status( $req ) )->get_data();
+qacf_check( $clean( $s['summary'] ?? '' ), 'status_url carries the summary too', $s );
+unset( $_SERVER['HTTP_AUTHORIZATION'] );
+wp_set_current_user( 0 );
+$long = Confirmation::resolve_summary( array( 'summary' => str_repeat( 'מחיקה ', 80 ) ), 'qaconfirm.deleteThing', array(), array() );
+qacf_check( mb_strlen( $long ) <= 255 && mb_check_encoding( $long, 'UTF-8' ), 'a long non-Latin summary is cut on a character boundary (≤ 255 characters)', mb_strlen( $long ) );
+qacf_check( 'Refund thing #9 of 12.5' === Confirmation::resolve_summary( array( 'summary' => 'Refund thing #{thing_id} of {total}' ), 'x.y', array( 'thing_id' => 9 ), array( 'total' => 12.5 ) ), 'template placeholders: arguments first, then preview values' );
+qacf_check( 'Deletes all of it' === Confirmation::resolve_summary( array( 'summary' => "<b>Deletes</b>  all\n of it" ), 'x.y', array(), array() ), 'markup and line breaks are stripped from a summary' );
+
+// The user's own language (Hebrew ships with the bridge).
+update_user_meta( $editor, 'locale', 'he_IL' );
+$g = $gateway->call_as( $editor, 'qaconfirm.deleteThing', array( 'thing_id' => 32 ), array( 'caller' => 'qa-summary' ) );
+qacf_check( 1 === preg_match( '/\p{Hebrew}/u', (string) ( $g['confirmation']['summary'] ?? '' ) ) && 1 === preg_match( '/\p{Hebrew}/u', (string) ( $g['confirmation']['user_message'] ?? '' ) ), 'a Hebrew user gets the summary and user_message in Hebrew', $g['confirmation'] ?? null );
+delete_user_meta( $editor, 'locale' );
+
+// The confirm page: the summary is the headline, the tool name is a technical detail.
+$page = new \GoldtWebMCP\User\Confirmation_Page();
+wp_set_current_user( $editor );
+$_GET['confirmation_id'] = $wipe_id;
+$wpdb->update( $wpdb->prefix . 'goldtwmcp_pending_actions', array( 'summary' => 'Delete 3 things older than 14 days' ), array( 'id' => $wipe_id ) );
+ob_start();
+$page->render();
+$html = (string) ob_get_clean();
+unset( $_GET['confirmation_id'] );
+wp_set_current_user( 0 );
+qacf_check( false !== strpos( $html, '<strong>Delete 3 things older than 14 days</strong>' ) && false !== strpos( $html, 'This cannot be undone.' ) && false !== strpos( $html, 'Confirm and run' ), 'confirm page: summary headline + what is lost + buttons', substr( wp_strip_all_tags( $html ), 0, 400 ) );
+qacf_check( $clean( wp_strip_all_tags( $html ) ), 'confirm page shows no agent-facing text' );
+
 echo "\n== Audit log ==\n";
 $events = array_column( Confirmation::list_log( $editor, 200 ), 'event' );
-foreach ( array( 'requested', 'reused', 'confirmed', 'executed', 'replay_blocked', 'mismatch', 'rejected', 'expired', 'autonomy_granted', 'autonomous_execute', 'autonomy_revoked' ) as $e ) {
+foreach ( array( 'requested', 'reused', 'confirmed', 'executed', 'replay_blocked', 'duplicate_blocked', 'mismatch', 'rejected', 'expired', 'autonomy_granted', 'autonomous_execute', 'autonomy_revoked' ) as $e ) {
 	qacf_check( in_array( $e, $events, true ), "audit event {$e}" );
 }
