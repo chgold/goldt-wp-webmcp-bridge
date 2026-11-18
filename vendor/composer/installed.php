@@ -3,7 +3,7 @@
         'name' => 'goldt/webmcp-bridge',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'ae482298e06e6e95b42795e2a3966bd1c073f6df',
+        'reference' => 'e434693b9c005346a5daf1aef6d887e393ea0717',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'goldt/webmcp-bridge' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'ae482298e06e6e95b42795e2a3966bd1c073f6df',
+            'reference' => 'e434693b9c005346a5daf1aef6d887e393ea0717',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
