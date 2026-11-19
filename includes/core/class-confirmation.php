@@ -199,7 +199,10 @@ class Confirmation {
 	 * @return array
 	 */
 	public static function strip_confirm_from_schema( array $schema ) {
-		if ( isset( $schema['properties']['confirm'] ) ) {
+		// properties may be an array or an object (e.g. (object) array() for "no arguments").
+		if ( isset( $schema['properties'] ) && is_object( $schema['properties'] ) ) {
+			unset( $schema['properties']->confirm );
+		} elseif ( isset( $schema['properties'] ) && is_array( $schema['properties'] ) && isset( $schema['properties']['confirm'] ) ) {
 			unset( $schema['properties']['confirm'] );
 		}
 		if ( isset( $schema['required'] ) && is_array( $schema['required'] ) ) {
