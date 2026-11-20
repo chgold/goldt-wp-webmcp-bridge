@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.15
+Stable tag: 1.2.16
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,11 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.16 - 2026-11-20 =
+* OAuth: the built-in client `claude-ai` now also accepts Claude's official callback URL `https://claude.ai/api/mcp/auth_callback` (claude.ai, Claude Desktop and mobile), and `goldnat-master` accepts `https://goldnat.ai/oauth/callback`. Until now every built-in client accepted only the copy-the-code flow (`urn:ietf:wg:oauth:2.0:oob`), so a client that sends the user back to its own site was refused.
+* Nothing is removed: the copy-the-code flow keeps working, URLs an administrator added stay, the other built-in clients are unchanged, and the address must still match exactly - any other URL is refused as before.
+* Database: OAuth schema 2.0.10 (added automatically on update).
+
 = 1.2.15 - 2026-11-20 =
 * Fix: a fatal error ("Cannot use object of type stdClass as array") when an add-on registers a tool that needs the user's confirmation and declares its arguments as an object (for example `'properties' => (object) array()` for a tool without arguments, so the manifest shows `{}`). 1.2.14 assumed an array; on such a site every request that built the tool list stopped with the error. Both shapes now work, and the add-on's own tool definition is no longer changed while the `confirm` argument is removed.
 * Tests: tests/unit/ConfirmationSchemaTest.php (PHPUnit, both shapes of `properties`).
@@ -581,6 +586,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.16 =
+Claude (claude.ai, Desktop, mobile) and goldnat.ai can complete the OAuth sign-in with their own callback address. No other change.
 
 = 1.2.15 =
 Fixes a fatal error on sites where an add-on declares a confirmation tool without arguments. Recommended for everyone on 1.2.14.

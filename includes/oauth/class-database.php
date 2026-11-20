@@ -35,6 +35,26 @@ class Database {
 	const BUILTIN_CLIENT_IDS = array( 'goldnat-master', 'claude-ai', 'chatgpt', 'gemini', 'grok', 'perplexity', 'copilot', 'meta-ai', 'deepseek' );
 
 	/**
+	 * Official OAuth callback URLs of the built-in clients whose vendor publishes one.
+	 *
+	 * Until 1.2.15 every built-in client held only the out-of-band URI, so a
+	 * product that redirects back to its own site was refused by the exact
+	 * match in OAuth_Server::validate_redirect_uri(). Only URLs taken from the
+	 * vendor's own documentation are listed:
+	 * - claude-ai: https://claude.ai/api/mcp/auth_callback (Anthropic connector
+	 *   docs, "Callback URLs" — claude.ai, Claude Desktop, mobile).
+	 * - goldnat-master: https://goldnat.ai/oauth/callback (the redirect_uri
+	 *   goldnat.ai's OAuth client sends).
+	 * The other built-in clients keep OOB only until their callback is verified.
+	 *
+	 * @var array<string,array<int,string>>
+	 */
+	const OFFICIAL_REDIRECT_URIS = array(
+		'claude-ai'      => array( 'https://claude.ai/api/mcp/auth_callback' ),
+		'goldnat-master' => array( 'https://goldnat.ai/oauth/callback' ),
+	);
+
+	/**
 	 * Get current database version
 	 */
 	public static function get_version() {
@@ -228,6 +248,66 @@ class Database {
 		if ( version_compare( $current_version, '2.0.9', '<' ) ) {
 			self::upgrade_to_2_0_9();
 		}
+
+		if ( version_compare( $current_version, '2.0.10', '<' ) ) {
+			self::upgrade_to_2_0_10();
+		}
+	}
+
+	/**
+	 * Upgrade to version 2.0.10 — official callback URLs of the built-in clients.
+	 *
+	 * See OFFICIAL_REDIRECT_URIS. Union only: OOB and any URL an admin added
+	 * stay; other clients are not touched; matching stays exact.
+	 * Idempotent: a row that already holds every URL is not written.
+	 *
+	 * @return void
+	 */
+	private static function upgrade_to_2_0_10() {
+		self::apply_official_redirect_uris();
+		self::set_version( '2.0.10' );
+	}
+
+	/**
+	 * Add OFFICIAL_REDIRECT_URIS to the matching client rows (union).
+	 *
+	 * @return int Number of rows changed.
+	 */
+	public static function apply_official_redirect_uris() {
+		global $wpdb;
+
+		$table   = $wpdb->prefix . 'goldtwmcp_oauth_clients';
+		$changed = 0;
+
+		foreach ( self::OFFICIAL_REDIRECT_URIS as $client_id => $uris ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Schema data upgrade; table name from $wpdb->prefix.
+			$raw = $wpdb->get_var( $wpdb->prepare( "SELECT redirect_uris FROM {$table} WHERE client_id = %s", $client_id ) );
+			if ( null === $raw ) {
+				continue;
+			}
+			$current = json_decode( (string) $raw, true );
+			if ( ! is_array( $current ) ) {
+				$current = ( '' !== (string) $raw ) ? array( (string) $raw ) : array();
+			}
+			$merged = $current;
+			foreach ( $uris as $uri ) {
+				if ( ! in_array( $uri, $merged, true ) ) {
+					$merged[] = $uri;
+				}
+			}
+			if ( $merged === $current ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema data upgrade.
+			$wpdb->update(
+				$table,
+				array( 'redirect_uris' => wp_json_encode( array_values( $merged ) ) ),
+				array( 'client_id' => $client_id )
+			);
+			++$changed;
+		}
+
+		return $changed;
 	}
 
 	/**
