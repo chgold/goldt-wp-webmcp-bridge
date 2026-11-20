@@ -202,6 +202,32 @@ class Authorize_Endpoint {
 			$redirect_uri
 		);
 
+		$this->redirect_to_client( $redirect_url, $redirect_uri );
+	}
+
+	/**
+	 * Send the browser back to the client's registered redirect URI.
+	 *
+	 * wp_safe_redirect() only allows this site's own host, so until 1.2.16 a
+	 * client that redirects to its own site (claude.ai, goldnat.ai) was sent to
+	 * wp-admin instead and never received its code. The URI was already checked
+	 * against the client's registered list (exact match) in
+	 * handle_authorize_request(), so exactly that one host is allowed here, for
+	 * this redirect only.
+	 *
+	 * @param string $redirect_url URL to send the browser to (registered URI + query).
+	 * @param string $redirect_uri The registered redirect URI it was built from.
+	 * @return void
+	 */
+	private function redirect_to_client( $redirect_url, $redirect_uri ) {
+		$host  = wp_parse_url( $redirect_uri, PHP_URL_HOST );
+		$allow = static function ( $hosts ) use ( $host ) {
+			$hosts[] = $host;
+			return $hosts;
+		};
+		if ( is_string( $host ) && '' !== $host ) {
+			add_filter( 'allowed_redirect_hosts', $allow );
+		}
 		wp_safe_redirect( $redirect_url );
 		exit;
 	}
@@ -229,8 +255,7 @@ class Authorize_Endpoint {
 			$redirect_uri
 		);
 
-		wp_safe_redirect( $redirect_url );
-		exit;
+		$this->redirect_to_client( $redirect_url, $redirect_uri );
 	}
 
 	/**

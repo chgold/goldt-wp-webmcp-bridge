@@ -359,6 +359,7 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 = 1.2.16 - 2026-11-20 =
 * OAuth: the built-in client `claude-ai` now also accepts Claude's official callback URL `https://claude.ai/api/mcp/auth_callback` (claude.ai, Claude Desktop and mobile), and `goldnat-master` accepts `https://goldnat.ai/oauth/callback`. Until now every built-in client accepted only the copy-the-code flow (`urn:ietf:wg:oauth:2.0:oob`), so a client that sends the user back to its own site was refused.
+* Fix: after the user clicked Approve (or Deny), a client on another site never got its answer - WordPress' safe redirect allows only this site's own address, so the browser landed in wp-admin and the one-time code was lost. The browser now goes to the client's registered address (and only to it, after the exact check).
 * Nothing is removed: the copy-the-code flow keeps working, URLs an administrator added stay, the other built-in clients are unchanged, and the address must still match exactly - any other URL is refused as before.
 * Database: OAuth schema 2.0.10 (added automatically on update).
 
