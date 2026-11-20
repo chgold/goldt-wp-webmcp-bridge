@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.14
+Stable tag: 1.2.15
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -357,6 +357,10 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 
 == Changelog ==
 
+= 1.2.15 - 2026-11-20 =
+* Fix: a fatal error ("Cannot use object of type stdClass as array") when an add-on registers a tool that needs the user's confirmation and declares its arguments as an object (for example `'properties' => (object) array()` for a tool without arguments, so the manifest shows `{}`). 1.2.14 assumed an array; on such a site every request that built the tool list stopped with the error. Both shapes now work, and the add-on's own tool definition is no longer changed while the `confirm` argument is removed.
+* Tests: tests/unit/ConfirmationSchemaTest.php (PHPUnit, both shapes of `properties`).
+
 = 1.2.14 - 2026-11-17 =
 * Fix: an action that waits for the user's confirmation always carries one plain sentence written for the user - `summary` ("Delete 22 old revisions and 5 spam comments") - and `user_message` (the same, plus what to do next). Before, a tool that declared no summary left it empty, and the confirmation card of an AI client showed the instruction meant for the agent ("Not executed… Do NOT call this tool again…") to the customer. The summary now comes from the tool's own preview (`preview.summary`, built from the real names and numbers), from its `summary` template (placeholders are filled from the arguments and from the preview), from `preview.what`, and as a last resort from a generic sentence - never empty. `message` stays an instruction for the agent and says so.
 * The summary and the preview are built in the user's own language (`switch_to_user_locale`). Hebrew ships with the plugin for the confirmation texts; the `languages/` folder is now registered so bundled translations load.
@@ -577,6 +581,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 * 5 WordPress core tools
 
 == Upgrade Notice ==
+
+= 1.2.15 =
+Fixes a fatal error on sites where an add-on declares a confirmation tool without arguments. Recommended for everyone on 1.2.14.
 
 = 1.2.14 =
 Confirmation requests show the user one clear sentence about what will happen, in their language; after you confirm, a repeated call from the AI agent no longer creates a second request.

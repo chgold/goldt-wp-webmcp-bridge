@@ -200,8 +200,12 @@ class Confirmation {
 	 */
 	public static function strip_confirm_from_schema( array $schema ) {
 		// properties may be an array or an object (e.g. (object) array() for "no arguments").
+		// An object is cloned first: objects are shared by handle, so unset() on it would also
+		// change the tool definition the add-on still holds.
 		if ( isset( $schema['properties'] ) && is_object( $schema['properties'] ) ) {
-			unset( $schema['properties']->confirm );
+			$properties = clone $schema['properties'];
+			unset( $properties->confirm );
+			$schema['properties'] = $properties;
 		} elseif ( isset( $schema['properties'] ) && is_array( $schema['properties'] ) && isset( $schema['properties']['confirm'] ) ) {
 			unset( $schema['properties']['confirm'] );
 		}
