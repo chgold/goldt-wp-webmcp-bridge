@@ -169,6 +169,13 @@ class Database {
 	public static function tables_exist() {
 		global $wpdb;
 
+		// 1.2.17: on a visitor's page view the answer of the last full check is reused (it is stamped with the
+		// schema version and re-checked on every admin request, after an upgrade and after deactivation).
+		$stamp = (string) self::get_version();
+		if ( ! is_admin() && '0.0.0' !== $stamp && get_option( 'goldtwmcp_tables_ok' ) === $stamp ) {
+			return true;
+		}
+
 		$required_tables = array(
 			$wpdb->prefix . 'goldtwmcp_oauth_clients',
 			$wpdb->prefix . 'goldtwmcp_oauth_codes',
@@ -180,8 +187,16 @@ class Database {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Checking table existence
 			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
 			if ( $exists !== $table ) {
+				delete_option( 'goldtwmcp_tables_ok' );
 				return false;
 			}
+		}
+
+		if ( get_option( 'goldtwmcp_tables_ok' ) !== $stamp ) {
+			update_option( 'goldtwmcp_tables_ok', $stamp, true );
+			// The translation setting is read on every load: stored once with its default, it comes with
+			// WordPress's one options query instead of a query of its own.
+			add_option( 'goldtwmcp_translation_provider', 'ai_self', '', true );
 		}
 
 		return true;

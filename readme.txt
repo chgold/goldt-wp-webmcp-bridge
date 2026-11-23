@@ -4,7 +4,7 @@ Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.16
+Stable tag: 1.2.17
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -356,6 +356,9 @@ Enable WordPress debug mode and check `wp-content/debug.log` for details.
 4. AI agent in action - Live AI working on your WordPress site through the secure bridge
 
 == Changelog ==
+
+= 1.2.17 - 2026-11-24 =
+* Faster page views: the check that the plugin's tables exist no longer runs four database queries on every page (its last result is reused on visitors' pages and re-checked in the admin); the Redis connection for rate limiting is tried only when a tool is actually called; the translation setting no longer costs a query of its own.
 
 = 1.2.16 - 2026-11-20 =
 * OAuth: the built-in client `claude-ai` now also accepts Claude's official callback URL `https://claude.ai/api/mcp/auth_callback` (claude.ai, Claude Desktop and mobile), and `goldnat-master` accepts `https://goldnat.ai/oauth/callback`. Until now every built-in client accepted only the copy-the-code flow (`urn:ietf:wg:oauth:2.0:oob`), so a client that sends the user back to its own site was refused.

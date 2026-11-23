@@ -25,6 +25,7 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_pending_actions" );
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}goldtwmcp_autonomy_grants" );
 delete_option( 'goldtwmcp_confirmation_db_version' );
+delete_option( 'goldtwmcp_tables_ok' );
 
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 $wpdb->query(

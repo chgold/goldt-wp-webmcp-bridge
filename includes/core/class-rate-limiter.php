@@ -33,6 +33,13 @@ class Rate_Limiter {
 	private $use_redis = false;
 
 	/**
+	 * Whether the Redis connection was already attempted in this request.
+	 *
+	 * @var bool
+	 */
+	private $redis_tried = false;
+
+	/**
 	 * Requests allowed per minute.
 	 *
 	 * @var int
@@ -50,7 +57,7 @@ class Rate_Limiter {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$this->init_redis();
+		// 1.2.17: Redis is tried on the first rate-limit check, not when the plugin loads — a page view that calls no tool makes no connection attempt.
 		$this->requests_per_minute = apply_filters( 'goldtwmcp_rate_limit_per_minute', 50 );
 		$this->requests_per_hour   = apply_filters( 'goldtwmcp_rate_limit_per_hour', 1000 );
 	}
@@ -68,6 +75,19 @@ class Rate_Limiter {
 		}
 
 		do_action( 'goldtwmcp_rate_limiter_error', $message, $context );
+	}
+
+	/**
+	 * Is Redis in use? Connects on the first call.
+	 *
+	 * @return bool
+	 */
+	private function redis_ready() {
+		if ( ! $this->redis_tried ) {
+			$this->redis_tried = true;
+			$this->init_redis();
+		}
+		return $this->use_redis;
 	}
 
 	/**
@@ -119,7 +139,7 @@ class Rate_Limiter {
 		$key_minute = $this->get_key( $identifier, $action, 'minute' );
 		$key_hour   = $this->get_key( $identifier, $action, 'hour' );
 
-		if ( $this->use_redis ) {
+		if ( $this->redis_ready() ) {
 			return $this->check_rate_redis( $key_minute, $key_hour );
 		} else {
 			return $this->check_rate_transients( $key_minute, $key_hour );
@@ -137,7 +157,7 @@ class Rate_Limiter {
 		$key_minute = $this->get_key( $identifier, $action, 'minute' );
 		$key_hour   = $this->get_key( $identifier, $action, 'hour' );
 
-		if ( $this->use_redis ) {
+		if ( $this->redis_ready() ) {
 			$this->increment_redis( $key_minute, 60 );
 			$this->increment_redis( $key_hour, 3600 );
 		} else {
@@ -285,7 +305,7 @@ class Rate_Limiter {
 		$key_minute = $this->get_key( $identifier, $action, 'minute' );
 		$key_hour   = $this->get_key( $identifier, $action, 'hour' );
 
-		if ( $this->use_redis ) {
+		if ( $this->redis_ready() ) {
 			$count_minute = (int) $this->redis->get( $key_minute );
 			$count_hour   = (int) $this->redis->get( $key_hour );
 		} else {
@@ -298,7 +318,7 @@ class Rate_Limiter {
 			'remaining_per_hour'   => max( 0, $this->requests_per_hour - $count_hour ),
 			'limit_per_minute'     => $this->requests_per_minute,
 			'limit_per_hour'       => $this->requests_per_hour,
-			'using_redis'          => $this->use_redis,
+			'using_redis'          => $this->redis_ready(),
 		);
 	}
 
@@ -308,7 +328,7 @@ class Rate_Limiter {
 	 * @return bool
 	 */
 	public function is_using_redis() {
-		return $this->use_redis;
+		return $this->redis_ready();
 	}
 
 	/**
@@ -322,7 +342,7 @@ class Rate_Limiter {
 		$key_minute = $this->get_key( $identifier, $action, 'minute' );
 		$key_hour   = $this->get_key( $identifier, $action, 'hour' );
 
-		if ( $this->use_redis ) {
+		if ( $this->redis_ready() ) {
 			$this->redis->del( $key_minute );
 			$this->redis->del( $key_hour );
 		} else {
