@@ -208,7 +208,7 @@ class Authorize_Endpoint {
 	/**
 	 * Send the browser back to the client's registered redirect URI.
 	 *
-	 * wp_safe_redirect() only allows this site's own host, so until 1.2.16 a
+	 * The wp_safe_redirect() function only allows this site's own host, so until 1.2.16 a
 	 * client that redirects to its own site (claude.ai, goldnat.ai) was sent to
 	 * wp-admin instead and never received its code. The URI was already checked
 	 * against the client's registered list (exact match) in
