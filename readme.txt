@@ -2,7 +2,7 @@
 Contributors: chagold
 Tags: ai, servio, rest-api, oauth, ai-agent
 Requires at least: 6.0
-Tested up to: 7.1
+Tested up to: 7.2
 Requires PHP: 7.4
 Stable tag: 1.2.16
 License: GPLv3 or later
